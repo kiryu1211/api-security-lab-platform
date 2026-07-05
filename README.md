@@ -28,6 +28,7 @@ This system provides an isolated environment for examining how API vulnerabiliti
 - Initial route separation is available through `/api/vulnerable/health` and `/api/secure/health`.
 - Shared API response helpers, Zod request validation, and safe local sample users/resources are available for later learning modules.
 - OpenAPI specification is available at [`docs/api/openapi.json`](docs/api/openapi.json).
+- The BOLA module includes runnable vulnerable and secure order APIs for comparing missing ownership checks with verified ownership checks.
 
 ## Safety Policy
 

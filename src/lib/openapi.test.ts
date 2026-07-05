@@ -7,6 +7,10 @@ describe("OpenAPI specification", () => {
     expect(openApiSpec.paths).toHaveProperty("/api/vulnerable/health");
     expect(openApiSpec.paths).toHaveProperty("/api/secure/lab-samples");
     expect(openApiSpec.paths).toHaveProperty("/api/vulnerable/lab-samples");
+    expect(openApiSpec.paths).toHaveProperty("/api/secure/orders/{orderId}");
+    expect(openApiSpec.paths).toHaveProperty(
+      "/api/vulnerable/orders/{orderId}",
+    );
   });
 
   it("describes vulnerable routes as local-only", () => {

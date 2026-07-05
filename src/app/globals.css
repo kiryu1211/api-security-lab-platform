@@ -452,7 +452,8 @@ a {
 }
 
 .comparison-panel-header code,
-.request-response-grid pre {
+.request-response-grid pre,
+.api-result-box pre {
   display: block;
   overflow-x: auto;
   border-radius: 0.85rem;
@@ -481,14 +482,60 @@ a {
 
 .request-response-grid pre,
 .request-response-grid p,
-.design-note p {
+.design-note p,
+.api-result-box p {
   margin: 0.35rem 0 0;
   line-height: 1.65;
 }
 
 .request-response-grid p,
-.design-note p {
+.design-note p,
+.api-result-box p {
   color: var(--muted);
+}
+
+.api-result-box {
+  border-top: 1px solid var(--line);
+  padding-top: 0.9rem;
+}
+
+.api-result-box pre {
+  max-height: 22rem;
+  margin: 0.45rem 0 0;
+  white-space: pre-wrap;
+}
+
+.demo-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.demo-action-row p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.run-demo-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.85rem 1.15rem;
+  color: white;
+  background: linear-gradient(135deg, var(--foreground), #1d4ed8);
+  box-shadow: 0 18px 38px rgba(29, 78, 216, 0.2);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.run-demo-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.run-demo-button:focus-visible {
+  outline: 3px solid rgba(29, 78, 216, 0.28);
+  outline-offset: 3px;
 }
 
 .mini-label {

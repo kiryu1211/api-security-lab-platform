@@ -130,7 +130,7 @@ erDiagram
 - SSRF protection includes allowlists, private IP range rejection, redirect restrictions, and timeouts.
 - Rate limiting is considered per user, per IP address, and per API route.
 
-The initial route separation is represented by `/api/vulnerable/health`, `/api/secure/health`, `/api/vulnerable/lab-samples`, and `/api/secure/lab-samples`. Vulnerable routes use the shared safety guard before returning a response.
+The initial route separation is represented by `/api/vulnerable/health`, `/api/secure/health`, `/api/vulnerable/lab-samples`, `/api/secure/lab-samples`, `/api/vulnerable/orders/{orderId}`, and `/api/secure/orders/{orderId}`. Vulnerable routes use the shared safety guard before returning a response.
 
 ## API Foundation
 
@@ -139,6 +139,13 @@ The initial route separation is represented by `/api/vulnerable/health`, `/api/s
 - Local sample users and resources are defined in `src/data/lab-samples.ts`. They use synthetic demo identifiers and do not include real personal data, logs, credentials, or tokens.
 - `src/lib/lab-sample-service.ts` provides filtered sample data for API modules without introducing database dependencies before the persistence phase.
 - `docs/api/openapi.json` documents the current support routes, separated secure/vulnerable tags, shared success/error response shapes, and local-only vulnerable route behavior.
+
+## BOLA Module Design
+
+- The vulnerable BOLA route `/api/vulnerable/orders/{orderId}` intentionally fetches a local demo order by ID only after the local-only safety guard passes.
+- The secure BOLA route `/api/secure/orders/{orderId}` requires `userId` and verifies that the requested order belongs to that demo user.
+- The comparison UI runs `order-demo-002` as a user who does not own it, so the vulnerable route returns the order while the secure route returns `403 FORBIDDEN`.
+- The BOLA implementation uses synthetic demo users and resources only; it does not use real accounts, orders, logs, or tokens.
 
 ## Multilingual UI Design
 

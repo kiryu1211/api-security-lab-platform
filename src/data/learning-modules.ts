@@ -63,7 +63,7 @@ export const learningModules: LearningModule[] = [
     },
     secure: {
       route: "/api/secure/orders/{orderId}",
-      request: "GET /api/secure/orders/order-demo-002",
+      request: "GET /api/secure/orders/order-demo-002?userId=user-demo-alice",
       response: {
         ja: "所有者が一致しない場合は403を返す想定です。",
         en: "Expected to return 403 when the owner does not match.",

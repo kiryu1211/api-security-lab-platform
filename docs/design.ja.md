@@ -130,7 +130,7 @@ erDiagram
 - SSRF対策では、許可リスト、プライベートIP範囲拒否、リダイレクト制限、タイムアウトを設計に含める。
 - レート制限はユーザー単位、IP単位、APIルート単位で検討する。
 
-初期のルート分離は `/api/vulnerable/health`、`/api/secure/health`、`/api/vulnerable/lab-samples`、`/api/secure/lab-samples` で表現します。脆弱APIルートは、レスポンスを返す前に共通の安全ガードを通します。
+初期のルート分離は `/api/vulnerable/health`、`/api/secure/health`、`/api/vulnerable/lab-samples`、`/api/secure/lab-samples`、`/api/vulnerable/orders/{orderId}`、`/api/secure/orders/{orderId}` で表現します。脆弱APIルートは、レスポンスを返す前に共通の安全ガードを通します。
 
 ## API基盤
 
@@ -139,6 +139,13 @@ erDiagram
 - ローカル用のサンプルユーザーとサンプルリソースは `src/data/lab-samples.ts` で定義する。合成したデモ用IDだけを使用し、実在する個人情報、ログ、認証情報、トークンは含めない。
 - `src/lib/lab-sample-service.ts` は、永続化フェーズ前にデータベース依存を増やさず、APIモジュールへフィルタ済みサンプルデータを提供する。
 - `docs/api/openapi.json` では、現在の補助ルート、安全/脆弱タグの分離、共通の成功/エラーレスポンス形式、脆弱ルートのローカル限定動作を記述する。
+
+## BOLAモジュール設計
+
+- 脆弱なBOLAルート `/api/vulnerable/orders/{orderId}` は、ローカル限定の安全ガードを通過した後、ローカル用デモ注文をIDのみで取得する。
+- 安全なBOLAルート `/api/secure/orders/{orderId}` は `userId` を必須とし、指定された注文がそのデモユーザーの所有物かを検証する。
+- 比較UIでは、所有者ではないユーザーとして `order-demo-002` を実行し、脆弱ルートでは注文が返り、安全ルートでは `403 FORBIDDEN` が返ることを確認できる。
+- BOLA実装では合成したデモユーザーとデモリソースのみを使用し、実在するアカウント、注文、ログ、トークンは使用しない。
 
 ## 多言語UI設計
 

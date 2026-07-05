@@ -34,10 +34,22 @@ const difficultyLabels = {
   },
 } as const;
 
+type DemoResult = {
+  status: number;
+  body: unknown;
+};
+
+type BolaDemoState = {
+  loading: boolean;
+  vulnerable?: DemoResult;
+  secure?: DemoResult;
+};
+
 export function HomePage() {
   const [language, setLanguage] = useState<Language>(defaultLanguage);
   const [selectedModuleId, setSelectedModuleId] =
     useState<LearningModuleId>("bola");
+  const [bolaDemo, setBolaDemo] = useState<BolaDemoState>({ loading: false });
   const t = uiText[language];
   const selectedModule = getLearningModule(selectedModuleId);
 
@@ -56,6 +68,32 @@ export function HomePage() {
 
   function handleLanguageChange(nextLanguage: Language) {
     setLanguage(nextLanguage);
+  }
+
+  async function handleRunBolaDemo() {
+    setBolaDemo({ loading: true });
+
+    const [vulnerableResponse, secureResponse] = await Promise.all([
+      fetch("/api/vulnerable/orders/order-demo-002"),
+      fetch("/api/secure/orders/order-demo-002?userId=user-demo-alice"),
+    ]);
+
+    const [vulnerableBody, secureBody] = await Promise.all([
+      vulnerableResponse.json(),
+      secureResponse.json(),
+    ]);
+
+    setBolaDemo({
+      loading: false,
+      vulnerable: {
+        status: vulnerableResponse.status,
+        body: vulnerableBody,
+      },
+      secure: {
+        status: secureResponse.status,
+        body: secureBody,
+      },
+    });
   }
 
   return (
@@ -219,6 +257,11 @@ export function HomePage() {
               route={selectedModule.vulnerable.route}
               title={t.comparison.vulnerable}
               labels={t.comparison}
+              result={
+                selectedModule.id === "bola" ? bolaDemo.vulnerable : undefined
+              }
+              resultTitle={t.comparison.vulnerableResult}
+              noResultLabel={t.comparison.noResult}
             />
             <ComparisonPanel
               badge={t.comparison.secureBadge}
@@ -229,7 +272,29 @@ export function HomePage() {
               route={selectedModule.secure.route}
               title={t.comparison.secure}
               labels={t.comparison}
+              result={
+                selectedModule.id === "bola" ? bolaDemo.secure : undefined
+              }
+              resultTitle={t.comparison.secureResult}
+              noResultLabel={t.comparison.noResult}
             />
+          </div>
+
+          <div className="demo-action-row">
+            {selectedModule.id === "bola" ? (
+              <button
+                className="run-demo-button"
+                type="button"
+                onClick={handleRunBolaDemo}
+                disabled={bolaDemo.loading}
+              >
+                {bolaDemo.loading
+                  ? t.comparison.demoLoading
+                  : t.comparison.runDemo}
+              </button>
+            ) : (
+              <p>{t.comparison.demoUnavailable}</p>
+            )}
           </div>
         </section>
 
@@ -263,8 +328,11 @@ function ComparisonPanel({
   kind,
   labels,
   note,
+  noResultLabel,
   request,
   response,
+  result,
+  resultTitle,
   route,
   title,
 }: {
@@ -272,8 +340,11 @@ function ComparisonPanel({
   kind: "vulnerable" | "secure";
   labels: (typeof uiText)[Language]["comparison"];
   note: string;
+  noResultLabel: string;
   request: string;
   response: string;
+  result?: DemoResult;
+  resultTitle: string;
   route: string;
   title: string;
 }) {
@@ -299,6 +370,14 @@ function ComparisonPanel({
       <div className="design-note">
         <span className="mini-label">{labels.designDifference}</span>
         <p>{note}</p>
+      </div>
+      <div className="api-result-box">
+        <span className="mini-label">{resultTitle}</span>
+        {result ? (
+          <pre>{`HTTP ${result.status}\n${JSON.stringify(result.body, null, 2)}`}</pre>
+        ) : (
+          <p>{noResultLabel}</p>
+        )}
       </div>
     </article>
   );

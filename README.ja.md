@@ -28,6 +28,7 @@
 - 初期のルート分離として、`/api/vulnerable/health` と `/api/secure/health` を用意しています。
 - 後続の学習モジュールで利用するために、共通APIレスポンス、Zodによるリクエスト検証、安全なローカル用サンプルユーザー/リソースを用意しています。
 - OpenAPI仕様は [`docs/api/openapi.json`](docs/api/openapi.json) に配置しています。
+- BOLAモジュールでは、所有者確認がない脆弱な注文APIと、所有者確認を行う安全な注文APIを実行して比較できます。
 
 ## 安全性に関する方針
 

@@ -69,6 +69,12 @@ export const uiText = {
       designDifference: "設計差分",
       vulnerableBadge: "ローカル限定",
       secureBadge: "防御済み",
+      runDemo: "BOLA APIを実行",
+      demoUnavailable: "このテーマの実APIデモは後続フェーズで追加します。",
+      demoLoading: "APIを実行中...",
+      vulnerableResult: "脆弱APIの結果",
+      secureResult: "安全APIの結果",
+      noResult: "まだ実行していません。",
     },
     checklist: {
       heading: "チェックリスト",
@@ -137,6 +143,13 @@ export const uiText = {
       designDifference: "Design difference",
       vulnerableBadge: "Local only",
       secureBadge: "Mitigated",
+      runDemo: "Run BOLA APIs",
+      demoUnavailable:
+        "Live API demo for this topic will be added in a later phase.",
+      demoLoading: "Running APIs...",
+      vulnerableResult: "Vulnerable API result",
+      secureResult: "Secure API result",
+      noResult: "Not run yet.",
     },
     checklist: {
       heading: "Checklist",

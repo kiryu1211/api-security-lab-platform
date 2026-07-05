@@ -15,3 +15,13 @@ export const labSampleQuerySchema = z.object({
   userId: labUserIdSchema.optional(),
   resourceType: z.enum(["order", "profile", "report"]).optional(),
 });
+
+export const orderPathParamsSchema = z.object({
+  orderId: labResourceIdSchema.refine((value) => value.startsWith("order-"), {
+    message: "Use one of the local demo order IDs.",
+  }),
+});
+
+export const secureOrderQuerySchema = z.object({
+  userId: labUserIdSchema,
+});
