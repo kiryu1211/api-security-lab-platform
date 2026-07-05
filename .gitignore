@@ -17,6 +17,7 @@ credentials/
 private/
 
 # Developer-only documents
+AGENTS.md
 private-docs/
 
 # Logs and local data
