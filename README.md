@@ -26,6 +26,8 @@ This system provides an isolated environment for examining how API vulnerabiliti
 - The initial learning UI includes a topic list, learning detail panel, vulnerable/secure comparison view, and implementation checklist.
 - UI text and learning module content are managed through Japanese and English resources instead of being embedded directly in the screen component.
 - Initial route separation is available through `/api/vulnerable/health` and `/api/secure/health`.
+- Shared API response helpers, Zod request validation, and safe local sample users/resources are available for later learning modules.
+- OpenAPI specification is available at [`docs/api/openapi.json`](docs/api/openapi.json).
 
 ## Safety Policy
 
@@ -51,6 +53,7 @@ Run verification commands sequentially. `npm run build` and `npm run typecheck` 
 - Proposal: [`docs/proposal.en.md`](docs/proposal.en.md)
 - Requirements: [`docs/requirements.en.md`](docs/requirements.en.md)
 - Design: [`docs/design.en.md`](docs/design.en.md)
+- OpenAPI: [`docs/api/openapi.json`](docs/api/openapi.json)
 
 ## UI Language Policy
 

@@ -10,7 +10,7 @@
 - Validation: Zod
 - Testing: Vitest
 - Linting and formatting: ESLint と Prettier
-- API Documentation: OpenAPI。APIモジュールの実装に合わせて追加する
+- API Documentation: `docs/api/openapi.json` のOpenAPI仕様
 - Database and ORM: 後続フェーズの学習データ用にSQLiteとPrismaを予定する
 
 TypeScriptを使用する理由は、APIリクエスト、レスポンス、認可対象リソース、学習モジュールを型で管理し、脆弱例と安全例の差分を明確にしやすいためです。OpenAPIは、モジュールAPIが具体化した段階でAPI仕様と検証観点を文書化するために使用します。
@@ -130,7 +130,15 @@ erDiagram
 - SSRF対策では、許可リスト、プライベートIP範囲拒否、リダイレクト制限、タイムアウトを設計に含める。
 - レート制限はユーザー単位、IP単位、APIルート単位で検討する。
 
-初期のルート分離は `/api/vulnerable/health` と `/api/secure/health` で表現します。脆弱APIのヘルスチェックルートは、レスポンスを返す前に共通の安全ガードを通します。
+初期のルート分離は `/api/vulnerable/health`、`/api/secure/health`、`/api/vulnerable/lab-samples`、`/api/secure/lab-samples` で表現します。脆弱APIルートは、レスポンスを返す前に共通の安全ガードを通します。
+
+## API基盤
+
+- 共通APIレスポンスは `src/lib/api-response.ts` で定義し、成功時は `{ ok, data, meta }`、エラー時は `{ ok, error, meta }` を返す。
+- 共通リクエスト検証は `src/lib/request-validation.ts` で定義し、`src/lib/api-schemas.ts` のZodスキーマを使用する。
+- ローカル用のサンプルユーザーとサンプルリソースは `src/data/lab-samples.ts` で定義する。合成したデモ用IDだけを使用し、実在する個人情報、ログ、認証情報、トークンは含めない。
+- `src/lib/lab-sample-service.ts` は、永続化フェーズ前にデータベース依存を増やさず、APIモジュールへフィルタ済みサンプルデータを提供する。
+- `docs/api/openapi.json` では、現在の補助ルート、安全/脆弱タグの分離、共通の成功/エラーレスポンス形式、脆弱ルートのローカル限定動作を記述する。
 
 ## 多言語UI設計
 

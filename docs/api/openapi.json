@@ -1,0 +1,233 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "API Security Lab Platform API",
+    "version": "0.1.0",
+    "description": "Local-first API specification for comparing vulnerable and secure API examples. Vulnerable routes are local-only and must not be publicly deployed."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "secure",
+      "description": "Secure API examples and support endpoints"
+    },
+    {
+      "name": "vulnerable",
+      "description": "Local-only vulnerable API examples and support endpoints"
+    }
+  ],
+  "paths": {
+    "/api/secure/health": {
+      "get": {
+        "tags": ["secure"],
+        "summary": "Secure API health endpoint",
+        "responses": {
+          "200": {
+            "description": "Secure route status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vulnerable/health": {
+      "get": {
+        "tags": ["vulnerable"],
+        "summary": "Local-only vulnerable API health endpoint",
+        "responses": {
+          "200": {
+            "description": "Vulnerable route status when local mode is enabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Vulnerable route disabled outside local non-production mode",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/secure/lab-samples": {
+      "get": {
+        "tags": ["secure"],
+        "summary": "List safe local sample users and resources",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/UserId"
+          },
+          {
+            "$ref": "#/components/parameters/ResourceType"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Filtered sample data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vulnerable/lab-samples": {
+      "get": {
+        "tags": ["vulnerable"],
+        "summary": "List local-only vulnerable-route sample data",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/UserId"
+          },
+          {
+            "$ref": "#/components/parameters/ResourceType"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Filtered sample data when local mode is enabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Vulnerable route disabled outside local non-production mode",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "UserId": {
+        "name": "userId",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "pattern": "^user-demo-[a-z-]+$"
+        }
+      },
+      "ResourceType": {
+        "name": "resourceType",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": ["order", "profile", "report"]
+        }
+      }
+    },
+    "schemas": {
+      "ApiSuccess": {
+        "type": "object",
+        "required": ["ok", "data", "meta"],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "const": true
+          },
+          "data": {
+            "type": "object"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
+        }
+      },
+      "ApiError": {
+        "type": "object",
+        "required": ["ok", "error", "meta"],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "const": false
+          },
+          "error": {
+            "type": "object",
+            "required": ["code", "message"],
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {}
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
+        }
+      },
+      "ApiMeta": {
+        "type": "object",
+        "required": ["routeType"],
+        "properties": {
+          "routeType": {
+            "type": "string",
+            "enum": ["secure", "vulnerable"]
+          },
+          "localOnly": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

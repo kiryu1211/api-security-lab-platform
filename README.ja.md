@@ -26,6 +26,8 @@
 - 初期の学習UIとして、学習テーマ一覧、学習詳細パネル、脆弱/安全の比較ビュー、実装チェックリストを用意しています。
 - UI文言と学習モジュールの内容は、画面コンポーネントへ直接埋め込まず、日本語・英語のリソースとして管理しています。
 - 初期のルート分離として、`/api/vulnerable/health` と `/api/secure/health` を用意しています。
+- 後続の学習モジュールで利用するために、共通APIレスポンス、Zodによるリクエスト検証、安全なローカル用サンプルユーザー/リソースを用意しています。
+- OpenAPI仕様は [`docs/api/openapi.json`](docs/api/openapi.json) に配置しています。
 
 ## 安全性に関する方針
 
@@ -51,6 +53,7 @@
 - 企画書: [`docs/proposal.ja.md`](docs/proposal.ja.md)
 - 要件定義書: [`docs/requirements.ja.md`](docs/requirements.ja.md)
 - 設計書: [`docs/design.ja.md`](docs/design.ja.md)
+- OpenAPI: [`docs/api/openapi.json`](docs/api/openapi.json)
 
 ## UI言語方針
 

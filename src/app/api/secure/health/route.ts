@@ -1,10 +1,6 @@
-import { NextResponse } from "next/server";
+import { apiSuccess, secureRouteMeta } from "@/lib/api-response";
 import { getLabRuntimeSafety } from "@/lib/env";
 
 export function GET() {
-  return NextResponse.json({
-    ok: true,
-    routeType: "secure",
-    safety: getLabRuntimeSafety(),
-  });
+  return apiSuccess({ safety: getLabRuntimeSafety() }, secureRouteMeta());
 }

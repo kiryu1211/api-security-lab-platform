@@ -10,7 +10,7 @@ The initial implementation prioritizes clear API specifications, request validat
 - Validation: Zod
 - Testing: Vitest
 - Linting and formatting: ESLint and Prettier
-- API Documentation: OpenAPI, to be added as API modules are implemented
+- API Documentation: OpenAPI in `docs/api/openapi.json`
 - Database and ORM: SQLite and Prisma are planned for lab data in later phases
 
 TypeScript is suitable because API requests, responses, authorization targets, and learning modules can be managed with types. OpenAPI will document API specifications and verification perspectives as the module APIs become concrete.
@@ -130,7 +130,15 @@ erDiagram
 - SSRF protection includes allowlists, private IP range rejection, redirect restrictions, and timeouts.
 - Rate limiting is considered per user, per IP address, and per API route.
 
-The initial route separation is represented by `/api/vulnerable/health` and `/api/secure/health`. The vulnerable health route uses the shared safety guard before returning a response.
+The initial route separation is represented by `/api/vulnerable/health`, `/api/secure/health`, `/api/vulnerable/lab-samples`, and `/api/secure/lab-samples`. Vulnerable routes use the shared safety guard before returning a response.
+
+## API Foundation
+
+- Shared API response helpers are defined in `src/lib/api-response.ts` and return `{ ok, data, meta }` for success or `{ ok, error, meta }` for errors.
+- Shared request validation is defined in `src/lib/request-validation.ts` and uses Zod schemas from `src/lib/api-schemas.ts`.
+- Local sample users and resources are defined in `src/data/lab-samples.ts`. They use synthetic demo identifiers and do not include real personal data, logs, credentials, or tokens.
+- `src/lib/lab-sample-service.ts` provides filtered sample data for API modules without introducing database dependencies before the persistence phase.
+- `docs/api/openapi.json` documents the current support routes, separated secure/vulnerable tags, shared success/error response shapes, and local-only vulnerable route behavior.
 
 ## Multilingual UI Design
 
