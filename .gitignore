@@ -1,0 +1,39 @@
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Secrets and keys
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+id_rsa
+id_rsa.pub
+secrets/
+credentials/
+private/
+
+# Developer-only documents
+private-docs/
+
+# Logs and local data
+*.log
+logs/
+audit-logs/
+*.sqlite
+*.sqlite3
+*.db
+storage/
+uploads/
+tmp/
+temp/
+
+# Dependencies and build outputs
+node_modules/
+dist/
+build/
+.next/
+coverage/
