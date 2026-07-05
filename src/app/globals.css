@@ -1,0 +1,260 @@
+:root {
+  --background: #f7f2ea;
+  --foreground: #17202a;
+  --muted: #5f6b7a;
+  --panel: #fffaf2;
+  --panel-strong: #ffffff;
+  --line: #eadfce;
+  --secure: #0f766e;
+  --secure-soft: #dcfce7;
+  --vulnerable: #b42318;
+  --vulnerable-soft: #fee4e2;
+  --accent: #1d4ed8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  margin: 0;
+  color: var(--foreground);
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(29, 78, 216, 0.1),
+      transparent 34rem
+    ),
+    linear-gradient(135deg, #fffaf2 0%, var(--background) 56%, #f1f5f9 100%);
+  font-family:
+    var(--font-geist-sans),
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem clamp(1rem, 4vw, 3rem);
+  border-bottom: 1px solid rgba(234, 223, 206, 0.86);
+  background: rgba(255, 250, 242, 0.82);
+  backdrop-filter: blur(14px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.brand-title {
+  font-size: clamp(1rem, 1.8vw, 1.25rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.brand-subtitle {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.language-switcher {
+  display: inline-flex;
+  gap: 0.35rem;
+  padding: 0.3rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-strong);
+}
+
+.language-switcher button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.5rem 0.75rem;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.language-switcher button[aria-pressed="true"] {
+  color: white;
+  background: var(--foreground);
+}
+
+.main-content {
+  width: min(1120px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: clamp(2rem, 5vw, 4.5rem) 0 4rem;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: start;
+}
+
+.eyebrow {
+  display: inline-flex;
+  width: fit-content;
+  border: 1px solid rgba(29, 78, 216, 0.18);
+  border-radius: 999px;
+  padding: 0.45rem 0.7rem;
+  color: #1e3a8a;
+  background: rgba(219, 234, 254, 0.68);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.hero h1 {
+  margin: 1rem 0;
+  font-size: clamp(2.4rem, 6vw, 5rem);
+  line-height: 0.96;
+  letter-spacing: -0.075em;
+}
+
+.hero-lead {
+  max-width: 46rem;
+  color: var(--muted);
+  font-size: clamp(1.05rem, 2vw, 1.22rem);
+  line-height: 1.8;
+}
+
+.safety-card,
+.status-card,
+.module-card {
+  border: 1px solid var(--line);
+  border-radius: 1.5rem;
+  background: rgba(255, 250, 242, 0.9);
+  box-shadow: 0 24px 60px rgba(23, 32, 42, 0.08);
+}
+
+.safety-card {
+  padding: 1.1rem;
+  border-color: rgba(180, 35, 24, 0.28);
+  background: linear-gradient(180deg, #fff7ed, var(--vulnerable-soft));
+}
+
+.card-label {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.safety-card p,
+.status-card p,
+.module-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.status-card,
+.module-card {
+  padding: 1.2rem;
+}
+
+.status-card strong,
+.module-card strong {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-size: 1.05rem;
+}
+
+.route-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 1.25rem;
+}
+
+.route-tag {
+  border-radius: 0.9rem;
+  padding: 0.7rem 0.85rem;
+  font-family:
+    var(--font-geist-mono), ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.route-tag.vulnerable {
+  color: var(--vulnerable);
+  background: var(--vulnerable-soft);
+}
+
+.route-tag.secure {
+  color: var(--secure);
+  background: var(--secure-soft);
+}
+
+.module-section {
+  margin-top: clamp(2rem, 5vw, 4rem);
+}
+
+.section-heading {
+  margin: 0 0 1rem;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  letter-spacing: -0.055em;
+}
+
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.module-card[data-state="ready"] {
+  border-color: rgba(15, 118, 110, 0.28);
+}
+
+.module-card[data-state="planned"] {
+  opacity: 0.82;
+}
+
+@media (max-width: 820px) {
+  .site-header,
+  .hero,
+  .status-grid,
+  .module-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .site-header {
+    align-items: flex-start;
+  }
+}

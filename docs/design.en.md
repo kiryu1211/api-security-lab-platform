@@ -1,17 +1,19 @@
 # API Security Lab Platform Design
 
-## Technology Selection Direction
+## Technology Selection
 
-The initial implementation should prioritize clear API specifications, request validation, authentication and authorization, rate limiting, and isolation of vulnerable demos. A suitable candidate stack is:
+The initial implementation prioritizes clear API specifications, request validation, authentication and authorization, rate limiting, and isolation of vulnerable demos. The current implementation uses:
 
-- Frontend: TypeScript + React / Next.js
-- Backend: Next.js API Routes or Node.js API
-- Database: PostgreSQL or SQLite
-- ORM: Prisma
+- Frontend: TypeScript + React + Next.js App Router
+- Backend: Next.js Route Handlers
+- Package manager: npm with `package-lock.json`
 - Validation: Zod
-- API Documentation: OpenAPI
+- Testing: Vitest
+- Linting and formatting: ESLint and Prettier
+- API Documentation: OpenAPI, to be added as API modules are implemented
+- Database and ORM: SQLite and Prisma are planned for lab data in later phases
 
-TypeScript is suitable because API requests, responses, authorization targets, and learning modules can be managed with types. OpenAPI helps document API specifications and verification perspectives.
+TypeScript is suitable because API requests, responses, authorization targets, and learning modules can be managed with types. OpenAPI will document API specifications and verification perspectives as the module APIs become concrete.
 
 ## Architecture
 
@@ -122,11 +124,13 @@ erDiagram
 ## Security Design
 
 - Vulnerable APIs are clearly separated under paths such as `/vulnerable/*`, while secure APIs use paths such as `/secure/*`.
-- `LAB_MODE=local` is assumed, and vulnerable APIs are not enabled in production environments.
+- `LAB_MODE=local` is required for vulnerable APIs, and vulnerable APIs are disabled when `NODE_ENV=production`.
 - Screens that operate vulnerable APIs always display local-only warnings.
 - Secure APIs validate user ID, role, and target resource ownership in the API layer.
 - SSRF protection includes allowlists, private IP range rejection, redirect restrictions, and timeouts.
 - Rate limiting is considered per user, per IP address, and per API route.
+
+The initial route separation is represented by `/api/vulnerable/health` and `/api/secure/health`. The vulnerable health route uses the shared safety guard before returning a response.
 
 ## Multilingual UI Design
 

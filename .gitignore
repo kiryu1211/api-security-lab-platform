@@ -38,3 +38,4 @@ dist/
 build/
 .next/
 coverage/
+tsconfig.tsbuildinfo

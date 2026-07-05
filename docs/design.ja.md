@@ -1,17 +1,19 @@
 # APIセキュリティ学習・検証プラットフォーム 設計書
 
-## 技術選定方針
+## 技術選定
 
-初期実装では、API仕様の明確化、リクエスト検証、認証・認可、レート制限、脆弱デモの隔離を重視します。候補構成は以下です。
+初期実装では、API仕様の明確化、リクエスト検証、認証・認可、レート制限、脆弱デモの隔離を重視します。現在の実装では以下を使用します。
 
-- Frontend: TypeScript + React / Next.js
-- Backend: Next.js API Routes または Node.js API
-- Database: PostgreSQL または SQLite
-- ORM: Prisma
+- Frontend: TypeScript + React + Next.js App Router
+- Backend: Next.js Route Handlers
+- Package manager: npm と `package-lock.json`
 - Validation: Zod
-- API Documentation: OpenAPI
+- Testing: Vitest
+- Linting and formatting: ESLint と Prettier
+- API Documentation: OpenAPI。APIモジュールの実装に合わせて追加する
+- Database and ORM: 後続フェーズの学習データ用にSQLiteとPrismaを予定する
 
-TypeScriptを採用する理由は、APIリクエスト、レスポンス、認可対象リソース、学習モジュールを型で管理し、脆弱例と安全例の差分を明確にしやすいためです。OpenAPIを併用することで、API仕様と検証観点を文書化しやすくします。
+TypeScriptを採用する理由は、APIリクエスト、レスポンス、認可対象リソース、学習モジュールを型で管理し、脆弱例と安全例の差分を明確にしやすいためです。OpenAPIは、モジュールAPIが具体化した段階でAPI仕様と検証観点を文書化するために使用します。
 
 ## アーキテクチャ
 
@@ -122,11 +124,13 @@ erDiagram
 ## セキュリティ設計
 
 - 脆弱APIは `/vulnerable/*`、安全APIは `/secure/*` のように明確に分離する。
-- `LAB_MODE=local` を前提とし、脆弱APIは本番環境で有効化しない。
+- 脆弱APIでは `LAB_MODE=local` を必須とし、`NODE_ENV=production` では無効化する。
 - 脆弱APIを操作する画面には、ローカル限定であることを常に表示する。
 - 安全APIでは、ユーザーID、ロール、対象リソース所有者をAPI層で検証する。
 - SSRF対策では、許可リスト、プライベートIP範囲拒否、リダイレクト制限、タイムアウトを設計に含める。
 - レート制限はユーザー単位、IP単位、APIルート単位で検討する。
+
+初期のルート分離は `/api/vulnerable/health` と `/api/secure/health` で表現します。脆弱APIのヘルスチェックルートは、レスポンスを返す前に共通の安全ガードを通します。
 
 ## 多言語UI設計
 

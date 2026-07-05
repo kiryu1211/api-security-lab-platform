@@ -24,6 +24,20 @@
 
 脆弱なAPI例は、制御されたローカル環境での検証専用です。公開環境へデプロイしてはいけません。脆弱なルートと安全なルートは明確に分離し、脆弱シナリオを利用する画面では警告を表示します。
 
+脆弱APIルートは、`LAB_MODE=local` かつ `NODE_ENV=production` ではない場合にのみ有効化します。安全APIルートは、比較と検証のために利用できる状態を維持します。
+
+## 開発コマンド
+
+- `npm install`: `package-lock.json` に基づいて依存関係をインストールする。
+- `npm run dev`: ローカル開発サーバーを起動する。
+- `npm run lint`: ESLintを実行する。
+- `npm run format`: Prettierでフォーマットを確認する。
+- `npm run typecheck`: TypeScriptの型チェックを実行する。
+- `npm run test`: Vitestのテストを実行する。
+- `npm run build`: 本番ビルドを作成する。
+
+検証コマンドは順番に実行します。`npm run build` と `npm run typecheck` はどちらも `.next/` 配下のNext.js生成型を参照するため、並列実行しないでください。
+
 ## ドキュメント
 
 - English README: [`README.md`](README.md)

@@ -24,6 +24,20 @@ This system provides an isolated environment for examining how API vulnerabiliti
 
 The vulnerable examples are for controlled local verification only. They must not be deployed to a public environment. The system should clearly separate vulnerable routes from secure routes and display warnings whenever a vulnerable scenario is used.
 
+Vulnerable API routes are enabled only when `LAB_MODE=local` and the application is not running with `NODE_ENV=production`. Secure routes remain available for comparison and verification.
+
+## Development Commands
+
+- `npm install`: install dependencies from `package-lock.json`.
+- `npm run dev`: start the local development server.
+- `npm run lint`: run ESLint.
+- `npm run format`: check formatting with Prettier.
+- `npm run typecheck`: run TypeScript type checking.
+- `npm run test`: run the Vitest suite.
+- `npm run build`: create a production build.
+
+Run verification commands sequentially. `npm run build` and `npm run typecheck` both read Next.js generated type files under `.next/`, so they should not be run in parallel.
+
 ## Documentation
 
 - Japanese README: [`README.ja.md`](README.ja.md)
