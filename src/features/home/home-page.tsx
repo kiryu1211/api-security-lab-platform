@@ -1,79 +1,57 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  getLearningModule,
+  learningModules,
+  type LearningModuleId,
+} from "@/data/learning-modules";
+import { defaultLanguage, isLanguage, uiText, type Language } from "@/lib/i18n";
 
-type Language = "ja" | "en";
+const languageStorageKey = "lab-ui-language";
 
-const content = {
+const progressLabels = {
   ja: {
-    brand: "APIセキュリティ学習・検証プラットフォーム",
-    subtitle: "ローカル限定の比較学習環境",
-    eyebrow: "初期実装: 安全ガードとUI基盤",
-    title: "脆弱なAPIと安全なAPIを、同じ画面で比較する。",
-    lead: "BOLA、認証不備、レート制限不足、Mass Assignment、SSRFを段階的に検証するための基盤です。脆弱なデモはローカル環境でのみ扱い、公開環境では有効化しません。",
-    warningLabel: "ローカル限定の警告",
-    warning:
-      "脆弱APIは学習目的のローカル検証専用です。外部公開、共有環境、本番環境では実行しないでください。",
-    statusHeading: "現在の基盤",
-    routeSeparation: "ルート分離",
-    routeSeparationText: "脆弱APIと安全APIを明確に分け、誤利用を避けます。",
-    safetyGuard: "安全ガード",
-    safetyGuardText:
-      "LAB_MODEと実行環境を確認し、公開環境相当では脆弱APIを無効化します。",
-    language: "言語切替",
-    languageText: "日本語を初期表示とし、画面全体を英語へ切り替えます。",
-    modulesHeading: "学習モジュール計画",
-    ready: "基盤準備中",
+    ready: "基盤準備済み",
     planned: "今後追加",
   },
   en: {
-    brand: "API Security Lab Platform",
-    subtitle: "Local-only comparative learning environment",
-    eyebrow: "Initial implementation: safety guard and UI foundation",
-    title: "Compare vulnerable and secure APIs on the same screen.",
-    lead: "This foundation supports staged verification of BOLA, broken authentication, missing rate limits, Mass Assignment, and SSRF. Vulnerable demos are local-only and are not enabled in public environments.",
-    warningLabel: "Local-only warning",
-    warning:
-      "Vulnerable APIs are for local learning and verification only. Do not run them in public, shared, or production environments.",
-    statusHeading: "Current Foundation",
-    routeSeparation: "Route separation",
-    routeSeparationText:
-      "Vulnerable and secure APIs stay separated to reduce accidental misuse.",
-    safetyGuard: "Safety guard",
-    safetyGuardText:
-      "LAB_MODE and runtime environment checks disable vulnerable APIs in public-like environments.",
-    language: "Language switching",
-    languageText:
-      "Japanese is the default, with a shared switcher for English UI text.",
-    modulesHeading: "Learning Module Plan",
     ready: "Foundation ready",
     planned: "Planned",
   },
 } as const;
 
-const modules = [
-  { id: "bola", title: "BOLA", state: "ready" },
-  { id: "auth", title: "Authentication / Token Handling", state: "planned" },
-  { id: "rate", title: "Rate Limiting", state: "planned" },
-  { id: "mass-assignment", title: "Mass Assignment", state: "planned" },
-  { id: "ssrf", title: "SSRF", state: "planned" },
-] as const;
+const difficultyLabels = {
+  ja: {
+    Basic: "基礎",
+    Intermediate: "中級",
+    Advanced: "応用",
+  },
+  en: {
+    Basic: "Basic",
+    Intermediate: "Intermediate",
+    Advanced: "Advanced",
+  },
+} as const;
 
 export function HomePage() {
-  const [language, setLanguage] = useState<Language>("ja");
-  const t = content[language];
+  const [language, setLanguage] = useState<Language>(defaultLanguage);
+  const [selectedModuleId, setSelectedModuleId] =
+    useState<LearningModuleId>("bola");
+  const t = uiText[language];
+  const selectedModule = getLearningModule(selectedModuleId);
 
   useEffect(() => {
-    const savedLanguage = window.localStorage.getItem("lab-ui-language");
+    const savedLanguage = window.localStorage.getItem(languageStorageKey);
 
-    if (savedLanguage === "ja" || savedLanguage === "en") {
+    if (isLanguage(savedLanguage)) {
       setLanguage(savedLanguage);
     }
   }, []);
 
   useEffect(() => {
     document.documentElement.lang = language;
-    window.localStorage.setItem("lab-ui-language", language);
+    window.localStorage.setItem(languageStorageKey, language);
   }, [language]);
 
   function handleLanguageChange(nextLanguage: Language) {
@@ -83,37 +61,39 @@ export function HomePage() {
   return (
     <div className="app-shell">
       <header className="site-header">
-        <div className="brand" aria-label={t.brand}>
+        <a className="brand" href="#top" aria-label={t.brand}>
           <span className="brand-title">{t.brand}</span>
           <span className="brand-subtitle">{t.subtitle}</span>
-        </div>
-        <div
-          className="language-switcher"
-          aria-label={language === "ja" ? "言語切替" : "Language switcher"}
-        >
+        </a>
+        <nav className="site-nav" aria-label="Main navigation">
+          <a href="#topics">{t.nav.topics}</a>
+          <a href="#comparison">{t.nav.comparison}</a>
+          <a href="#checklist">{t.nav.checklist}</a>
+        </nav>
+        <div className="language-switcher" aria-label={t.languageSwitcherLabel}>
           <button
             type="button"
             aria-pressed={language === "ja"}
             onClick={() => handleLanguageChange("ja")}
           >
-            日本語
+            {t.languageNames.ja}
           </button>
           <button
             type="button"
             aria-pressed={language === "en"}
             onClick={() => handleLanguageChange("en")}
           >
-            English
+            {t.languageNames.en}
           </button>
         </div>
       </header>
 
-      <main className="main-content">
+      <main className="main-content" id="top">
         <section className="hero" aria-labelledby="hero-title">
           <div>
-            <span className="eyebrow">{t.eyebrow}</span>
-            <h1 id="hero-title">{t.title}</h1>
-            <p className="hero-lead">{t.lead}</p>
+            <span className="eyebrow">{t.hero.eyebrow}</span>
+            <h1 id="hero-title">{t.hero.title}</h1>
+            <p className="hero-lead">{t.hero.lead}</p>
             <div className="route-tags" aria-label="API route separation">
               <span className="route-tag vulnerable">/vulnerable/*</span>
               <span className="route-tag secure">/secure/*</span>
@@ -122,50 +102,204 @@ export function HomePage() {
 
           <aside className="safety-card" aria-labelledby="safety-warning-title">
             <p className="card-label" id="safety-warning-title">
-              {t.warningLabel}
+              {t.warning.label}
             </p>
-            <p>{t.warning}</p>
+            <p>{t.warning.text}</p>
           </aside>
         </section>
 
         <section className="module-section" aria-labelledby="status-heading">
           <h2 className="section-heading" id="status-heading">
-            {t.statusHeading}
+            {t.status.heading}
           </h2>
           <div className="status-grid">
-            <article className="status-card">
-              <strong>{t.routeSeparation}</strong>
-              <p>{t.routeSeparationText}</p>
-            </article>
-            <article className="status-card">
-              <strong>{t.safetyGuard}</strong>
-              <p>{t.safetyGuardText}</p>
-            </article>
-            <article className="status-card">
-              <strong>{t.language}</strong>
-              <p>{t.languageText}</p>
+            {t.status.items.map((item) => (
+              <article className="status-card" key={item.title}>
+                <strong>{item.title}</strong>
+                <p>{item.text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section
+          className="module-section"
+          id="topics"
+          aria-labelledby="topics-heading"
+        >
+          <div className="section-copy">
+            <h2 className="section-heading" id="topics-heading">
+              {t.topics.heading}
+            </h2>
+            <p>{t.topics.lead}</p>
+          </div>
+
+          <div className="learning-layout">
+            <div className="topic-list" aria-label={t.topics.heading}>
+              {learningModules.map((module) => {
+                const isSelected = module.id === selectedModule.id;
+
+                return (
+                  <button
+                    className="topic-card"
+                    data-selected={isSelected}
+                    key={module.id}
+                    type="button"
+                    onClick={() => setSelectedModuleId(module.id)}
+                    aria-pressed={isSelected}
+                  >
+                    <span className="topic-card-topline">
+                      <span>{module.riskCategory}</span>
+                      <span
+                        className="progress-pill"
+                        data-progress={module.progress}
+                      >
+                        {progressLabels[language][module.progress]}
+                      </span>
+                    </span>
+                    <strong>{module.title[language]}</strong>
+                    <span className="topic-summary">
+                      {module.summary[language]}
+                    </span>
+                    <span className="topic-meta">
+                      {t.topics.difficultyLabel}:{" "}
+                      {difficultyLabels[language][module.difficulty]}
+                    </span>
+                    <span className="topic-action">
+                      {isSelected
+                        ? t.topics.selectedLabel
+                        : t.topics.selectLabel}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <article className="detail-panel" aria-labelledby="detail-heading">
+              <span className="eyebrow">{selectedModule.riskCategory}</span>
+              <h2 id="detail-heading">{t.detail.heading}</h2>
+              <h3>{selectedModule.title[language]}</h3>
+              <p>{selectedModule.summary[language]}</p>
+              <dl className="detail-list">
+                <div>
+                  <dt>{t.detail.vulnerableCondition}</dt>
+                  <dd>{selectedModule.vulnerableCondition[language]}</dd>
+                </div>
+                <div>
+                  <dt>{t.detail.defensiveDesign}</dt>
+                  <dd>{selectedModule.defensiveDesign[language]}</dd>
+                </div>
+              </dl>
             </article>
           </div>
         </section>
 
-        <section className="module-section" aria-labelledby="modules-heading">
-          <h2 className="section-heading" id="modules-heading">
-            {t.modulesHeading}
-          </h2>
-          <div className="module-grid">
-            {modules.map((module) => (
-              <article
-                className="module-card"
-                data-state={module.state}
-                key={module.id}
-              >
-                <strong>{module.title}</strong>
-                <p>{module.state === "ready" ? t.ready : t.planned}</p>
-              </article>
+        <section
+          className="module-section"
+          id="comparison"
+          aria-labelledby="comparison-heading"
+        >
+          <div className="comparison-heading-row">
+            <h2 className="section-heading" id="comparison-heading">
+              {t.comparison.heading}
+            </h2>
+            <aside className="inline-warning" aria-label={t.warning.label}>
+              <strong>{t.warning.label}</strong>
+              <span>{t.warning.text}</span>
+            </aside>
+          </div>
+
+          <div className="comparison-grid">
+            <ComparisonPanel
+              badge={t.comparison.vulnerableBadge}
+              kind="vulnerable"
+              note={selectedModule.vulnerable.note[language]}
+              request={selectedModule.vulnerable.request}
+              response={selectedModule.vulnerable.response[language]}
+              route={selectedModule.vulnerable.route}
+              title={t.comparison.vulnerable}
+              labels={t.comparison}
+            />
+            <ComparisonPanel
+              badge={t.comparison.secureBadge}
+              kind="secure"
+              note={selectedModule.secure.note[language]}
+              request={selectedModule.secure.request}
+              response={selectedModule.secure.response[language]}
+              route={selectedModule.secure.route}
+              title={t.comparison.secure}
+              labels={t.comparison}
+            />
+          </div>
+        </section>
+
+        <section
+          className="module-section"
+          id="checklist"
+          aria-labelledby="checklist-heading"
+        >
+          <div className="section-copy">
+            <h2 className="section-heading" id="checklist-heading">
+              {t.checklist.heading}
+            </h2>
+            <p>{t.checklist.lead}</p>
+          </div>
+          <div className="checklist-card">
+            {selectedModule.checklist[language].map((item) => (
+              <label className="checklist-item" key={item}>
+                <input type="checkbox" />
+                <span>{item}</span>
+              </label>
             ))}
           </div>
         </section>
       </main>
     </div>
+  );
+}
+
+function ComparisonPanel({
+  badge,
+  kind,
+  labels,
+  note,
+  request,
+  response,
+  route,
+  title,
+}: {
+  badge: string;
+  kind: "vulnerable" | "secure";
+  labels: (typeof uiText)[Language]["comparison"];
+  note: string;
+  request: string;
+  response: string;
+  route: string;
+  title: string;
+}) {
+  return (
+    <article className="comparison-panel" data-kind={kind}>
+      <div className="comparison-panel-header">
+        <div>
+          <span className="comparison-badge">{badge}</span>
+          <h3>{title}</h3>
+        </div>
+        <code>{route}</code>
+      </div>
+      <div className="request-response-grid">
+        <div>
+          <span className="mini-label">{labels.request}</span>
+          <pre>{request}</pre>
+        </div>
+        <div>
+          <span className="mini-label">{labels.response}</span>
+          <p>{response}</p>
+        </div>
+      </div>
+      <div className="design-note">
+        <span className="mini-label">{labels.designDifference}</span>
+        <p>{note}</p>
+      </div>
+    </article>
   );
 }

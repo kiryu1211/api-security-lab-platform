@@ -71,6 +71,7 @@ a {
 .brand {
   display: grid;
   gap: 0.15rem;
+  text-decoration: none;
 }
 
 .brand-title {
@@ -82,6 +83,29 @@ a {
 .brand-subtitle {
   color: var(--muted);
   font-size: 0.85rem;
+}
+
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+}
+
+.site-nav a {
+  border-radius: 999px;
+  padding: 0.48rem 0.7rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.site-nav a:hover,
+.site-nav a:focus-visible {
+  color: var(--foreground);
+  background: rgba(255, 255, 255, 0.72);
+  outline: none;
 }
 
 .language-switcher {
@@ -105,6 +129,13 @@ a {
 .language-switcher button[aria-pressed="true"] {
   color: white;
   background: var(--foreground);
+}
+
+.language-switcher button:focus-visible,
+.topic-card:focus-visible,
+.checklist-item:focus-within {
+  outline: 3px solid rgba(29, 78, 216, 0.28);
+  outline-offset: 3px;
 }
 
 .main-content {
@@ -224,12 +255,272 @@ a {
 
 .module-section {
   margin-top: clamp(2rem, 5vw, 4rem);
+  scroll-margin-top: 6rem;
 }
 
 .section-heading {
   margin: 0 0 1rem;
   font-size: clamp(1.6rem, 3vw, 2.4rem);
   letter-spacing: -0.055em;
+}
+
+.section-copy {
+  max-width: 48rem;
+  margin-bottom: 1rem;
+}
+
+.section-copy p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+.learning-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.88fr) minmax(0, 1.12fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.topic-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.topic-card {
+  display: grid;
+  gap: 0.72rem;
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  color: inherit;
+  background: rgba(255, 250, 242, 0.74);
+  box-shadow: 0 18px 40px rgba(23, 32, 42, 0.05);
+  text-align: left;
+  cursor: pointer;
+}
+
+.topic-card[data-selected="true"] {
+  border-color: rgba(29, 78, 216, 0.38);
+  background: linear-gradient(135deg, #eff6ff, #fffaf2 72%);
+}
+
+.topic-card-topline,
+.topic-meta,
+.topic-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.topic-card strong {
+  font-size: 1.05rem;
+}
+
+.topic-summary {
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.topic-action {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.45rem 0.65rem;
+  color: #1e3a8a;
+  background: rgba(219, 234, 254, 0.8);
+  font-weight: 800;
+}
+
+.progress-pill,
+.comparison-badge {
+  border-radius: 999px;
+  padding: 0.38rem 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.progress-pill[data-progress="ready"] {
+  color: var(--secure);
+  background: var(--secure-soft);
+}
+
+.progress-pill[data-progress="planned"] {
+  color: #8a4b12;
+  background: #ffedd5;
+}
+
+.detail-panel,
+.comparison-panel,
+.checklist-card {
+  border: 1px solid var(--line);
+  border-radius: 1.6rem;
+  background: rgba(255, 250, 242, 0.92);
+  box-shadow: 0 24px 60px rgba(23, 32, 42, 0.08);
+}
+
+.detail-panel {
+  position: sticky;
+  top: 6rem;
+  padding: clamp(1.1rem, 3vw, 1.6rem);
+}
+
+.detail-panel h2,
+.detail-panel h3,
+.comparison-panel h3 {
+  margin: 0.7rem 0;
+  letter-spacing: -0.04em;
+}
+
+.detail-panel p {
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.detail-list {
+  display: grid;
+  gap: 1rem;
+  margin: 1.3rem 0 0;
+}
+
+.detail-list div {
+  border-left: 4px solid rgba(29, 78, 216, 0.24);
+  padding-left: 0.9rem;
+}
+
+.detail-list dt {
+  margin-bottom: 0.35rem;
+  font-weight: 800;
+}
+
+.detail-list dd {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.comparison-heading-row {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(280px, 1.1fr);
+  gap: 1rem;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+
+.inline-warning {
+  display: grid;
+  gap: 0.28rem;
+  border: 1px solid rgba(180, 35, 24, 0.28);
+  border-radius: 1rem;
+  padding: 0.9rem 1rem;
+  color: var(--vulnerable);
+  background: var(--vulnerable-soft);
+}
+
+.inline-warning span {
+  color: #7a271a;
+  line-height: 1.65;
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.comparison-panel {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.comparison-panel[data-kind="vulnerable"] {
+  border-color: rgba(180, 35, 24, 0.32);
+}
+
+.comparison-panel[data-kind="secure"] {
+  border-color: rgba(15, 118, 110, 0.32);
+}
+
+.comparison-panel-header {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.comparison-panel-header code,
+.request-response-grid pre {
+  display: block;
+  overflow-x: auto;
+  border-radius: 0.85rem;
+  padding: 0.8rem;
+  color: #0f172a;
+  background: #f8fafc;
+  font-family:
+    var(--font-geist-mono), ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.comparison-panel[data-kind="vulnerable"] .comparison-badge {
+  color: var(--vulnerable);
+  background: var(--vulnerable-soft);
+}
+
+.comparison-panel[data-kind="secure"] .comparison-badge {
+  color: var(--secure);
+  background: var(--secure-soft);
+}
+
+.request-response-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.request-response-grid pre,
+.request-response-grid p,
+.design-note p {
+  margin: 0.35rem 0 0;
+  line-height: 1.65;
+}
+
+.request-response-grid p,
+.design-note p {
+  color: var(--muted);
+}
+
+.mini-label {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.checklist-card {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.checklist-item {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  border: 1px solid rgba(234, 223, 206, 0.9);
+  border-radius: 1rem;
+  padding: 0.9rem;
+  background: rgba(255, 255, 255, 0.54);
+  cursor: pointer;
+}
+
+.checklist-item input {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.2rem;
+  accent-color: var(--secure);
 }
 
 .module-grid {
@@ -250,11 +541,24 @@ a {
   .site-header,
   .hero,
   .status-grid,
-  .module-grid {
+  .module-grid,
+  .learning-layout,
+  .comparison-heading-row,
+  .comparison-grid,
+  .request-response-grid {
     grid-template-columns: 1fr;
   }
 
   .site-header {
     align-items: flex-start;
+    position: static;
+  }
+
+  .site-nav {
+    justify-content: flex-start;
+  }
+
+  .detail-panel {
+    position: static;
   }
 }

@@ -149,10 +149,12 @@ flowchart TD
 - Learning module names, warnings, request explanations, response explanations, mitigations, and checklist items are translation targets.
 - Japanese mode uses Japanese UI text, and English mode uses English UI text.
 - Common technical terms such as API, BOLA, SSRF, Mass Assignment, and OWASP may remain in English in Japanese mode.
+- UI text is managed in `src/lib/i18n.ts`, and learning module content is managed in `src/data/learning-modules.ts`.
 
 ## Screen Design
 
-- Topic list: risk category, difficulty, progress, and safety notes.
-- Learning detail: overview, vulnerable conditions, defensive design, and comparison demo.
-- Comparison view: side-by-side request and response examples for vulnerable and secure APIs.
-- Checklist: defensive review points for implementation.
+- Topic list: displays risk category, difficulty, progress, summary, and selected state for each module.
+- Learning detail: displays overview, vulnerable condition, and defensive design for the selected module.
+- Comparison view: displays side-by-side route, request, response, and design notes for vulnerable and secure APIs.
+- Checklist: displays defensive review points for the selected module. Progress persistence is planned for a later phase.
+- Vulnerable comparison areas always display local-only and non-public deployment warnings.

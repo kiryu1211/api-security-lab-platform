@@ -20,6 +20,13 @@ This system provides an isolated environment for examining how API vulnerabiliti
 - SSRF prevention scenario
 - Japanese-first interface with a shared English language switcher on every screen
 
+## Current Implementation Status
+
+- Next.js App Router, TypeScript, React, Zod, Vitest, ESLint, and Prettier are configured.
+- The initial learning UI includes a topic list, learning detail panel, vulnerable/secure comparison view, and implementation checklist.
+- UI text and learning module content are managed through Japanese and English resources instead of being embedded directly in the screen component.
+- Initial route separation is available through `/api/vulnerable/health` and `/api/secure/health`.
+
 ## Safety Policy
 
 The vulnerable examples are for controlled local verification only. They must not be deployed to a public environment. The system should clearly separate vulnerable routes from secure routes and display warnings whenever a vulnerable scenario is used.
