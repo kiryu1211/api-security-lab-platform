@@ -69,7 +69,7 @@ export const uiText = {
       designDifference: "設計差分",
       vulnerableBadge: "ローカル限定",
       secureBadge: "防御済み",
-      runDemo: "BOLA APIを実行",
+      runDemo: "APIデモを実行",
       demoUnavailable: "このテーマの実APIデモは後続フェーズで追加します。",
       demoLoading: "APIを実行中...",
       vulnerableResult: "脆弱APIの結果",
@@ -143,7 +143,7 @@ export const uiText = {
       designDifference: "Design difference",
       vulnerableBadge: "Local only",
       secureBadge: "Mitigated",
-      runDemo: "Run BOLA APIs",
+      runDemo: "Run API demo",
       demoUnavailable:
         "Live API demo for this topic will be added in a later phase.",
       demoLoading: "Running APIs...",

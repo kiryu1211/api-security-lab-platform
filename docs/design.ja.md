@@ -130,7 +130,7 @@ erDiagram
 - SSRF対策では、許可リスト、プライベートIP範囲拒否、リダイレクト制限、タイムアウトを設計に含める。
 - レート制限はユーザー単位、IP単位、APIルート単位で検討する。
 
-初期のルート分離は `/api/vulnerable/health`、`/api/secure/health`、`/api/vulnerable/lab-samples`、`/api/secure/lab-samples`、`/api/vulnerable/orders/{orderId}`、`/api/secure/orders/{orderId}` で表現します。脆弱APIルートは、レスポンスを返す前に共通の安全ガードを通します。
+初期のルート分離は `/api/vulnerable/health`、`/api/secure/health`、`/api/vulnerable/lab-samples`、`/api/secure/lab-samples`、`/api/vulnerable/orders/{orderId}`、`/api/secure/orders/{orderId}`、`/api/vulnerable/auth/session`、`/api/secure/auth/session` で表現します。脆弱APIルートは、レスポンスを返す前に共通の安全ガードを通します。
 
 ## API基盤
 
@@ -146,6 +146,13 @@ erDiagram
 - 安全なBOLAルート `/api/secure/orders/{orderId}` は `userId` を必須とし、指定された注文がそのデモユーザーの所有物かを検証する。
 - 比較UIでは、所有者ではないユーザーとして `order-demo-002` を実行し、脆弱ルートでは注文が返り、安全ルートでは `403 FORBIDDEN` が返ることを確認できる。
 - BOLA実装では合成したデモユーザーとデモリソースのみを使用し、実在するアカウント、注文、ログ、トークンは使用しない。
+
+## 認証モジュール設計
+
+- 脆弱な認証ルート `/api/vulnerable/auth/session` は、ローカル限定の安全ガードを通過した後、既知のデモトークンIDだけを見てセッションを受け入れる。
+- 安全な認証ルート `/api/secure/auth/session` は、デモトークンの署名状態、期限、失効状態、必要な権限を確認してからセッションを受け入れる。
+- 比較UIでは、署名状態が不正、期限切れ、失効済みの `demo-token-expired-admin` を使用する。脆弱ルートでは受け入れられ、安全ルートでは `401 UNAUTHORIZED` が返ることを確認できる。
+- 認証モジュールでは合成したトークンIDとメタデータのみを使用し、実トークン、署名鍵、秘密情報、認証情報、実セッションは含めない。
 
 ## 多言語UI設計
 

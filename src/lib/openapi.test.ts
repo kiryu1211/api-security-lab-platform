@@ -11,6 +11,8 @@ describe("OpenAPI specification", () => {
     expect(openApiSpec.paths).toHaveProperty(
       "/api/vulnerable/orders/{orderId}",
     );
+    expect(openApiSpec.paths).toHaveProperty("/api/secure/auth/session");
+    expect(openApiSpec.paths).toHaveProperty("/api/vulnerable/auth/session");
   });
 
   it("describes vulnerable routes as local-only", () => {

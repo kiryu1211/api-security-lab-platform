@@ -130,7 +130,7 @@ erDiagram
 - SSRF protection includes allowlists, private IP range rejection, redirect restrictions, and timeouts.
 - Rate limiting is considered per user, per IP address, and per API route.
 
-The initial route separation is represented by `/api/vulnerable/health`, `/api/secure/health`, `/api/vulnerable/lab-samples`, `/api/secure/lab-samples`, `/api/vulnerable/orders/{orderId}`, and `/api/secure/orders/{orderId}`. Vulnerable routes use the shared safety guard before returning a response.
+The initial route separation is represented by `/api/vulnerable/health`, `/api/secure/health`, `/api/vulnerable/lab-samples`, `/api/secure/lab-samples`, `/api/vulnerable/orders/{orderId}`, `/api/secure/orders/{orderId}`, `/api/vulnerable/auth/session`, and `/api/secure/auth/session`. Vulnerable routes use the shared safety guard before returning a response.
 
 ## API Foundation
 
@@ -146,6 +146,13 @@ The initial route separation is represented by `/api/vulnerable/health`, `/api/s
 - The secure BOLA route `/api/secure/orders/{orderId}` requires `userId` and verifies that the requested order belongs to that demo user.
 - The comparison UI runs `order-demo-002` as a user who does not own it, so the vulnerable route returns the order while the secure route returns `403 FORBIDDEN`.
 - The BOLA implementation uses synthetic demo users and resources only; it does not use real accounts, orders, logs, or tokens.
+
+## Authentication Module Design
+
+- The vulnerable authentication route `/api/vulnerable/auth/session` accepts a known demo token by ID only after the local-only safety guard passes.
+- The secure authentication route `/api/secure/auth/session` validates demo token signature state, expiration, revocation state, and required permission before accepting a session.
+- The comparison UI uses `demo-token-expired-admin`, which has an invalid signature, is expired, and is revoked. The vulnerable route accepts it, while the secure route returns `401 UNAUTHORIZED`.
+- The authentication module uses synthetic token identifiers and metadata only; it does not contain real tokens, signing keys, secrets, credentials, or user sessions.
 
 ## Multilingual UI Design
 

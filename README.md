@@ -29,6 +29,7 @@ This system provides an isolated environment for examining how API vulnerabiliti
 - Shared API response helpers, Zod request validation, and safe local sample users/resources are available for later learning modules.
 - OpenAPI specification is available at [`docs/api/openapi.json`](docs/api/openapi.json).
 - The BOLA module includes runnable vulnerable and secure order APIs for comparing missing ownership checks with verified ownership checks.
+- The authentication module includes runnable vulnerable and secure session APIs for comparing weak token acceptance with signature, expiration, revocation, and permission validation.
 
 ## Safety Policy
 

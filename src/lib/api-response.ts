@@ -3,7 +3,11 @@ import { NextResponse } from "next/server";
 export type ApiRouteType = "secure" | "vulnerable";
 
 export type ApiErrorCode =
-  "VALIDATION_ERROR" | "VULNERABLE_API_DISABLED" | "NOT_FOUND" | "FORBIDDEN";
+  | "VALIDATION_ERROR"
+  | "VULNERABLE_API_DISABLED"
+  | "NOT_FOUND"
+  | "UNAUTHORIZED"
+  | "FORBIDDEN";
 
 type ApiMeta = {
   routeType: ApiRouteType;

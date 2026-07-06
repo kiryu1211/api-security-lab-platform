@@ -25,3 +25,12 @@ export const orderPathParamsSchema = z.object({
 export const secureOrderQuerySchema = z.object({
   userId: labUserIdSchema,
 });
+
+export const authSessionBodySchema = z.object({
+  tokenId: z
+    .string()
+    .regex(/^demo-token-[a-z-]+$/, "Use one of the local demo token IDs."),
+  requiredPermission: z
+    .enum(["orders:read", "admin:read"])
+    .default("orders:read"),
+});

@@ -179,6 +179,120 @@
         }
       }
     },
+    "/api/vulnerable/auth/session": {
+      "post": {
+        "tags": ["vulnerable"],
+        "summary": "Local-only weak token validation example",
+        "description": "Accepts a local demo token by ID only to demonstrate missing signature, expiration, revocation, and permission checks. This route is local-only and must not be publicly deployed.",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/AuthSessionRequest"
+        },
+        "responses": {
+          "200": {
+            "description": "Session accepted with weak validation when local mode is enabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid demo token request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Vulnerable route disabled outside local non-production mode",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Demo token not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/secure/auth/session": {
+      "post": {
+        "tags": ["secure"],
+        "summary": "Secure token validation example",
+        "description": "Validates demo token signature state, expiration, revocation state, and required permission before creating a session.",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/AuthSessionRequest"
+        },
+        "responses": {
+          "200": {
+            "description": "Session accepted after secure validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid demo token request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Demo token failed signature, expiration, or revocation validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Demo token does not include the required permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Demo token not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/secure/lab-samples": {
       "get": {
         "tags": ["secure"],
@@ -263,6 +377,22 @@
     }
   },
   "components": {
+    "requestBodies": {
+      "AuthSessionRequest": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AuthSessionRequest"
+            },
+            "example": {
+              "tokenId": "demo-token-expired-admin",
+              "requiredPermission": "admin:read"
+            }
+          }
+        }
+      }
+    },
     "parameters": {
       "UserId": {
         "name": "userId",
@@ -354,6 +484,21 @@
           },
           "localOnly": {
             "type": "boolean"
+          }
+        }
+      },
+      "AuthSessionRequest": {
+        "type": "object",
+        "required": ["tokenId"],
+        "properties": {
+          "tokenId": {
+            "type": "string",
+            "pattern": "^demo-token-[a-z-]+$"
+          },
+          "requiredPermission": {
+            "type": "string",
+            "enum": ["orders:read", "admin:read"],
+            "default": "orders:read"
           }
         }
       }

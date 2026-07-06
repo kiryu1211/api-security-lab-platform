@@ -39,19 +39,29 @@ type DemoResult = {
   body: unknown;
 };
 
-type BolaDemoState = {
+type ModuleDemoState = {
   loading: boolean;
   vulnerable?: DemoResult;
   secure?: DemoResult;
 };
 
+type DemoEnabledModuleId = Extract<LearningModuleId, "bola" | "auth">;
+
 export function HomePage() {
   const [language, setLanguage] = useState<Language>(defaultLanguage);
   const [selectedModuleId, setSelectedModuleId] =
     useState<LearningModuleId>("bola");
-  const [bolaDemo, setBolaDemo] = useState<BolaDemoState>({ loading: false });
+  const [demoState, setDemoState] = useState<
+    Record<DemoEnabledModuleId, ModuleDemoState>
+  >({
+    bola: { loading: false },
+    auth: { loading: false },
+  });
   const t = uiText[language];
   const selectedModule = getLearningModule(selectedModuleId);
+  const selectedDemoModuleId = isDemoEnabledModule(selectedModule.id)
+    ? selectedModule.id
+    : undefined;
 
   useEffect(() => {
     const savedLanguage = window.localStorage.getItem(languageStorageKey);
@@ -70,30 +80,60 @@ export function HomePage() {
     setLanguage(nextLanguage);
   }
 
-  async function handleRunBolaDemo() {
-    setBolaDemo({ loading: true });
+  function isDemoEnabledModule(
+    id: LearningModuleId,
+  ): id is DemoEnabledModuleId {
+    return id === "bola" || id === "auth";
+  }
 
-    const [vulnerableResponse, secureResponse] = await Promise.all([
-      fetch("/api/vulnerable/orders/order-demo-002"),
-      fetch("/api/secure/orders/order-demo-002?userId=user-demo-alice"),
-    ]);
+  async function handleRunDemo(moduleId: DemoEnabledModuleId) {
+    setDemoState((current) => ({ ...current, [moduleId]: { loading: true } }));
+
+    const [vulnerableResponse, secureResponse] = await Promise.all(
+      moduleId === "bola"
+        ? [
+            fetch("/api/vulnerable/orders/order-demo-002"),
+            fetch("/api/secure/orders/order-demo-002?userId=user-demo-alice"),
+          ]
+        : [
+            fetch("/api/vulnerable/auth/session", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                tokenId: "demo-token-expired-admin",
+                requiredPermission: "admin:read",
+              }),
+            }),
+            fetch("/api/secure/auth/session", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                tokenId: "demo-token-expired-admin",
+                requiredPermission: "admin:read",
+              }),
+            }),
+          ],
+    );
 
     const [vulnerableBody, secureBody] = await Promise.all([
       vulnerableResponse.json(),
       secureResponse.json(),
     ]);
 
-    setBolaDemo({
-      loading: false,
-      vulnerable: {
-        status: vulnerableResponse.status,
-        body: vulnerableBody,
+    setDemoState((current) => ({
+      ...current,
+      [moduleId]: {
+        loading: false,
+        vulnerable: {
+          status: vulnerableResponse.status,
+          body: vulnerableBody,
+        },
+        secure: {
+          status: secureResponse.status,
+          body: secureBody,
+        },
       },
-      secure: {
-        status: secureResponse.status,
-        body: secureBody,
-      },
-    });
+    }));
   }
 
   return (
@@ -258,7 +298,9 @@ export function HomePage() {
               title={t.comparison.vulnerable}
               labels={t.comparison}
               result={
-                selectedModule.id === "bola" ? bolaDemo.vulnerable : undefined
+                selectedDemoModuleId
+                  ? demoState[selectedDemoModuleId].vulnerable
+                  : undefined
               }
               resultTitle={t.comparison.vulnerableResult}
               noResultLabel={t.comparison.noResult}
@@ -273,7 +315,9 @@ export function HomePage() {
               title={t.comparison.secure}
               labels={t.comparison}
               result={
-                selectedModule.id === "bola" ? bolaDemo.secure : undefined
+                selectedDemoModuleId
+                  ? demoState[selectedDemoModuleId].secure
+                  : undefined
               }
               resultTitle={t.comparison.secureResult}
               noResultLabel={t.comparison.noResult}
@@ -281,14 +325,14 @@ export function HomePage() {
           </div>
 
           <div className="demo-action-row">
-            {selectedModule.id === "bola" ? (
+            {selectedDemoModuleId ? (
               <button
                 className="run-demo-button"
                 type="button"
-                onClick={handleRunBolaDemo}
-                disabled={bolaDemo.loading}
+                onClick={() => handleRunDemo(selectedDemoModuleId)}
+                disabled={demoState[selectedDemoModuleId].loading}
               >
-                {bolaDemo.loading
+                {demoState[selectedDemoModuleId].loading
                   ? t.comparison.demoLoading
                   : t.comparison.runDemo}
               </button>

@@ -90,7 +90,7 @@ export const learningModules: LearningModule[] = [
     id: "auth",
     riskCategory: "OWASP API2:2023 Broken Authentication",
     difficulty: "Intermediate",
-    progress: "planned",
+    progress: "ready",
     title: {
       ja: "認証とトークン検証",
       en: "Authentication and Token Validation",
@@ -109,7 +109,8 @@ export const learningModules: LearningModule[] = [
     },
     vulnerable: {
       route: "/api/vulnerable/auth/session",
-      request: "POST /api/vulnerable/auth/session",
+      request:
+        'POST /api/vulnerable/auth/session\n{\n  "tokenId": "demo-token-expired-admin",\n  "requiredPermission": "admin:read"\n}',
       response: {
         ja: "弱い検証でセッションを受け入れる想定です。",
         en: "Expected to accept a session with weak validation.",
@@ -121,7 +122,8 @@ export const learningModules: LearningModule[] = [
     },
     secure: {
       route: "/api/secure/auth/session",
-      request: "POST /api/secure/auth/session",
+      request:
+        'POST /api/secure/auth/session\n{\n  "tokenId": "demo-token-expired-admin",\n  "requiredPermission": "admin:read"\n}',
       response: {
         ja: "検証に失敗したトークンを拒否する想定です。",
         en: "Expected to reject tokens that fail validation.",
