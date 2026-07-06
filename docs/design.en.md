@@ -180,6 +180,13 @@ flowchart TD
 - Common technical terms such as API, BOLA, SSRF, Mass Assignment, and OWASP may remain in English in Japanese mode.
 - UI text is managed in `src/lib/i18n.ts`, and learning module content is managed in `src/data/learning-modules.ts`.
 
+## Security Verification Design
+
+- `src/lib/security-verification.test.ts` verifies across all vulnerable APIs that production-like settings return `403 VULNERABLE_API_DISABLED`.
+- The same test verifies that secure APIs do not reproduce BOLA, weak authentication, Mass Assignment, SSRF, or missing rate limiting behavior.
+- `src/lib/openapi.test.ts` verifies that every vulnerable API operation documents local-only behavior and the disabled response for production-like settings.
+- UI text resources are tested for matching Japanese and English key structures to avoid mixed-language shared screen labels.
+
 ## Screen Design
 
 - Topic list: displays risk category, difficulty, progress, summary, and selected state for each module.

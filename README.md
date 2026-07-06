@@ -31,12 +31,15 @@ This system provides an isolated environment for examining how API vulnerabiliti
 - The BOLA module includes runnable vulnerable and secure order APIs for comparing missing ownership checks with verified ownership checks.
 - The authentication module includes runnable vulnerable and secure session APIs for comparing weak token acceptance with signature, expiration, revocation, and permission validation.
 - Rate limiting, Mass Assignment, and SSRF modules include runnable vulnerable and secure APIs. SSRF demos return safe previews only and do not perform real outbound network access.
+- Security verification tests confirm that every vulnerable API is disabled in production-like settings, secure APIs do not reproduce the covered vulnerabilities, OpenAPI vulnerable-route descriptions remain local-only, and Japanese/English UI text resources stay aligned.
 
 ## Safety Policy
 
 The vulnerable examples are for controlled local verification only. They must not be deployed to a public environment. The system should clearly separate vulnerable routes from secure routes and display warnings whenever a vulnerable scenario is used.
 
 Vulnerable API routes are enabled only when `LAB_MODE=local` and the application is not running with `NODE_ENV=production`. Secure routes remain available for comparison and verification.
+
+SSRF demos do not perform real outbound network access from either vulnerable or secure APIs; they return verification preview metadata only.
 
 ## Development Commands
 

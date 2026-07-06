@@ -16,10 +16,12 @@ export const uiText = {
     brand: "APIセキュリティ学習・検証プラットフォーム",
     subtitle: "ローカル限定の比較学習環境",
     nav: {
+      label: "メインナビゲーション",
       topics: "学習テーマ",
       comparison: "比較ビュー",
       checklist: "チェックリスト",
     },
+    routeSeparationLabel: "APIルート分離",
     hero: {
       eyebrow: "UI/UX基盤",
       title: "APIのリスクと防御策を、操作前に理解できる画面へ。",
@@ -90,10 +92,12 @@ export const uiText = {
     brand: "API Security Lab Platform",
     subtitle: "Local-only comparative learning environment",
     nav: {
+      label: "Main navigation",
       topics: "Topics",
       comparison: "Comparison",
       checklist: "Checklist",
     },
+    routeSeparationLabel: "API route separation",
     hero: {
       eyebrow: "UI/UX foundation",
       title: "Understand API risks and defenses before running demos.",

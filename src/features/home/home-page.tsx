@@ -211,7 +211,7 @@ export function HomePage() {
           <span className="brand-title">{t.brand}</span>
           <span className="brand-subtitle">{t.subtitle}</span>
         </a>
-        <nav className="site-nav" aria-label="Main navigation">
+        <nav className="site-nav" aria-label={t.nav.label}>
           <a href="#topics">{t.nav.topics}</a>
           <a href="#comparison">{t.nav.comparison}</a>
           <a href="#checklist">{t.nav.checklist}</a>
@@ -240,7 +240,7 @@ export function HomePage() {
             <span className="eyebrow">{t.hero.eyebrow}</span>
             <h1 id="hero-title">{t.hero.title}</h1>
             <p className="hero-lead">{t.hero.lead}</p>
-            <div className="route-tags" aria-label="API route separation">
+            <div className="route-tags" aria-label={t.routeSeparationLabel}>
               <span className="route-tag vulnerable">/vulnerable/*</span>
               <span className="route-tag secure">/secure/*</span>
             </div>

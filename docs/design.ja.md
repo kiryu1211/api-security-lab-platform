@@ -180,6 +180,13 @@ flowchart TD
 - API、BOLA、SSRF、Mass Assignment、OWASPなどの一般的な技術用語は日本語設定でも英語表記を許容する。
 - UI文言は `src/lib/i18n.ts`、学習モジュールの内容は `src/data/learning-modules.ts` で管理する。
 
+## セキュリティ検証設計
+
+- `src/lib/security-verification.test.ts` は、公開環境相当の設定で全ての脆弱APIが `403 VULNERABLE_API_DISABLED` を返すことを横断的に確認する。
+- 同テストでは、安全APIがBOLA、認証不備、Mass Assignment、SSRF、レート制限不足を再現しないことを確認する。
+- `src/lib/openapi.test.ts` は、全ての脆弱API操作にローカル限定の説明と公開環境相当での無効化レスポンスが記述されていることを確認する。
+- UI文言リソースは、日英のキー構造が揃っていることをテストし、共通画面ラベルの言語混在を避ける。
+
 ## 画面設計
 
 - 学習テーマ一覧: 各モジュールのリスクカテゴリ、難易度、進捗、概要、選択状態を表示する。

@@ -1,0 +1,195 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { POST as secureAuthSessionPost } from "@/app/api/secure/auth/session/route";
+import { POST as secureFetchUrlPost } from "@/app/api/secure/fetch-url/route";
+import { GET as secureOrderGet } from "@/app/api/secure/orders/[orderId]/route";
+import { PATCH as secureProfilePatch } from "@/app/api/secure/profile/route";
+import { GET as secureRateLimitGet } from "@/app/api/secure/rate-limit/search/route";
+import { POST as vulnerableAuthSessionPost } from "@/app/api/vulnerable/auth/session/route";
+import { POST as vulnerableFetchUrlPost } from "@/app/api/vulnerable/fetch-url/route";
+import { GET as vulnerableHealthGet } from "@/app/api/vulnerable/health/route";
+import { GET as vulnerableLabSamplesGet } from "@/app/api/vulnerable/lab-samples/route";
+import { GET as vulnerableOrderGet } from "@/app/api/vulnerable/orders/[orderId]/route";
+import { PATCH as vulnerableProfilePatch } from "@/app/api/vulnerable/profile/route";
+import { GET as vulnerableRateLimitGet } from "@/app/api/vulnerable/rate-limit/search/route";
+import { uiText } from "./i18n";
+import { resetRateLimitBuckets } from "./rate-limit-service";
+
+type RouteCall = {
+  name: string;
+  call: () => Response | Promise<Response>;
+};
+
+const jsonHeaders = { "Content-Type": "application/json" };
+
+describe("phase 7 security verification", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    resetRateLimitBuckets();
+  });
+
+  it("disables every vulnerable API route in production-like settings", async () => {
+    vi.stubEnv("LAB_MODE", "local");
+    vi.stubEnv("NODE_ENV", "production");
+
+    const vulnerableRoutes: RouteCall[] = [
+      {
+        name: "health",
+        call: () => vulnerableHealthGet(),
+      },
+      {
+        name: "lab samples",
+        call: () =>
+          vulnerableLabSamplesGet(
+            new Request("http://localhost/api/vulnerable/lab-samples"),
+          ),
+      },
+      {
+        name: "BOLA order",
+        call: () =>
+          vulnerableOrderGet(new Request("http://localhost"), {
+            params: Promise.resolve({ orderId: "order-demo-002" }),
+          }),
+      },
+      {
+        name: "authentication session",
+        call: () =>
+          vulnerableAuthSessionPost(
+            new Request("http://localhost/api/vulnerable/auth/session", {
+              method: "POST",
+              headers: jsonHeaders,
+              body: JSON.stringify({ tokenId: "demo-token-expired-admin" }),
+            }),
+          ),
+      },
+      {
+        name: "rate limit search",
+        call: () =>
+          vulnerableRateLimitGet(
+            new Request(
+              "http://localhost/api/vulnerable/rate-limit/search?userId=user-demo-alice&q=demo",
+            ),
+          ),
+      },
+      {
+        name: "profile update",
+        call: () =>
+          vulnerableProfilePatch(
+            new Request("http://localhost/api/vulnerable/profile", {
+              method: "PATCH",
+              headers: jsonHeaders,
+              body: JSON.stringify({ ownerId: "user-demo-bob" }),
+            }),
+          ),
+      },
+      {
+        name: "URL fetch preview",
+        call: () =>
+          vulnerableFetchUrlPost(
+            new Request("http://localhost/api/vulnerable/fetch-url", {
+              method: "POST",
+              headers: jsonHeaders,
+              body: JSON.stringify({ url: "http://127.0.0.1/admin" }),
+            }),
+          ),
+      },
+    ];
+
+    for (const route of vulnerableRoutes) {
+      const response = await route.call();
+      const body = await response.json();
+
+      expect(response.status, route.name).toBe(403);
+      expect(body.error.code, route.name).toBe("VULNERABLE_API_DISABLED");
+      expect(body.meta, route.name).toMatchObject({
+        routeType: "vulnerable",
+        localOnly: true,
+      });
+    }
+  });
+
+  it("keeps secure APIs from reproducing the vulnerable behavior", async () => {
+    resetRateLimitBuckets();
+
+    const secureBola = await secureOrderGet(
+      new Request(
+        "http://localhost/api/secure/orders/order-demo-002?userId=user-demo-alice",
+      ),
+      { params: Promise.resolve({ orderId: "order-demo-002" }) },
+    );
+    const secureAuth = await secureAuthSessionPost(
+      new Request("http://localhost/api/secure/auth/session", {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify({
+          tokenId: "demo-token-expired-admin",
+          requiredPermission: "admin:read",
+        }),
+      }),
+    );
+    const secureProfile = await secureProfilePatch(
+      new Request("http://localhost/api/secure/profile", {
+        method: "PATCH",
+        headers: jsonHeaders,
+        body: JSON.stringify({ ownerId: "user-demo-bob", role: "reviewer" }),
+      }),
+    );
+    const secureSsrf = await secureFetchUrlPost(
+      new Request("http://localhost/api/secure/fetch-url", {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify({ url: "https://127.0.0.1/admin" }),
+      }),
+    );
+
+    const rateLimitRequests = await Promise.all([
+      secureRateLimitGet(
+        new Request(
+          "http://localhost/api/secure/rate-limit/search?userId=user-demo-alice&q=demo",
+        ),
+      ),
+      secureRateLimitGet(
+        new Request(
+          "http://localhost/api/secure/rate-limit/search?userId=user-demo-alice&q=demo",
+        ),
+      ),
+      secureRateLimitGet(
+        new Request(
+          "http://localhost/api/secure/rate-limit/search?userId=user-demo-alice&q=demo",
+        ),
+      ),
+      secureRateLimitGet(
+        new Request(
+          "http://localhost/api/secure/rate-limit/search?userId=user-demo-alice&q=demo",
+        ),
+      ),
+    ]);
+
+    expect(secureBola.status).toBe(403);
+    expect(secureAuth.status).toBe(401);
+    expect(secureProfile.status).toBe(200);
+    expect(await secureProfile.json()).toMatchObject({
+      data: {
+        profile: {
+          ownerId: "user-demo-alice",
+          rejectedProperties: expect.arrayContaining(["ownerId", "role"]),
+        },
+      },
+    });
+    expect(secureSsrf.status).toBe(403);
+    expect(rateLimitRequests.at(-1)?.status).toBe(429);
+  });
+
+  it("keeps shared UI text resources structurally aligned across languages", () => {
+    expect(Object.keys(uiText.ja).sort()).toEqual(
+      Object.keys(uiText.en).sort(),
+    );
+    expect(Object.keys(uiText.ja.nav).sort()).toEqual(
+      Object.keys(uiText.en.nav).sort(),
+    );
+    expect(Object.keys(uiText.ja.comparison).sort()).toEqual(
+      Object.keys(uiText.en.comparison).sort(),
+    );
+    expect(uiText.ja.nav.label).toBe("メインナビゲーション");
+    expect(uiText.en.nav.label).toBe("Main navigation");
+  });
+});
