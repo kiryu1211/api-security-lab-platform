@@ -4,6 +4,7 @@ import openApiSpec from "../../docs/api/openapi.json";
 type OpenApiOperation = {
   summary?: string;
   description?: string;
+  parameters?: Array<{ $ref: string }>;
   responses: Record<string, { description?: string }>;
 };
 
@@ -67,6 +68,24 @@ describe("OpenAPI specification", () => {
         operation.responses["403"]?.description,
         `${method.toUpperCase()} ${path}`,
       ).toMatch(/disabled outside local non-production mode/i);
+    }
+  });
+
+  it("documents rate-limit query parameters used by the route handlers", () => {
+    const paths = openApiSpec.paths as Record<string, OpenApiPathItem>;
+
+    for (const path of [
+      "/api/vulnerable/rate-limit/search",
+      "/api/secure/rate-limit/search",
+    ]) {
+      const parameters = paths[path].get.parameters ?? [];
+
+      expect(parameters).toEqual(
+        expect.arrayContaining([
+          { $ref: "#/components/parameters/UserId" },
+          { $ref: "#/components/parameters/SearchQuery" },
+        ]),
+      );
     }
   });
 });

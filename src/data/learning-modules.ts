@@ -290,8 +290,8 @@ export const learningModules: LearningModule[] = [
       request:
         'POST /api/vulnerable/fetch-url\n{\n  "url": "http://127.0.0.1/admin"\n}',
       response: {
-        ja: "任意URLへアクセスしてしまう想定です。",
-        en: "Expected to access arbitrary URLs.",
+        ja: "任意URLを受け入れたプレビューを返す想定です。実ネットワークアクセスは行いません。",
+        en: "Expected to accept arbitrary URLs for preview without performing real network access.",
       },
       note: {
         ja: "ローカル限定でも内部ネットワークへの実アクセスは避けます。",

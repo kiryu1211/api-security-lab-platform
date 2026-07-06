@@ -25,7 +25,7 @@ This system provides an isolated environment for examining how API vulnerabiliti
 - Next.js App Router, TypeScript, React, Zod, Vitest, ESLint, and Prettier are configured.
 - The initial learning UI includes a topic list, learning detail panel, vulnerable/secure comparison view, and implementation checklist.
 - UI text and learning module content are managed through Japanese and English resources instead of being embedded directly in the screen component.
-- Initial route separation is available through `/api/vulnerable/health` and `/api/secure/health`.
+- Route separation is implemented across health checks, lab samples, BOLA orders, authentication sessions, rate-limit search, profile updates, and URL fetch previews under `/api/vulnerable/*` and `/api/secure/*`.
 - Shared API response helpers, Zod request validation, and safe local sample users/resources are available for later learning modules.
 - OpenAPI specification is available at [`docs/api/openapi.json`](docs/api/openapi.json).
 - The BOLA module includes runnable vulnerable and secure order APIs for comparing missing ownership checks with verified ownership checks.

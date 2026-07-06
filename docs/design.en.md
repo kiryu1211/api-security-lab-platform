@@ -130,7 +130,7 @@ erDiagram
 - SSRF protection includes allowlists, private IP range rejection, redirect restrictions, and timeouts.
 - Rate limiting is considered per user, per IP address, and per API route.
 
-The initial route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route handlers for health checks, lab samples, BOLA orders, authentication sessions, rate-limit search, profile updates, and URL fetch previews. Vulnerable routes use the shared safety guard before returning a response.
+Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route handlers for health checks, lab samples, BOLA orders, authentication sessions, rate-limit search, profile updates, and URL fetch previews. Vulnerable routes use the shared safety guard before returning a response.
 
 ## API Foundation
 

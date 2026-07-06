@@ -20,4 +20,15 @@ describe("learning modules", () => {
       expect(learningModule.secure.route).toContain("/api/secure/");
     }
   });
+
+  it("describes SSRF demos as previews without real network access", () => {
+    const ssrfModule = learningModules.find((item) => item.id === "ssrf");
+
+    expect(ssrfModule?.vulnerable.response.ja).toContain(
+      "実ネットワークアクセスは行いません",
+    );
+    expect(ssrfModule?.vulnerable.response.en).toContain(
+      "without performing real network access",
+    );
+  });
 });

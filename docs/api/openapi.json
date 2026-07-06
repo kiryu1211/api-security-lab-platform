@@ -297,6 +297,14 @@
       "get": {
         "tags": ["vulnerable"],
         "summary": "Local-only search without rate limiting",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/UserId"
+          },
+          {
+            "$ref": "#/components/parameters/SearchQuery"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Search accepted without rate limiting",
@@ -329,6 +337,14 @@
       "get": {
         "tags": ["secure"],
         "summary": "Search with demo rate limiting",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/UserId"
+          },
+          {
+            "$ref": "#/components/parameters/SearchQuery"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Search accepted within the rate limit",
@@ -644,6 +660,17 @@
         "schema": {
           "type": "string",
           "enum": ["order", "profile", "report"]
+        }
+      },
+      "SearchQuery": {
+        "name": "q",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "default": "demo"
         }
       }
     },

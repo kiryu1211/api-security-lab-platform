@@ -25,7 +25,7 @@
 - Next.js App Router、TypeScript、React、Zod、Vitest、ESLint、Prettierを設定済みです。
 - 初期の学習UIとして、学習テーマ一覧、学習詳細パネル、脆弱/安全の比較ビュー、実装チェックリストを用意しています。
 - UI文言と学習モジュールの内容は、画面コンポーネントへ直接埋め込まず、日本語・英語のリソースとして管理しています。
-- 初期のルート分離として、`/api/vulnerable/health` と `/api/secure/health` を用意しています。
+- ヘルスチェック、サンプルデータ、BOLA注文、認証セッション、レート制限検索、プロフィール更新、URL取得プレビューを `/api/vulnerable/*` と `/api/secure/*` に分けて実装しています。
 - 後続の学習モジュールで利用するために、共通APIレスポンス、Zodによるリクエスト検証、安全なローカル用サンプルユーザー/リソースを用意しています。
 - OpenAPI仕様は [`docs/api/openapi.json`](docs/api/openapi.json) に配置しています。
 - BOLAモジュールでは、所有者確認がない脆弱な注文APIと、所有者確認を行う安全な注文APIを実行して比較できます。
