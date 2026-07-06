@@ -45,7 +45,7 @@ type ModuleDemoState = {
   secure?: DemoResult;
 };
 
-type DemoEnabledModuleId = Extract<LearningModuleId, "bola" | "auth">;
+type DemoEnabledModuleId = LearningModuleId;
 
 export function HomePage() {
   const [language, setLanguage] = useState<Language>(defaultLanguage);
@@ -56,6 +56,9 @@ export function HomePage() {
   >({
     bola: { loading: false },
     auth: { loading: false },
+    "rate-limit": { loading: false },
+    "mass-assignment": { loading: false },
+    ssrf: { loading: false },
   });
   const t = uiText[language];
   const selectedModule = getLearningModule(selectedModuleId);
@@ -83,36 +86,101 @@ export function HomePage() {
   function isDemoEnabledModule(
     id: LearningModuleId,
   ): id is DemoEnabledModuleId {
-    return id === "bola" || id === "auth";
+    return learningModules.some(
+      (module) => module.id === id && module.progress === "ready",
+    );
+  }
+
+  function demoRequests(
+    moduleId: DemoEnabledModuleId,
+  ): [Promise<Response>, Promise<Response>] {
+    switch (moduleId) {
+      case "bola":
+        return [
+          fetch("/api/vulnerable/orders/order-demo-002"),
+          fetch("/api/secure/orders/order-demo-002?userId=user-demo-alice"),
+        ];
+      case "auth":
+        return [
+          fetch("/api/vulnerable/auth/session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              tokenId: "demo-token-expired-admin",
+              requiredPermission: "admin:read",
+            }),
+          }),
+          fetch("/api/secure/auth/session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              tokenId: "demo-token-expired-admin",
+              requiredPermission: "admin:read",
+            }),
+          }),
+        ];
+      case "rate-limit":
+        return [
+          fetch(
+            "/api/vulnerable/rate-limit/search?userId=user-demo-alice&q=demo",
+          ),
+          Promise.all([
+            fetch(
+              "/api/secure/rate-limit/search?userId=user-demo-alice&q=demo",
+            ),
+            fetch(
+              "/api/secure/rate-limit/search?userId=user-demo-alice&q=demo",
+            ),
+            fetch(
+              "/api/secure/rate-limit/search?userId=user-demo-alice&q=demo",
+            ),
+            fetch(
+              "/api/secure/rate-limit/search?userId=user-demo-alice&q=demo",
+            ),
+          ]).then((responses) => responses[responses.length - 1]),
+        ];
+      case "mass-assignment":
+        return [
+          fetch("/api/vulnerable/profile", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              displayLabel: "changed-label",
+              ownerId: "user-demo-bob",
+              role: "reviewer",
+            }),
+          }),
+          fetch("/api/secure/profile", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              displayLabel: "changed-label",
+              ownerId: "user-demo-bob",
+              role: "reviewer",
+            }),
+          }),
+        ];
+      case "ssrf":
+        return [
+          fetch("/api/vulnerable/fetch-url", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: "http://127.0.0.1/admin" }),
+          }),
+          fetch("/api/secure/fetch-url", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: "https://127.0.0.1/admin" }),
+          }),
+        ];
+    }
   }
 
   async function handleRunDemo(moduleId: DemoEnabledModuleId) {
     setDemoState((current) => ({ ...current, [moduleId]: { loading: true } }));
 
     const [vulnerableResponse, secureResponse] = await Promise.all(
-      moduleId === "bola"
-        ? [
-            fetch("/api/vulnerable/orders/order-demo-002"),
-            fetch("/api/secure/orders/order-demo-002?userId=user-demo-alice"),
-          ]
-        : [
-            fetch("/api/vulnerable/auth/session", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                tokenId: "demo-token-expired-admin",
-                requiredPermission: "admin:read",
-              }),
-            }),
-            fetch("/api/secure/auth/session", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                tokenId: "demo-token-expired-admin",
-                requiredPermission: "admin:read",
-              }),
-            }),
-          ],
+      demoRequests(moduleId),
     );
 
     const [vulnerableBody, secureBody] = await Promise.all([

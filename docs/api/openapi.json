@@ -293,6 +293,200 @@
         }
       }
     },
+    "/api/vulnerable/rate-limit/search": {
+      "get": {
+        "tags": ["vulnerable"],
+        "summary": "Local-only search without rate limiting",
+        "responses": {
+          "200": {
+            "description": "Search accepted without rate limiting",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Vulnerable route disabled outside local non-production mode",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/secure/rate-limit/search": {
+      "get": {
+        "tags": ["secure"],
+        "summary": "Search with demo rate limiting",
+        "responses": {
+          "200": {
+            "description": "Search accepted within the rate limit",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "429": {
+            "description": "Demo rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vulnerable/profile": {
+      "patch": {
+        "tags": ["vulnerable"],
+        "summary": "Local-only Mass Assignment vulnerable profile update",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ProfileUpdateRequest"
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated with all accepted properties",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Vulnerable route disabled outside local non-production mode",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/secure/profile": {
+      "patch": {
+        "tags": ["secure"],
+        "summary": "Profile update with allowlisted properties",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ProfileUpdateRequest"
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated with allowlisted properties only",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vulnerable/fetch-url": {
+      "post": {
+        "tags": ["vulnerable"],
+        "summary": "Local-only SSRF vulnerable URL preview",
+        "description": "Accepts arbitrary URLs for demonstration, but does not perform real outbound network access.",
+        "requestBody": { "$ref": "#/components/requestBodies/FetchUrlRequest" },
+        "responses": {
+          "200": {
+            "description": "URL accepted for preview",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Vulnerable route disabled outside local non-production mode",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/secure/fetch-url": {
+      "post": {
+        "tags": ["secure"],
+        "summary": "SSRF protected URL preview",
+        "description": "Applies protocol, host allowlist, private host rejection, redirect policy, and timeout metadata without real outbound network access.",
+        "requestBody": { "$ref": "#/components/requestBodies/FetchUrlRequest" },
+        "responses": {
+          "200": {
+            "description": "URL accepted by SSRF protection policy",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "URL rejected by SSRF protection policy",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/secure/lab-samples": {
       "get": {
         "tags": ["secure"],
@@ -389,6 +583,28 @@
               "tokenId": "demo-token-expired-admin",
               "requiredPermission": "admin:read"
             }
+          }
+        }
+      },
+      "ProfileUpdateRequest": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ProfileUpdateRequest" },
+            "example": {
+              "displayLabel": "changed-label",
+              "ownerId": "user-demo-bob",
+              "role": "reviewer"
+            }
+          }
+        }
+      },
+      "FetchUrlRequest": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/FetchUrlRequest" },
+            "example": { "url": "https://api.example.test/resource" }
           }
         }
       }
@@ -500,6 +716,22 @@
             "enum": ["orders:read", "admin:read"],
             "default": "orders:read"
           }
+        }
+      },
+      "ProfileUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "displayLabel": { "type": "string" },
+          "notificationsEnabled": { "type": "boolean" },
+          "ownerId": { "type": "string", "pattern": "^user-demo-[a-z-]+$" },
+          "role": { "type": "string", "enum": ["learner", "reviewer"] }
+        }
+      },
+      "FetchUrlRequest": {
+        "type": "object",
+        "required": ["url"],
+        "properties": {
+          "url": { "type": "string", "format": "uri" }
         }
       }
     }

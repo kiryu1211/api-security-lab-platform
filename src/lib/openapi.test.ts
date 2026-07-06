@@ -13,6 +13,14 @@ describe("OpenAPI specification", () => {
     );
     expect(openApiSpec.paths).toHaveProperty("/api/secure/auth/session");
     expect(openApiSpec.paths).toHaveProperty("/api/vulnerable/auth/session");
+    expect(openApiSpec.paths).toHaveProperty("/api/secure/rate-limit/search");
+    expect(openApiSpec.paths).toHaveProperty(
+      "/api/vulnerable/rate-limit/search",
+    );
+    expect(openApiSpec.paths).toHaveProperty("/api/secure/profile");
+    expect(openApiSpec.paths).toHaveProperty("/api/vulnerable/profile");
+    expect(openApiSpec.paths).toHaveProperty("/api/secure/fetch-url");
+    expect(openApiSpec.paths).toHaveProperty("/api/vulnerable/fetch-url");
   });
 
   it("describes vulnerable routes as local-only", () => {

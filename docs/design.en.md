@@ -130,7 +130,7 @@ erDiagram
 - SSRF protection includes allowlists, private IP range rejection, redirect restrictions, and timeouts.
 - Rate limiting is considered per user, per IP address, and per API route.
 
-The initial route separation is represented by `/api/vulnerable/health`, `/api/secure/health`, `/api/vulnerable/lab-samples`, `/api/secure/lab-samples`, `/api/vulnerable/orders/{orderId}`, `/api/secure/orders/{orderId}`, `/api/vulnerable/auth/session`, and `/api/secure/auth/session`. Vulnerable routes use the shared safety guard before returning a response.
+The initial route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route handlers for health checks, lab samples, BOLA orders, authentication sessions, rate-limit search, profile updates, and URL fetch previews. Vulnerable routes use the shared safety guard before returning a response.
 
 ## API Foundation
 
@@ -153,6 +153,13 @@ The initial route separation is represented by `/api/vulnerable/health`, `/api/s
 - The secure authentication route `/api/secure/auth/session` validates demo token signature state, expiration, revocation state, and required permission before accepting a session.
 - The comparison UI uses `demo-token-expired-admin`, which has an invalid signature, is expired, and is revoked. The vulnerable route accepts it, while the secure route returns `401 UNAUTHORIZED`.
 - The authentication module uses synthetic token identifiers and metadata only; it does not contain real tokens, signing keys, secrets, credentials, or user sessions.
+
+## Rate Limiting, Mass Assignment, And SSRF Module Design
+
+- The vulnerable rate-limit route `/api/vulnerable/rate-limit/search` accepts repeated requests without applying limits. The secure route `/api/secure/rate-limit/search` applies a route and demo-user keyed in-memory limit and returns `429 RATE_LIMITED` after the demo threshold.
+- The vulnerable Mass Assignment route `/api/vulnerable/profile` applies all accepted properties, including privileged fields such as `ownerId` and `role`. The secure route `/api/secure/profile` applies only allowlisted profile fields and reports rejected properties.
+- The vulnerable SSRF route `/api/vulnerable/fetch-url` accepts arbitrary URLs for demonstration. The secure route `/api/secure/fetch-url` requires HTTPS, rejects private hosts, and allows only `api.example.test`.
+- SSRF demos never perform real outbound network access; both vulnerable and secure routes return preview metadata only.
 
 ## Multilingual UI Design
 

@@ -130,7 +130,7 @@ erDiagram
 - SSRF対策では、許可リスト、プライベートIP範囲拒否、リダイレクト制限、タイムアウトを設計に含める。
 - レート制限はユーザー単位、IP単位、APIルート単位で検討する。
 
-初期のルート分離は `/api/vulnerable/health`、`/api/secure/health`、`/api/vulnerable/lab-samples`、`/api/secure/lab-samples`、`/api/vulnerable/orders/{orderId}`、`/api/secure/orders/{orderId}`、`/api/vulnerable/auth/session`、`/api/secure/auth/session` で表現します。脆弱APIルートは、レスポンスを返す前に共通の安全ガードを通します。
+初期のルート分離は、ヘルスチェック、サンプルデータ、BOLA注文、認証セッション、レート制限検索、プロフィール更新、URL取得プレビューの各Route Handlerを `/api/vulnerable/*` と `/api/secure/*` に分けて表現します。脆弱APIルートは、レスポンスを返す前に共通の安全ガードを通します。
 
 ## API基盤
 
@@ -153,6 +153,13 @@ erDiagram
 - 安全な認証ルート `/api/secure/auth/session` は、デモトークンの署名状態、期限、失効状態、必要な権限を確認してからセッションを受け入れる。
 - 比較UIでは、署名状態が不正、期限切れ、失効済みの `demo-token-expired-admin` を使用する。脆弱ルートでは受け入れられ、安全ルートでは `401 UNAUTHORIZED` が返ることを確認できる。
 - 認証モジュールでは合成したトークンIDとメタデータのみを使用し、実トークン、署名鍵、秘密情報、認証情報、実セッションは含めない。
+
+## レート制限・Mass Assignment・SSRFモジュール設計
+
+- 脆弱なレート制限ルート `/api/vulnerable/rate-limit/search` は、繰り返しリクエストに制限を適用しない。安全なルート `/api/secure/rate-limit/search` は、ルートとデモユーザーをキーにしたインメモリ制限を適用し、デモ用の上限を超えた場合は `429 RATE_LIMITED` を返す。
+- 脆弱なMass Assignmentルート `/api/vulnerable/profile` は、`ownerId` や `role` などの権限が必要な項目も含め、受け入れたプロパティをそのまま適用する。安全なルート `/api/secure/profile` は、許可リストに含まれるプロフィール項目だけを適用し、拒否したプロパティを返す。
+- 脆弱なSSRFルート `/api/vulnerable/fetch-url` は、任意URLを受け入れる例として動作する。安全なルート `/api/secure/fetch-url` はHTTPSを必須とし、プライベートホストを拒否し、`api.example.test` のみを許可する。
+- SSRFデモでは実際の外部ネットワークアクセスを行わず、脆弱APIと安全APIのどちらもプレビュー用メタデータだけを返す。
 
 ## 多言語UI設計
 

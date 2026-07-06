@@ -150,7 +150,7 @@ export const learningModules: LearningModule[] = [
     id: "rate-limit",
     riskCategory: "OWASP API4:2023 Unrestricted Resource Consumption",
     difficulty: "Intermediate",
-    progress: "planned",
+    progress: "ready",
     title: {
       ja: "レート制限と自動化悪用対策",
       en: "Rate Limiting and Abuse Prevention",
@@ -208,7 +208,7 @@ export const learningModules: LearningModule[] = [
     id: "mass-assignment",
     riskCategory: "OWASP API3:2023 Broken Object Property Level Authorization",
     difficulty: "Intermediate",
-    progress: "planned",
+    progress: "ready",
     title: {
       ja: "Mass Assignmentとプロパティ認可",
       en: "Mass Assignment and Property Authorization",
@@ -227,7 +227,8 @@ export const learningModules: LearningModule[] = [
     },
     vulnerable: {
       route: "/api/vulnerable/profile",
-      request: "PATCH /api/vulnerable/profile",
+      request:
+        'PATCH /api/vulnerable/profile\n{\n  "displayLabel": "changed-label",\n  "ownerId": "user-demo-bob",\n  "role": "reviewer"\n}',
       response: {
         ja: "許可していない項目まで更新される想定です。",
         en: "Expected to update fields that should not be accepted.",
@@ -239,7 +240,8 @@ export const learningModules: LearningModule[] = [
     },
     secure: {
       route: "/api/secure/profile",
-      request: "PATCH /api/secure/profile",
+      request:
+        'PATCH /api/secure/profile\n{\n  "displayLabel": "changed-label",\n  "ownerId": "user-demo-bob",\n  "role": "reviewer"\n}',
       response: {
         ja: "許可リスト外の項目を拒否する想定です。",
         en: "Expected to reject fields outside the allowlist.",
@@ -266,7 +268,7 @@ export const learningModules: LearningModule[] = [
     id: "ssrf",
     riskCategory: "OWASP API7:2023 Server Side Request Forgery",
     difficulty: "Advanced",
-    progress: "planned",
+    progress: "ready",
     title: {
       ja: "SSRFと外部URL取得制御",
       en: "SSRF and Outbound URL Controls",
@@ -285,7 +287,8 @@ export const learningModules: LearningModule[] = [
     },
     vulnerable: {
       route: "/api/vulnerable/fetch-url",
-      request: "POST /api/vulnerable/fetch-url",
+      request:
+        'POST /api/vulnerable/fetch-url\n{\n  "url": "http://127.0.0.1/admin"\n}',
       response: {
         ja: "任意URLへアクセスしてしまう想定です。",
         en: "Expected to access arbitrary URLs.",
@@ -297,7 +300,8 @@ export const learningModules: LearningModule[] = [
     },
     secure: {
       route: "/api/secure/fetch-url",
-      request: "POST /api/secure/fetch-url",
+      request:
+        'POST /api/secure/fetch-url\n{\n  "url": "https://127.0.0.1/admin"\n}',
       response: {
         ja: "許可されていないURLを拒否する想定です。",
         en: "Expected to reject URLs that are not allowed.",

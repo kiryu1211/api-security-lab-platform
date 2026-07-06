@@ -30,6 +30,7 @@ This system provides an isolated environment for examining how API vulnerabiliti
 - OpenAPI specification is available at [`docs/api/openapi.json`](docs/api/openapi.json).
 - The BOLA module includes runnable vulnerable and secure order APIs for comparing missing ownership checks with verified ownership checks.
 - The authentication module includes runnable vulnerable and secure session APIs for comparing weak token acceptance with signature, expiration, revocation, and permission validation.
+- Rate limiting, Mass Assignment, and SSRF modules include runnable vulnerable and secure APIs. SSRF demos return safe previews only and do not perform real outbound network access.
 
 ## Safety Policy
 

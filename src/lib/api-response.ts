@@ -7,6 +7,7 @@ export type ApiErrorCode =
   | "VULNERABLE_API_DISABLED"
   | "NOT_FOUND"
   | "UNAUTHORIZED"
+  | "RATE_LIMITED"
   | "FORBIDDEN";
 
 type ApiMeta = {

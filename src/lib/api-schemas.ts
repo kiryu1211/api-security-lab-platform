@@ -34,3 +34,19 @@ export const authSessionBodySchema = z.object({
     .enum(["orders:read", "admin:read"])
     .default("orders:read"),
 });
+
+export const rateLimitQuerySchema = z.object({
+  userId: labUserIdSchema.default("user-demo-alice"),
+  q: z.string().min(1).max(40).default("demo"),
+});
+
+export const profileUpdateBodySchema = z.object({
+  displayLabel: z.string().min(1).max(80).optional(),
+  notificationsEnabled: z.boolean().optional(),
+  role: z.enum(["learner", "reviewer"]).optional(),
+  ownerId: labUserIdSchema.optional(),
+});
+
+export const fetchUrlBodySchema = z.object({
+  url: z.string().url(),
+});
