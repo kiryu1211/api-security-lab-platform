@@ -2,7 +2,7 @@
 
 ## Technology Selection
 
-The initial implementation prioritizes clear API specifications, request validation, authentication and authorization, rate limiting, and isolation of vulnerable demos. The current implementation uses:
+The current implementation prioritizes clear API specifications, request validation, authentication and authorization, rate limiting, and isolation of vulnerable demos. It uses:
 
 - Frontend: TypeScript + React + Next.js App Router
 - Backend: Next.js Route Handlers
@@ -11,9 +11,9 @@ The initial implementation prioritizes clear API specifications, request validat
 - Testing: Vitest
 - Linting and formatting: ESLint and Prettier
 - API Documentation: OpenAPI in `docs/api/openapi.json`
-- Database and ORM: SQLite and Prisma are planned for lab data in later phases
+- Database and ORM: not introduced yet; SQLite and Prisma are candidates for a later persistence phase
 
-TypeScript is suitable because API requests, responses, authorization targets, and learning modules can be managed with types. OpenAPI will document API specifications and verification perspectives as the module APIs become concrete.
+TypeScript is suitable because API requests, responses, authorization targets, and learning modules can be managed with types. OpenAPI documents implemented API specifications and verification perspectives.
 
 ## Architecture
 
@@ -24,10 +24,12 @@ flowchart LR
     API --> Safe[Secure API Modules]
     API --> Vuln[Vulnerable API Modules]
     API --> Guard[Safety Guard]
-    Safe --> DB[(Local Database)]
-    Vuln --> DB
+    Safe --> Data[In-memory Demo Data]
+    Vuln --> Data
     Guard --> API
 ```
+
+Current demo data is managed as synthetic data under `src/data/`. A local database can be introduced when persistence is needed.
 
 ## Module Structure
 
@@ -68,20 +70,22 @@ sequenceDiagram
     participant UI
     participant VulnAPI
     participant SafeAPI
-    participant DB
+    participant DemoData
 
     User->>UI: Specify another user's resource ID
-    UI->>VulnAPI: GET /vulnerable/orders/{id}
-    VulnAPI->>DB: Fetch order by ID only
-    DB-->>VulnAPI: Order data
+    UI->>VulnAPI: GET /api/vulnerable/orders/{id}
+    VulnAPI->>DemoData: Fetch order by ID only
+    DemoData-->>VulnAPI: Order data
     VulnAPI-->>UI: Unauthorized data exposure
-    UI->>SafeAPI: GET /secure/orders/{id}
-    SafeAPI->>DB: Check order and owner
-    DB-->>SafeAPI: Owner information
+    UI->>SafeAPI: GET /api/secure/orders/{id}
+    SafeAPI->>DemoData: Check order and owner
+    DemoData-->>SafeAPI: Owner information
     SafeAPI-->>UI: Reject if unauthorized
 ```
 
-## Data Model
+## Future Data Model
+
+The following is a conceptual model for a future persistence layer. The current implementation uses synthetic local demo data instead of a real database.
 
 ```mermaid
 erDiagram
@@ -123,12 +127,12 @@ erDiagram
 
 ## Security Design
 
-- Vulnerable APIs are clearly separated under paths such as `/vulnerable/*`, while secure APIs use paths such as `/secure/*`.
+- Vulnerable APIs are clearly separated under `/api/vulnerable/*`, while secure APIs use `/api/secure/*`.
 - `LAB_MODE=local` is required for vulnerable APIs, and vulnerable APIs are disabled when `NODE_ENV=production`.
-- Screens that operate vulnerable APIs always display local-only warnings.
+- Screens that operate vulnerable APIs always display warnings that they are local-only and must not be publicly exposed.
 - Secure APIs validate user ID, role, and target resource ownership in the API layer.
-- SSRF protection includes allowlists, private IP range rejection, redirect restrictions, and timeouts.
-- Rate limiting is considered per user, per IP address, and per API route.
+- SSRF protection returns validation previews for allowlists, private host rejection, redirect policy, and timeout policy without real network access.
+- Rate limiting currently applies per demo user and API route. Per-source limits are a future extension candidate.
 
 Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route handlers for health checks, lab samples, BOLA orders, authentication sessions, rate-limit search, profile updates, and URL fetch previews. Vulnerable routes use the shared safety guard before returning a response.
 
@@ -137,8 +141,8 @@ Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route
 - Shared API response helpers are defined in `src/lib/api-response.ts` and return `{ ok, data, meta }` for success or `{ ok, error, meta }` for errors.
 - Shared request validation is defined in `src/lib/request-validation.ts` and uses Zod schemas from `src/lib/api-schemas.ts`.
 - Local sample users and resources are defined in `src/data/lab-samples.ts`. They use synthetic demo identifiers and do not include real personal data, logs, credentials, or tokens.
-- `src/lib/lab-sample-service.ts` provides filtered sample data for API modules without introducing database dependencies before the persistence phase.
-- `docs/api/openapi.json` documents the current support routes, separated secure/vulnerable tags, shared success/error response shapes, and local-only vulnerable route behavior.
+- `src/lib/lab-sample-service.ts` provides filtered sample data for API modules without introducing database dependencies before persistence is added.
+- `docs/api/openapi.json` documents implemented routes, separated secure/vulnerable tags, shared success/error response shapes, and local-only vulnerable route behavior.
 
 ## BOLA Module Design
 
@@ -158,7 +162,7 @@ Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route
 
 - The vulnerable rate-limit route `/api/vulnerable/rate-limit/search` accepts repeated requests without applying limits. The secure route `/api/secure/rate-limit/search` applies a route and demo-user keyed in-memory limit and returns `429 RATE_LIMITED` after the demo threshold.
 - The vulnerable Mass Assignment route `/api/vulnerable/profile` applies all accepted properties, including privileged fields such as `ownerId` and `role`. The secure route `/api/secure/profile` applies only allowlisted profile fields and reports rejected properties.
-- The vulnerable SSRF route `/api/vulnerable/fetch-url` accepts arbitrary URLs for demonstration. The secure route `/api/secure/fetch-url` requires HTTPS, rejects private hosts, and allows only `api.example.test`.
+- The vulnerable SSRF route `/api/vulnerable/fetch-url` accepts arbitrary URLs for demonstration without real outbound network access. The secure route `/api/secure/fetch-url` returns a preview that requires HTTPS, rejects private hosts, and allows only `api.example.test`.
 - SSRF demos never perform real outbound network access; both vulnerable and secure routes return preview metadata only.
 
 ## Multilingual UI Design
@@ -192,5 +196,5 @@ flowchart TD
 - Topic list: displays risk category, difficulty, progress, summary, and selected state for each module.
 - Learning detail: displays overview, vulnerable condition, and defensive design for the selected module.
 - Comparison view: displays side-by-side route, request, response, and design notes for vulnerable and secure APIs.
-- Checklist: displays defensive review points for the selected module. Progress persistence is planned for a later phase.
+- Checklist: displays defensive review points for the selected module. Progress is not currently saved.
 - Vulnerable comparison areas always display local-only and non-public deployment warnings.

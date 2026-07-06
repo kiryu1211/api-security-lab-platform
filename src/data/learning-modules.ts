@@ -34,30 +34,30 @@ export const learningModules: LearningModule[] = [
     difficulty: "Basic",
     progress: "ready",
     title: {
-      ja: "BOLAとオブジェクト所有者確認",
+      ja: "BOLAとオブジェクト単位の認可確認",
       en: "BOLA and Object Ownership Checks",
     },
     summary: {
-      ja: "他ユーザーのリソースIDを指定したとき、APIが所有者確認を行うかを比較します。",
+      ja: "他ユーザーのリソースIDを指定したときに、APIが所有者を確認するかどうかを比較します。",
       en: "Compare whether the API checks resource ownership when another user's resource ID is supplied.",
     },
     vulnerableCondition: {
-      ja: "リソースIDだけで注文を取得し、認証済みユーザーと所有者の関係を確認しない。",
+      ja: "リソースIDだけで注文を取得し、認証済みユーザーと所有者の関係を確認していない。",
       en: "The API fetches an order by resource ID only and does not verify the relationship between the authenticated user and the owner.",
     },
     defensiveDesign: {
-      ja: "注文ID、ログインユーザーID、所有者IDを照合し、所有者でない場合は拒否する。",
+      ja: "注文ID、ユーザーID、所有者IDを照合し、所有者ではないユーザーからのリクエストを拒否する。",
       en: "Compare the order ID, signed-in user ID, and owner ID, then reject requests from non-owners.",
     },
     vulnerable: {
       route: "/api/vulnerable/orders/{orderId}",
       request: "GET /api/vulnerable/orders/order-demo-002",
       response: {
-        ja: "IDのみで取得した注文情報を返してしまう想定です。",
+        ja: "所有者を確認せず、IDに一致する注文情報を返します。",
         en: "Expected to return order data fetched by ID only.",
       },
       note: {
-        ja: "このルートはローカル限定の脆弱例として扱います。",
+        ja: "ローカル限定の脆弱な例として、安全ガードを通過した場合だけ動作します。",
         en: "This route is treated as a local-only vulnerable example.",
       },
     },
@@ -65,11 +65,11 @@ export const learningModules: LearningModule[] = [
       route: "/api/secure/orders/{orderId}",
       request: "GET /api/secure/orders/order-demo-002?userId=user-demo-alice",
       response: {
-        ja: "所有者が一致しない場合は403を返す想定です。",
+        ja: "所有者が一致しない場合は403を返します。",
         en: "Expected to return 403 when the owner does not match.",
       },
       note: {
-        ja: "安全APIでは、API層で所有者確認を必ず実施します。",
+        ja: "安全APIでは、API層で所有者確認を行います。",
         en: "The secure API always performs ownership checks in the API layer.",
       },
     },
@@ -96,15 +96,15 @@ export const learningModules: LearningModule[] = [
       en: "Authentication and Token Validation",
     },
     summary: {
-      ja: "弱い認証や不適切なトークン検証が、API利用者のなりすましにつながる流れを確認します。",
+      ja: "不十分な認証やトークン検証が、API利用者のなりすましにつながる流れを確認します。",
       en: "Review how weak authentication and improper token validation can lead to API user impersonation.",
     },
     vulnerableCondition: {
-      ja: "署名、期限、失効状態、権限を十分に検証しないままトークンを受け入れる。",
+      ja: "署名、期限、失効状態、権限を十分に確認しないままトークンを受け入れている。",
       en: "The API accepts a token without sufficiently validating signature, expiration, revocation state, and permissions.",
     },
     defensiveDesign: {
-      ja: "署名、期限、失効、権限を検証し、失敗時は一貫したエラーで拒否する。",
+      ja: "署名、期限、失効状態、権限を検証し、検証に失敗した場合は一貫したエラーで拒否する。",
       en: "Validate signature, expiration, revocation, and permissions, then reject failures with consistent errors.",
     },
     vulnerable: {
@@ -112,7 +112,7 @@ export const learningModules: LearningModule[] = [
       request:
         'POST /api/vulnerable/auth/session\n{\n  "tokenId": "demo-token-expired-admin",\n  "requiredPermission": "admin:read"\n}',
       response: {
-        ja: "弱い検証でセッションを受け入れる想定です。",
+        ja: "トークンIDの存在だけを見て、セッションを受け入れます。",
         en: "Expected to accept a session with weak validation.",
       },
       note: {
@@ -125,11 +125,11 @@ export const learningModules: LearningModule[] = [
       request:
         'POST /api/secure/auth/session\n{\n  "tokenId": "demo-token-expired-admin",\n  "requiredPermission": "admin:read"\n}',
       response: {
-        ja: "検証に失敗したトークンを拒否する想定です。",
+        ja: "検証に失敗したトークンを拒否します。",
         en: "Expected to reject tokens that fail validation.",
       },
       note: {
-        ja: "安全APIでは期限、失効、権限を明示的に確認します。",
+        ja: "安全APIでは、署名状態、期限、失効状態、権限を明示的に確認します。",
         en: "The secure API explicitly checks expiration, revocation, and permissions.",
       },
     },
@@ -156,26 +156,26 @@ export const learningModules: LearningModule[] = [
       en: "Rate Limiting and Abuse Prevention",
     },
     summary: {
-      ja: "過剰リクエストを制限しないAPIと、ユーザー・IP・ルート単位で制御するAPIを比較します。",
+      ja: "過剰なリクエストを制限しないAPIと、利用者・送信元・ルート単位で制御するAPIを比較します。",
       en: "Compare APIs without request limits against APIs controlled per user, IP address, and route.",
     },
     vulnerableCondition: {
-      ja: "短時間に大量のリクエストを送っても制限せず、処理資源を消費し続ける。",
+      ja: "短時間に大量のリクエストを受けても制限せず、処理資源を消費し続ける。",
       en: "The API continues consuming resources even when many requests are sent in a short time.",
     },
     defensiveDesign: {
-      ja: "利用者や送信元ごとに回数と時間枠を管理し、上限超過時は429を返す。",
+      ja: "利用者や送信元ごとに回数と時間枠を管理し、上限を超えた場合は429を返す。",
       en: "Track counts and windows per user or source, then return 429 when limits are exceeded.",
     },
     vulnerable: {
       route: "/api/vulnerable/rate-limit/search",
       request: "GET /api/vulnerable/rate-limit/search?q=demo",
       response: {
-        ja: "制限なく処理を続ける想定です。",
+        ja: "リクエスト回数を制限せずに処理を続けます。",
         en: "Expected to continue processing without limits.",
       },
       note: {
-        ja: "ローカル検証でも高負荷な実行は避ける設計にします。",
+        ja: "ローカル検証でも高負荷にならないよう、デモ用の軽い処理だけを行います。",
         en: "The lab design avoids high-load execution even during local verification.",
       },
     },
@@ -183,11 +183,11 @@ export const learningModules: LearningModule[] = [
       route: "/api/secure/rate-limit/search",
       request: "GET /api/secure/rate-limit/search?q=demo",
       response: {
-        ja: "上限超過時に429を返す想定です。",
+        ja: "上限を超えた場合は429を返します。",
         en: "Expected to return 429 when the limit is exceeded.",
       },
       note: {
-        ja: "安全APIでは制限値とエラーを明確にします。",
+        ja: "安全APIでは、上限を超えた場合に明確なエラーを返します。",
         en: "The secure API makes limits and errors explicit.",
       },
     },
@@ -214,15 +214,15 @@ export const learningModules: LearningModule[] = [
       en: "Mass Assignment and Property Authorization",
     },
     summary: {
-      ja: "許可していないプロパティ更新を受け入れるAPIと、許可リストで制限するAPIを比較します。",
+      ja: "許可していないプロパティ更新を受け入れるAPIと、許可リストで更新項目を制限するAPIを比較します。",
       en: "Compare APIs that accept unauthorized property updates against APIs that restrict updates with allowlists.",
     },
     vulnerableCondition: {
-      ja: "リクエストボディ全体をそのまま更新処理に渡し、roleやownerIdなども変更できてしまう。",
+      ja: "リクエストボディ全体をそのまま更新処理に渡し、roleやownerIdなどの項目まで変更できてしまう。",
       en: "The full request body is passed into update logic, allowing fields such as role or ownerId to be changed.",
     },
     defensiveDesign: {
-      ja: "更新可能な項目だけをスキーマと許可リストで受け取り、権限が必要な項目は別途確認する。",
+      ja: "更新できる項目だけをスキーマと許可リストで受け取り、権限が必要な項目は通常の更新処理から分離する。",
       en: "Accept only allowed fields through schemas and allowlists, then separately authorize sensitive fields.",
     },
     vulnerable: {
@@ -230,7 +230,7 @@ export const learningModules: LearningModule[] = [
       request:
         'PATCH /api/vulnerable/profile\n{\n  "displayLabel": "changed-label",\n  "ownerId": "user-demo-bob",\n  "role": "reviewer"\n}',
       response: {
-        ja: "許可していない項目まで更新される想定です。",
+        ja: "許可していない項目まで更新対象として受け入れます。",
         en: "Expected to update fields that should not be accepted.",
       },
       note: {
@@ -243,11 +243,11 @@ export const learningModules: LearningModule[] = [
       request:
         'PATCH /api/secure/profile\n{\n  "displayLabel": "changed-label",\n  "ownerId": "user-demo-bob",\n  "role": "reviewer"\n}',
       response: {
-        ja: "許可リスト外の項目を拒否する想定です。",
+        ja: "許可リストにない項目を拒否します。",
         en: "Expected to reject fields outside the allowlist.",
       },
       note: {
-        ja: "安全APIではZodスキーマで入力を絞り込みます。",
+        ja: "安全APIでは、Zodスキーマと許可リストで更新項目を絞り込みます。",
         en: "The secure API narrows input with Zod schemas.",
       },
     },
@@ -274,15 +274,15 @@ export const learningModules: LearningModule[] = [
       en: "SSRF and Outbound URL Controls",
     },
     summary: {
-      ja: "任意URL取得の危険性と、許可リスト、プライベートIP拒否、リダイレクト制御による防御を比較します。",
+      ja: "任意URLを受け入れる危険性と、許可リスト、プライベートIP拒否、リダイレクト制御による防御を比較します。",
       en: "Compare arbitrary URL fetching risks with defenses using allowlists, private IP rejection, and redirect controls.",
     },
     vulnerableCondition: {
-      ja: "利用者が指定したURLを検証せずにサーバー側から取得する。",
+      ja: "利用者が指定したURLを検証せず、サーバー側の処理対象として受け入れてしまう。",
       en: "The server fetches a user-supplied URL without validation.",
     },
     defensiveDesign: {
-      ja: "許可したホストだけを取得し、プライベートIP、リダイレクト、タイムアウトを制御する。",
+      ja: "許可したホストだけを対象にし、プライベートIP、リダイレクト、タイムアウトを制御する。",
       en: "Fetch only allowed hosts while controlling private IP ranges, redirects, and timeouts.",
     },
     vulnerable: {
@@ -290,11 +290,11 @@ export const learningModules: LearningModule[] = [
       request:
         'POST /api/vulnerable/fetch-url\n{\n  "url": "http://127.0.0.1/admin"\n}',
       response: {
-        ja: "任意URLを受け入れたプレビューを返す想定です。実ネットワークアクセスは行いません。",
+        ja: "任意URLを受け入れたことを示すプレビューを返します。実ネットワークアクセスは行いません。",
         en: "Expected to accept arbitrary URLs for preview without performing real network access.",
       },
       note: {
-        ja: "ローカル限定でも内部ネットワークへの実アクセスは避けます。",
+        ja: "ローカル限定でも、内部ネットワークへの実アクセスは行いません。",
         en: "The lab avoids real access to internal networks even in local-only mode.",
       },
     },
@@ -303,11 +303,11 @@ export const learningModules: LearningModule[] = [
       request:
         'POST /api/secure/fetch-url\n{\n  "url": "https://127.0.0.1/admin"\n}',
       response: {
-        ja: "許可されていないURLを拒否する想定です。",
+        ja: "許可されていないURLを拒否します。",
         en: "Expected to reject URLs that are not allowed.",
       },
       note: {
-        ja: "安全APIでは許可リスト、IP範囲、リダイレクト、タイムアウトを確認します。",
+        ja: "安全APIでは、許可リスト、IP範囲、リダイレクト、タイムアウトを確認します。",
         en: "The secure API checks allowlists, IP ranges, redirects, and timeouts.",
       },
     },

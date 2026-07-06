@@ -12,8 +12,8 @@ const languageStorageKey = "lab-ui-language";
 
 const progressLabels = {
   ja: {
-    ready: "基盤準備済み",
-    planned: "今後追加",
+    ready: "実装済み",
+    planned: "追加予定",
   },
   en: {
     ready: "Foundation ready",

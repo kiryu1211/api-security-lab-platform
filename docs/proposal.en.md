@@ -4,7 +4,7 @@
 
 Web services and mobile applications often rely on APIs as the center of their functionality. Since APIs are directly consumed by frontends, mobile clients, and external services, authorization flaws, weak authentication, excessive data exposure, and missing rate limits can directly affect user data and business operations.
 
-This system is designed as an environment for examining representative API security issues by comparing vulnerable examples with secure implementations. The goal is not merely to demonstrate attacks, but to make it clear why the issue occurs and which design decisions prevent it.
+This system is designed as an environment for examining representative API security issues by comparing vulnerable examples with secure implementations. The goal is not merely to demonstrate attacks, but to make it clear why each issue occurs and which design decisions prevent it.
 
 ## Objectives
 
@@ -18,6 +18,13 @@ This system is designed as an environment for examining representative API secur
 - API developer: reviews secure API design and implementation patterns.
 - Security learner: understands causes and mitigations of API vulnerabilities through comparison.
 - Security reviewer: organizes API security review perspectives.
+
+## Scope
+
+- Covers BOLA, authentication and token validation, rate limiting, Mass Assignment, and SSRF as learning topics.
+- Separates `/api/vulnerable/*` and `/api/secure/*` so vulnerable and secure behavior can be compared for the same topic.
+- SSRF demos return verification preview metadata only and do not perform real outbound network access.
+- The UI defaults to Japanese and can be switched to English through a shared language switcher.
 
 ## Development Process Decision
 
@@ -34,7 +41,7 @@ flowchart TD
     C --> D[Observe vulnerable conditions]
     D --> E[Compare with secure implementation]
     E --> F[Review mitigations and design decisions]
-    F --> G[Checklist or review question]
+    F --> G[Implementation checklist]
 ```
 
 ## UI/UX Direction

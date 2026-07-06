@@ -25,15 +25,23 @@
 
 ## Security Requirements
 
-| ID    | Requirement          | Description                                                                          |
-| ----- | -------------------- | ------------------------------------------------------------------------------------ |
-| SR-01 | Local-only execution | README and UI screens must state that vulnerable APIs must not be publicly deployed. |
-| SR-02 | Route separation     | Vulnerable APIs and secure APIs are clearly separated to prevent accidental misuse.  |
-| SR-03 | Authorization checks | Secure APIs always validate the relationship between user and target resource.       |
-| SR-04 | Input validation     | Request bodies, queries, and URLs are validated with schemas.                        |
-| SR-05 | Rate limiting        | Secure APIs limit excessive requests.                                                |
-| SR-06 | SSRF protection      | Outbound URL fetching uses allowlists, IP range restrictions, and redirect control.  |
-| SR-07 | Secret management    | `.env`, keys, and tokens are excluded from Git tracking.                             |
+| ID    | Requirement          | Description                                                                                                               |
+| ----- | -------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| SR-01 | Local-only execution | README and UI screens must state that vulnerable APIs must not be deployed publicly.                                      |
+| SR-02 | Route separation     | Vulnerable APIs and secure APIs are clearly separated to prevent accidental misuse.                                       |
+| SR-03 | Authorization checks | Secure APIs always validate the relationship between user and target resource.                                            |
+| SR-04 | Input validation     | Request bodies, queries, and URLs are validated with schemas.                                                             |
+| SR-05 | Rate limiting        | Secure APIs limit excessive requests.                                                                                     |
+| SR-06 | SSRF protection      | URL validation previews use allowlists, private host rejection, and redirect policy metadata without real network access. |
+| SR-07 | Secret management    | `.env`, keys, and tokens are excluded from Git tracking.                                                                  |
+
+## Verification Requirements
+
+- Tests verify that every vulnerable API is disabled in production-like settings.
+- Secure APIs must not reproduce BOLA, weak authentication, Mass Assignment, SSRF, or missing rate limiting behavior.
+- SSRF demos must not perform real outbound network access from either vulnerable or secure APIs.
+- OpenAPI must document implemented API routes, inputs, error responses, and safety notes.
+- Japanese and English UI modes must keep visible text consistent within the selected language.
 
 ## Learning Module State Transition
 
@@ -44,7 +52,7 @@ stateDiagram-v2
     Reading --> RunningVulnerableDemo: Run vulnerable API
     RunningVulnerableDemo --> Comparing: Compare with secure API
     Comparing --> Reviewed: Review mitigations
-    Reviewed --> Completed: Complete checklist
+    Reviewed --> Completed: Review checklist items
 ```
 
 ## UI/UX Requirements
