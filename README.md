@@ -4,7 +4,7 @@ A local-first learning and verification platform for understanding common API se
 
 ## Purpose
 
-Modern applications often depend on APIs as their main interface for data access and business operations. Authorization mistakes, weak authentication, excessive data exposure, missing rate limits, business-flow abuse, legacy API inventory gaps, unsafe outbound requests, and overtrusted third-party API responses can lead to serious security incidents.
+Modern applications often depend on APIs as their main interface for data access and business operations. Authorization mistakes, weak authentication, excessive data exposure, missing rate limits, business-flow abuse, security misconfiguration, legacy API inventory gaps, unsafe outbound requests, and overtrusted third-party API responses can lead to serious security incidents.
 
 The purpose of this system is to provide an isolated environment for examining how API vulnerabilities occur and how secure design prevents them.
 
@@ -16,9 +16,11 @@ The purpose of this system is to provide an isolated environment for examining h
 - BOLA and object-level authorization scenarios
 - Authentication and token handling scenarios
 - Rate limiting and abuse prevention scenarios
+- Broken Function Level Authorization and administrative function protection scenarios
 - Sensitive Business Flows and business-flow abuse prevention scenarios
 - Mass assignment and object property authorization scenarios
 - SSRF prevention scenario
+- Security misconfiguration and diagnostic exposure control scenario
 - API inventory and legacy version management scenario
 - Unsafe Consumption of APIs and third-party response validation scenario
 - Japanese-first interface with a shared English language switcher on every screen
@@ -28,13 +30,32 @@ The purpose of this system is to provide an isolated environment for examining h
 - Next.js App Router, TypeScript, React, Zod, Vitest, ESLint, and Prettier are configured.
 - The learning UI includes a topic list, topic overview, vulnerable/secure comparison view, and implementation checklist.
 - UI text and learning module content are managed through Japanese and English resources instead of being embedded directly in the screen component.
-- Route separation is implemented across health checks, lab samples, BOLA orders, authentication sessions, rate-limit search, business-flow reservations, profile updates, URL fetch previews, API inventory operations, and third-party profile imports under `/api/vulnerable/*` and `/api/secure/*`.
+- Route separation is implemented across health checks, lab samples, BOLA orders, authentication sessions, rate-limit search, admin invitations, business-flow reservations, profile updates, URL fetch previews, configuration diagnostics, API inventory operations, and third-party profile imports under `/api/vulnerable/*` and `/api/secure/*`.
 - Shared API response helpers, Zod request validation, and safe local sample users/resources are available.
 - OpenAPI specification is available at [`docs/api/openapi.json`](docs/api/openapi.json).
 - The BOLA module includes runnable vulnerable and secure order APIs for comparing missing ownership checks with verified ownership checks.
 - The authentication module includes runnable vulnerable and secure session APIs for comparing insufficient token validation with signature, expiration, revocation, and permission validation.
-- Rate limiting, Sensitive Business Flows, Mass Assignment, SSRF, Improper Inventory Management, and Unsafe Consumption of APIs modules include runnable vulnerable and secure APIs. Sensitive Business Flows demos use synthetic limited-product data only and perform no real purchase or external payment. Improper Inventory Management demos issue no real tokens and send no notifications. SSRF and Unsafe Consumption of APIs demos return safe previews or synthetic responses only and do not perform real outbound network access.
+- Rate limiting, Broken Function Level Authorization, Sensitive Business Flows, Mass Assignment, SSRF, Security Misconfiguration, Improper Inventory Management, and Unsafe Consumption of APIs modules include runnable vulnerable and secure APIs. Broken Function Level Authorization demos use synthetic invitation previews only and send no real email or account creation. Security Misconfiguration demos use synthetic diagnostic metadata only and expose no real configuration, secrets, or logs. Sensitive Business Flows demos use synthetic limited-product data only and perform no real purchase or external payment. Improper Inventory Management demos issue no real tokens and send no notifications. SSRF and Unsafe Consumption of APIs demos return safe previews or synthetic responses only and do not perform real outbound network access.
 - Security verification tests confirm that every vulnerable API is disabled in production-like settings, secure APIs do not reproduce the covered vulnerabilities, OpenAPI vulnerable-route descriptions remain local-only, and Japanese/English UI text resources stay aligned.
+
+## OWASP API Security Top 10 Reference
+
+OWASP API Security Top 10 is a community-maintained list of the most common and impactful API-specific security risks. This lab uses the 2023 list as a learning map and currently covers API1 through API10 with runnable vulnerable/secure comparisons.
+
+Official reference: <https://owasp.org/API-Security/editions/2023/en/0x11-t10/>
+
+| OWASP category                                            | Lab module                                                 | Vulnerable route                             | Secure route                             |
+| --------------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------- | ---------------------------------------- |
+| API1:2023 Broken Object Level Authorization               | BOLA and Object Ownership Checks                           | `/api/vulnerable/orders/{orderId}`           | `/api/secure/orders/{orderId}`           |
+| API2:2023 Broken Authentication                           | Authentication and Token Validation                        | `/api/vulnerable/auth/session`               | `/api/secure/auth/session`               |
+| API3:2023 Broken Object Property Level Authorization      | Mass Assignment and Property Authorization                 | `/api/vulnerable/profile`                    | `/api/secure/profile`                    |
+| API4:2023 Unrestricted Resource Consumption               | Rate Limiting and Abuse Prevention                         | `/api/vulnerable/rate-limit/search`          | `/api/secure/rate-limit/search`          |
+| API5:2023 Broken Function Level Authorization             | Function-Level Authorization for Admin Actions             | `/api/vulnerable/admin/invitations`          | `/api/secure/admin/invitations`          |
+| API6:2023 Unrestricted Access to Sensitive Business Flows | Sensitive Business Flows and Abuse Controls                | `/api/vulnerable/business-flow/reservations` | `/api/secure/business-flow/reservations` |
+| API7:2023 Server Side Request Forgery                     | SSRF and Outbound URL Controls                             | `/api/vulnerable/fetch-url`                  | `/api/secure/fetch-url`                  |
+| API8:2023 Security Misconfiguration                       | Security Misconfiguration and Diagnostic Exposure Controls | `/api/vulnerable/config/diagnostics`         | `/api/secure/config/diagnostics`         |
+| API9:2023 Improper Inventory Management                   | API Inventory and Legacy Version Management                | `/api/vulnerable/inventory/operations`       | `/api/secure/inventory/operations`       |
+| API10:2023 Unsafe Consumption of APIs                     | Unsafe Consumption of Third-Party APIs                     | `/api/vulnerable/third-party/profile-import` | `/api/secure/third-party/profile-import` |
 
 ## Safety Policy
 

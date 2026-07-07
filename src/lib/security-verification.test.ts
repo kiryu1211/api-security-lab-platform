@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { POST as secureAuthSessionPost } from "@/app/api/secure/auth/session/route";
 import { POST as secureBusinessFlowPost } from "@/app/api/secure/business-flow/reservations/route";
+import { POST as secureConfigDiagnosticsPost } from "@/app/api/secure/config/diagnostics/route";
 import { POST as secureFetchUrlPost } from "@/app/api/secure/fetch-url/route";
+import { POST as secureInvitationPost } from "@/app/api/secure/admin/invitations/route";
 import { POST as secureInventoryPost } from "@/app/api/secure/inventory/operations/route";
 import { GET as secureOrderGet } from "@/app/api/secure/orders/[orderId]/route";
 import { PATCH as secureProfilePatch } from "@/app/api/secure/profile/route";
@@ -9,8 +11,10 @@ import { GET as secureRateLimitGet } from "@/app/api/secure/rate-limit/search/ro
 import { POST as secureProfileImportPost } from "@/app/api/secure/third-party/profile-import/route";
 import { POST as vulnerableAuthSessionPost } from "@/app/api/vulnerable/auth/session/route";
 import { POST as vulnerableBusinessFlowPost } from "@/app/api/vulnerable/business-flow/reservations/route";
+import { POST as vulnerableConfigDiagnosticsPost } from "@/app/api/vulnerable/config/diagnostics/route";
 import { POST as vulnerableFetchUrlPost } from "@/app/api/vulnerable/fetch-url/route";
 import { GET as vulnerableHealthGet } from "@/app/api/vulnerable/health/route";
+import { POST as vulnerableInvitationPost } from "@/app/api/vulnerable/admin/invitations/route";
 import { POST as vulnerableInventoryPost } from "@/app/api/vulnerable/inventory/operations/route";
 import { GET as vulnerableLabSamplesGet } from "@/app/api/vulnerable/lab-samples/route";
 import { GET as vulnerableOrderGet } from "@/app/api/vulnerable/orders/[orderId]/route";
@@ -77,6 +81,21 @@ describe("phase 7 security verification", () => {
           ),
       },
       {
+        name: "admin invitation",
+        call: () =>
+          vulnerableInvitationPost(
+            new Request("http://localhost/api/vulnerable/admin/invitations", {
+              method: "POST",
+              headers: jsonHeaders,
+              body: JSON.stringify({
+                actorUserId: "user-demo-alice",
+                targetEmailAlias: "analyst.demo",
+                requestedRole: "admin",
+              }),
+            }),
+          ),
+      },
+      {
         name: "profile update",
         call: () =>
           vulnerableProfilePatch(
@@ -114,6 +133,20 @@ describe("phase 7 security verification", () => {
               method: "POST",
               headers: jsonHeaders,
               body: JSON.stringify({ url: "http://127.0.0.1/admin" }),
+            }),
+          ),
+      },
+      {
+        name: "configuration diagnostics",
+        call: () =>
+          vulnerableConfigDiagnosticsPost(
+            new Request("http://localhost/api/vulnerable/config/diagnostics", {
+              method: "POST",
+              headers: jsonHeaders,
+              body: JSON.stringify({
+                requestedOrigin: "https://untrusted.example",
+                includeDebugDetails: true,
+              }),
             }),
           ),
       },
@@ -192,11 +225,32 @@ describe("phase 7 security verification", () => {
         body: JSON.stringify({ ownerId: "user-demo-bob", role: "reviewer" }),
       }),
     );
+    const secureInvitation = await secureInvitationPost(
+      new Request("http://localhost/api/secure/admin/invitations", {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify({
+          actorUserId: "user-demo-alice",
+          targetEmailAlias: "analyst.demo",
+          requestedRole: "admin",
+        }),
+      }),
+    );
     const secureSsrf = await secureFetchUrlPost(
       new Request("http://localhost/api/secure/fetch-url", {
         method: "POST",
         headers: jsonHeaders,
         body: JSON.stringify({ url: "https://127.0.0.1/admin" }),
+      }),
+    );
+    const secureConfigDiagnostics = await secureConfigDiagnosticsPost(
+      new Request("http://localhost/api/secure/config/diagnostics", {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify({
+          requestedOrigin: "https://untrusted.example",
+          includeDebugDetails: true,
+        }),
       }),
     );
     const secureBusinessFlow = await secureBusinessFlowPost(
@@ -257,6 +311,7 @@ describe("phase 7 security verification", () => {
 
     expect(secureBola.status).toBe(403);
     expect(secureAuth.status).toBe(401);
+    expect(secureInvitation.status).toBe(403);
     expect(secureProfile.status).toBe(200);
     expect(await secureProfile.json()).toMatchObject({
       data: {
@@ -267,6 +322,10 @@ describe("phase 7 security verification", () => {
       },
     });
     expect(secureSsrf.status).toBe(403);
+    expect(secureConfigDiagnostics.status).toBe(403);
+    expect(secureConfigDiagnostics.headers.get("X-Content-Type-Options")).toBe(
+      "nosniff",
+    );
     expect(secureBusinessFlow.status).toBe(403);
     expect(secureProfileImport.status).toBe(403);
     expect(secureInventory.status).toBe(403);

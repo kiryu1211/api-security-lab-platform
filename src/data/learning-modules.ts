@@ -4,9 +4,11 @@ export type LearningModuleId =
   | "bola"
   | "auth"
   | "rate-limit"
+  | "function-auth"
   | "business-flow"
   | "mass-assignment"
   | "ssrf"
+  | "security-config"
   | "api-inventory"
   | "unsafe-consumption";
 
@@ -212,6 +214,68 @@ export const learningModules: LearningModule[] = [
     },
   },
   {
+    id: "function-auth",
+    riskCategory: "OWASP API5:2023 Broken Function Level Authorization",
+    difficulty: "Intermediate",
+    progress: "ready",
+    title: {
+      ja: "機能単位の認可と管理操作の保護",
+      en: "Function-Level Authorization for Admin Actions",
+    },
+    summary: {
+      ja: "管理者向け招待作成APIを例に、ログイン済みユーザーが管理機能を直接呼べてしまう状態と、機能権限で拒否する設計を比較します。",
+      en: "Use an administrative invitation API to compare direct access to admin functions against enforcement with feature-level permissions.",
+    },
+    vulnerableCondition: {
+      ja: "URLや画面上では管理機能に見えていても、API層で機能権限を確認せず、一般ユーザーの直接リクエストを受け入れている。",
+      en: "The operation looks administrative in the UI or URL, but the API accepts direct requests from regular users without checking function permissions.",
+    },
+    defensiveDesign: {
+      ja: "APIごとに必要な機能権限を定義し、認証済みユーザーのロールと権限をdeny-by-defaultで検証してから処理する。",
+      en: "Define required permissions per API function, then validate the authenticated user's role and permissions with deny-by-default behavior before processing.",
+    },
+    vulnerable: {
+      route: "/api/vulnerable/admin/invitations",
+      request:
+        'POST /api/vulnerable/admin/invitations\n{\n  "actorUserId": "user-demo-alice",\n  "targetEmailAlias": "analyst.demo",\n  "requestedRole": "admin"\n}',
+      response: {
+        ja: "一般ユーザーからの管理者招待作成を、機能権限なしで受け入れます。",
+        en: "Expected to accept an administrative invitation request from a regular user without feature permission checks.",
+      },
+      note: {
+        ja: "合成した招待プレビューのみを返し、実メール送信や実アカウント作成は行いません。",
+        en: "The demo returns a synthetic invitation preview only and sends no real email or account creation.",
+      },
+    },
+    secure: {
+      route: "/api/secure/admin/invitations",
+      request:
+        'POST /api/secure/admin/invitations\n{\n  "actorUserId": "user-demo-alice",\n  "targetEmailAlias": "analyst.demo",\n  "requestedRole": "admin"\n}',
+      response: {
+        ja: "必要な機能権限を持たないユーザーの管理操作を403で拒否します。",
+        en: "Expected to return 403 when the user does not have the required function permission.",
+      },
+      note: {
+        ja: "安全APIでは、管理操作ごとの権限をAPI層で確認し、未定義または不足している権限を既定で拒否します。",
+        en: "The secure API checks per-function permissions in the API layer and rejects missing or undefined authorization by default.",
+      },
+    },
+    checklist: {
+      ja: [
+        "管理機能のURLやメニュー表示だけに依存していない。",
+        "API層で機能ごとの必要権限を確認している。",
+        "一般ユーザー、レビュー担当者、管理者の権限差をテストしている。",
+        "未定義の機能や権限不足をdeny-by-defaultで拒否している。",
+      ],
+      en: [
+        "Authorization does not rely on admin URLs or hidden menu items alone.",
+        "The API layer checks required permissions per function.",
+        "Permission differences between learners, reviewers, and admins are tested.",
+        "Undefined functions or missing permissions are rejected by default.",
+      ],
+    },
+  },
+  {
     id: "business-flow",
     riskCategory: "OWASP API6:2023 Sensitive Business Flows",
     difficulty: "Advanced",
@@ -390,6 +454,68 @@ export const learningModules: LearningModule[] = [
         "Hosts outside the allowlist are rejected.",
         "Private IP ranges are rejected.",
         "Redirect counts and timeouts are controlled.",
+      ],
+    },
+  },
+  {
+    id: "security-config",
+    riskCategory: "OWASP API8:2023 Security Misconfiguration",
+    difficulty: "Intermediate",
+    progress: "ready",
+    title: {
+      ja: "Security Misconfigurationと診断情報の公開制御",
+      en: "Security Misconfiguration and Diagnostic Exposure Controls",
+    },
+    summary: {
+      ja: "診断用APIを例に、デバッグ情報、過度に広いCORS、セキュリティヘッダー不足が重なる誤設定を安全な公開制御と比較します。",
+      en: "Use a diagnostics API to compare debug exposure, overly broad CORS, and missing security headers against controlled public configuration disclosure.",
+    },
+    vulnerableCondition: {
+      ja: "診断や設定確認のAPIが、デバッグ情報、内部パス、スタックトレース、ワイルドカードCORSを利用者に返している。",
+      en: "A diagnostics or configuration API returns debug details, internal paths, stack traces, and wildcard CORS behavior to callers.",
+    },
+    defensiveDesign: {
+      ja: "公開してよい設定だけを返し、許可Origin、キャッシュ無効化、セキュリティヘッダー、詳細エラー抑制をAPI層で適用する。",
+      en: "Return only approved public configuration while applying origin allowlists, no-store caching, security headers, and suppressed verbose errors in the API layer.",
+    },
+    vulnerable: {
+      route: "/api/vulnerable/config/diagnostics",
+      request:
+        'POST /api/vulnerable/config/diagnostics\n{\n  "requestedOrigin": "https://untrusted.example",\n  "includeDebugDetails": true\n}',
+      response: {
+        ja: "デバッグ設定、合成スタックトレース、ワイルドカードCORSを含む診断情報を返します。",
+        en: "Expected to return debug settings, a synthetic stack trace, and wildcard CORS diagnostics.",
+      },
+      note: {
+        ja: "返す値は合成メタデータだけで、実設定、秘密情報、実ログは含めません。",
+        en: "The response uses synthetic metadata only and contains no real configuration, secrets, or logs.",
+      },
+    },
+    secure: {
+      route: "/api/secure/config/diagnostics",
+      request:
+        'POST /api/secure/config/diagnostics\n{\n  "requestedOrigin": "https://untrusted.example",\n  "includeDebugDetails": true\n}',
+      response: {
+        ja: "許可されていないOriginからの診断要求を403で拒否し、セキュリティヘッダーを適用します。",
+        en: "Expected to return 403 for an unallowed origin while applying security headers.",
+      },
+      note: {
+        ja: "安全APIでは、診断情報の公開範囲を最小化し、詳細エラーや内部パスを返しません。",
+        en: "The secure API minimizes diagnostic disclosure and does not return verbose errors or internal paths.",
+      },
+    },
+    checklist: {
+      ja: [
+        "デバッグ情報やスタックトレースを公開APIで返していない。",
+        "CORSの許可Originを明示的な許可リストで制御している。",
+        "診断APIでもセキュリティヘッダーとno-storeを適用している。",
+        "実設定、秘密情報、内部パス、実ログをレスポンスに含めていない。",
+      ],
+      en: [
+        "Public APIs do not return debug details or stack traces.",
+        "CORS allowed origins are controlled with an explicit allowlist.",
+        "Diagnostics APIs also apply security headers and no-store caching.",
+        "Responses exclude real configuration, secrets, internal paths, and real logs.",
       ],
     },
   },

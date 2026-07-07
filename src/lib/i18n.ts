@@ -46,6 +46,10 @@ export const uiText = {
           title: "言語切替",
           text: "初期表示は日本語です。画面全体を英語表示へ切り替えられます。",
         },
+        {
+          title: "OWASP API Security Top 10",
+          text: "API固有の代表的なセキュリティリスク分類を参照し、公式分類に沿って学習テーマを整理します。",
+        },
       ],
     },
     topics: {
@@ -121,6 +125,10 @@ export const uiText = {
         {
           title: "Language switching",
           text: "Japanese is the default, with a shared switcher for English UI text.",
+        },
+        {
+          title: "OWASP API Security Top 10",
+          text: "Learning topics are organized against the official API-specific risk categories.",
         },
       ],
     },

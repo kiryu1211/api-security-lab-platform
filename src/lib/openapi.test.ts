@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { learningModules } from "@/data/learning-modules";
 import openApiSpec from "../../docs/api/openapi.json";
 
 type OpenApiOperation = {
@@ -9,6 +10,10 @@ type OpenApiOperation = {
 };
 
 type OpenApiPathItem = Record<string, OpenApiOperation>;
+
+function toOpenApiPath(route: string) {
+  return route.replace("{orderId}", "{orderId}");
+}
 
 describe("OpenAPI specification", () => {
   it("documents separated secure and vulnerable support routes", () => {
@@ -26,10 +31,18 @@ describe("OpenAPI specification", () => {
     expect(openApiSpec.paths).toHaveProperty(
       "/api/vulnerable/rate-limit/search",
     );
+    expect(openApiSpec.paths).toHaveProperty("/api/secure/admin/invitations");
+    expect(openApiSpec.paths).toHaveProperty(
+      "/api/vulnerable/admin/invitations",
+    );
     expect(openApiSpec.paths).toHaveProperty("/api/secure/profile");
     expect(openApiSpec.paths).toHaveProperty("/api/vulnerable/profile");
     expect(openApiSpec.paths).toHaveProperty("/api/secure/fetch-url");
     expect(openApiSpec.paths).toHaveProperty("/api/vulnerable/fetch-url");
+    expect(openApiSpec.paths).toHaveProperty("/api/secure/config/diagnostics");
+    expect(openApiSpec.paths).toHaveProperty(
+      "/api/vulnerable/config/diagnostics",
+    );
     expect(openApiSpec.paths).toHaveProperty(
       "/api/secure/business-flow/reservations",
     );
@@ -48,6 +61,17 @@ describe("OpenAPI specification", () => {
     expect(openApiSpec.paths).toHaveProperty(
       "/api/vulnerable/inventory/operations",
     );
+  });
+
+  it("documents every ready learning module route", () => {
+    for (const learningModule of learningModules) {
+      expect(openApiSpec.paths).toHaveProperty(
+        toOpenApiPath(learningModule.vulnerable.route),
+      );
+      expect(openApiSpec.paths).toHaveProperty(
+        toOpenApiPath(learningModule.secure.route),
+      );
+    }
   });
 
   it("describes vulnerable routes as local-only", () => {

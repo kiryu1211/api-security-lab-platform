@@ -131,13 +131,15 @@ erDiagram
 - 脆弱APIでは `LAB_MODE=local` を必須とし、`NODE_ENV=production` では無効化する。
 - 脆弱APIを操作する画面には、ローカル限定であり外部公開してはいけないことを常に表示する。
 - 安全APIでは、ユーザーID、ロール、対象リソース所有者をAPI層で検証する。
+- Broken Function Level Authorization対策では、管理機能に必要な機能権限をAPI層で確認し、権限不足をdeny-by-defaultで拒否する。
 - Sensitive Business Flows対策では、重要な予約・購入フローについて、フロー順序、ユーザー単位上限、在庫制約、自動化の兆候をAPI層で検証する。
 - SSRF対策では、実ネットワークアクセスを行わず、許可リスト、プライベートホスト拒否、リダイレクト方針、タイムアウト方針をプレビューとして返す。
+- Security Misconfiguration対策では、デバッグ情報を抑制し、Origin許可リスト、診断APIのキャッシュ無効化、セキュリティレスポンスヘッダーを適用する。
 - Unsafe Consumption of APIs対策では、外部API応答を信頼境界外の入力として扱い、提供元、TLS前提、リダイレクト許可先、応答サイズ、スキーマ、権限フィールドを検証する。
 - Improper Inventory Management対策では、APIの環境、バージョン、公開範囲、所有者、文書の鮮度、退役状態、保護策の適用状況を処理前に検証する。
 - レート制限は、現在はデモユーザーとAPIルート単位で適用する。送信元単位の制限は今後の拡張候補とする。
 
-ヘルスチェック、サンプルデータ、BOLA注文、認証セッション、レート制限検索、業務フロー予約、プロフィール更新、URL取得プレビュー、APIインベントリ操作、外部プロフィール連携の各Route Handlerを `/api/vulnerable/*` と `/api/secure/*` に分けます。脆弱APIルートは、レスポンスを返す前に共通の安全ガードを通します。
+ヘルスチェック、サンプルデータ、BOLA注文、認証セッション、レート制限検索、管理者招待、業務フロー予約、プロフィール更新、URL取得プレビュー、設定診断、APIインベントリ操作、外部プロフィール連携の各Route Handlerを `/api/vulnerable/*` と `/api/secure/*` に分けます。脆弱APIルートは、レスポンスを返す前に共通の安全ガードを通します。
 
 ## API基盤
 
@@ -168,12 +170,26 @@ erDiagram
 - 脆弱なSSRFルート `/api/vulnerable/fetch-url` は、任意URLを受け入れる例として動作する。ただし、実際の外部ネットワークアクセスは行わない。安全なルート `/api/secure/fetch-url` はHTTPSを必須とし、プライベートホストを拒否し、`api.example.test` のみを許可するプレビューを返す。
 - SSRFデモでは実際の外部ネットワークアクセスを行わず、脆弱APIと安全APIのどちらもプレビュー用メタデータだけを返す。
 
+## Broken Function Level Authorizationモジュール設計
+
+- 脆弱な管理者招待ルート `/api/vulnerable/admin/invitations` は、ローカル限定の安全ガードを通過した後、機能単位の権限を確認せずに合成した管理者招待リクエストを受け入れる。
+- 安全な管理者招待ルート `/api/secure/admin/invitations` は、招待プレビューを返す前に、実行者のロールと `admin:invitations:create` 権限を検証する。
+- 比較UIでは、管理権限を持たない学習者 `user-demo-alice` としてリクエストを実行する。脆弱ルートでは受け入れられ、安全ルートでは `403 FORBIDDEN` が返ることを確認できる。
+- 機能単位認可デモでは合成した実行者と招待メタデータのみを使用し、実メール送信、実アカウント作成、実在する個人情報、外部サービス連携は行わない。
+
 ## Sensitive Business Flowsモジュール設計
 
 - 脆弱な業務フロールート `/api/vulnerable/business-flow/reservations` は、ローカル限定の安全ガードを通過した後、限定商品の予約リクエストをフロー順序やユーザー単位上限を確認せずに受け入れる。
 - 安全な業務フロールート `/api/secure/business-flow/reservations` は、予約前にフロー順序、ユーザー単位の数量上限、在庫制約、自動化悪用の観点を検証する。
 - 比較UIでは、`direct-checkout` で `product-demo-001` を4件予約しようとするリクエストを実行する。脆弱ルートでは受け入れられ、安全ルートでは `403 FORBIDDEN` が返ることを確認できる。
 - 業務フローデモでは合成した限定商品データだけを使用し、実在する商品、注文、決済、個人情報、外部サービス連携は使用しない。
+
+## Security Misconfigurationモジュール設計
+
+- 脆弱な設定診断ルート `/api/vulnerable/config/diagnostics` は、ローカル限定の安全ガードを通過した後、合成したデバッグ設定、合成スタックトレース、過度に広いCORSレスポンスメタデータを返す。
+- 安全な設定診断ルート `/api/secure/config/diagnostics` は、リクエストされたOriginを検証し、デバッグ詳細を抑制し、キャッシュを無効化し、`X-Content-Type-Options`、`Content-Security-Policy`、`Referrer-Policy` などのセキュリティレスポンスヘッダーを適用する。
+- 比較UIでは、リクエストOriginとして `https://untrusted.example` を送信する。脆弱ルートではワイルドカードCORSメタデータとともに受け入れられ、安全ルートでは `403 FORBIDDEN` が返ることを確認できる。
+- Security Misconfigurationデモでは合成した診断メタデータだけを使用し、実設定、秘密情報、個人情報、内部ログ、実スタックトレースは公開しない。
 
 ## Unsafe Consumption of APIsモジュール設計
 
@@ -211,7 +227,7 @@ flowchart TD
 ## セキュリティ検証設計
 
 - `src/lib/security-verification.test.ts` は、公開環境に相当する設定ですべての脆弱APIが `403 VULNERABLE_API_DISABLED` を返すことを横断的に確認する。
-- 同テストでは、安全APIがBOLA、認証不備、レート制限不足、業務フロー悪用、Mass Assignment、SSRF、旧API管理不備、外部API応答の過信を再現しないことを確認する。
+- 同テストでは、安全APIがBOLA、認証不備、レート制限不足、機能単位認可不備、業務フロー悪用、Mass Assignment、SSRF、セキュリティ設定不備、旧API管理不備、外部API応答の過信を再現しないことを確認する。
 - `src/lib/openapi.test.ts` は、すべての脆弱API操作にローカル限定の説明と公開環境相当での無効化レスポンスが記述されていることを確認する。
 - UI文言リソースは、日英のキー構造が揃っていることをテストし、共通画面ラベルの言語混在を避ける。
 

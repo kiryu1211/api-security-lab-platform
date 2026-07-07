@@ -373,6 +373,78 @@
         }
       }
     },
+    "/api/vulnerable/admin/invitations": {
+      "post": {
+        "tags": ["vulnerable"],
+        "summary": "Local-only broken function authorization admin invitation example",
+        "description": "Accepts a synthetic administrative invitation request without checking feature-level permission. This route is local-only and must not be publicly deployed.",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/AdminInvitationRequest"
+        },
+        "responses": {
+          "200": {
+            "description": "Administrative invitation preview accepted without function-level authorization when local mode is enabled",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Vulnerable route disabled outside local non-production mode",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/secure/admin/invitations": {
+      "post": {
+        "tags": ["secure"],
+        "summary": "Function-level authorization protected admin invitation",
+        "description": "Checks the actor's role and admin invitation feature permission before returning a synthetic invitation preview.",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/AdminInvitationRequest"
+        },
+        "responses": {
+          "200": {
+            "description": "Administrative invitation preview accepted after feature-level authorization",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Administrative function rejected by feature-level authorization",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/vulnerable/profile": {
       "patch": {
         "tags": ["vulnerable"],
@@ -494,6 +566,78 @@
           },
           "403": {
             "description": "URL rejected by SSRF protection policy",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vulnerable/config/diagnostics": {
+      "post": {
+        "tags": ["vulnerable"],
+        "summary": "Local-only security misconfiguration diagnostics example",
+        "description": "Returns synthetic debug configuration, permissive CORS metadata, and verbose diagnostic details to demonstrate security misconfiguration. This route is local-only and must not be publicly deployed.",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/SecurityConfigAuditRequest"
+        },
+        "responses": {
+          "200": {
+            "description": "Diagnostic metadata returned with insecure response policy when local mode is enabled",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Vulnerable route disabled outside local non-production mode",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/secure/config/diagnostics": {
+      "post": {
+        "tags": ["secure"],
+        "summary": "Protected security configuration diagnostics",
+        "description": "Applies origin allowlisting, suppressed debug details, no-store caching, and security response headers before returning minimal synthetic public configuration.",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/SecurityConfigAuditRequest"
+        },
+        "responses": {
+          "200": {
+            "description": "Minimal diagnostics returned after configuration exposure controls",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Diagnostics rejected by origin or configuration exposure policy",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -818,6 +962,21 @@
           }
         }
       },
+      "AdminInvitationRequest": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AdminInvitationRequest"
+            },
+            "example": {
+              "actorUserId": "user-demo-alice",
+              "targetEmailAlias": "analyst.demo",
+              "requestedRole": "admin"
+            }
+          }
+        }
+      },
       "ProfileUpdateRequest": {
         "required": true,
         "content": {
@@ -837,6 +996,20 @@
           "application/json": {
             "schema": { "$ref": "#/components/schemas/FetchUrlRequest" },
             "example": { "url": "https://api.example.test/resource" }
+          }
+        }
+      },
+      "SecurityConfigAuditRequest": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/SecurityConfigAuditRequest"
+            },
+            "example": {
+              "requestedOrigin": "https://untrusted.example",
+              "includeDebugDetails": true
+            }
           }
         }
       },
@@ -1005,6 +1178,25 @@
           }
         }
       },
+      "AdminInvitationRequest": {
+        "type": "object",
+        "required": ["targetEmailAlias", "requestedRole"],
+        "properties": {
+          "actorUserId": {
+            "type": "string",
+            "pattern": "^user-demo-[a-z-]+$",
+            "default": "user-demo-alice"
+          },
+          "targetEmailAlias": {
+            "type": "string",
+            "enum": ["analyst.demo", "owner.demo"]
+          },
+          "requestedRole": {
+            "type": "string",
+            "enum": ["learner", "reviewer", "admin"]
+          }
+        }
+      },
       "ProfileUpdateRequest": {
         "type": "object",
         "properties": {
@@ -1019,6 +1211,20 @@
         "required": ["url"],
         "properties": {
           "url": { "type": "string", "format": "uri" }
+        }
+      },
+      "SecurityConfigAuditRequest": {
+        "type": "object",
+        "required": ["requestedOrigin"],
+        "properties": {
+          "requestedOrigin": {
+            "type": "string",
+            "enum": ["https://lab.example.test", "https://untrusted.example"]
+          },
+          "includeDebugDetails": {
+            "type": "boolean",
+            "default": true
+          }
         }
       },
       "BusinessFlowReservationRequest": {

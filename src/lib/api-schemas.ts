@@ -35,6 +35,12 @@ export const authSessionBodySchema = z.object({
     .default("orders:read"),
 });
 
+export const adminInvitationBodySchema = z.object({
+  actorUserId: labUserIdSchema.default("user-demo-alice"),
+  targetEmailAlias: z.enum(["analyst.demo", "owner.demo"]),
+  requestedRole: z.enum(["learner", "reviewer", "admin"]),
+});
+
 export const rateLimitQuerySchema = z.object({
   userId: labUserIdSchema.default("user-demo-alice"),
   q: z.string().min(1).max(40).default("demo"),
@@ -49,6 +55,14 @@ export const profileUpdateBodySchema = z.object({
 
 export const fetchUrlBodySchema = z.object({
   url: z.string().url(),
+});
+
+export const securityConfigAuditBodySchema = z.object({
+  requestedOrigin: z.enum([
+    "https://lab.example.test",
+    "https://untrusted.example",
+  ]),
+  includeDebugDetails: z.boolean().default(true),
 });
 
 export const businessFlowReservationBodySchema = z.object({

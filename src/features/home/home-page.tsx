@@ -57,9 +57,11 @@ export function HomePage() {
     bola: { loading: false },
     auth: { loading: false },
     "rate-limit": { loading: false },
+    "function-auth": { loading: false },
     "business-flow": { loading: false },
     "mass-assignment": { loading: false },
     ssrf: { loading: false },
+    "security-config": { loading: false },
     "api-inventory": { loading: false },
     "unsafe-consumption": { loading: false },
   });
@@ -142,6 +144,27 @@ export function HomePage() {
             ),
           ]).then((responses) => responses[responses.length - 1]),
         ];
+      case "function-auth":
+        return [
+          fetch("/api/vulnerable/admin/invitations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              actorUserId: "user-demo-alice",
+              targetEmailAlias: "analyst.demo",
+              requestedRole: "admin",
+            }),
+          }),
+          fetch("/api/secure/admin/invitations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              actorUserId: "user-demo-alice",
+              targetEmailAlias: "analyst.demo",
+              requestedRole: "admin",
+            }),
+          }),
+        ];
       case "business-flow":
         return [
           fetch("/api/vulnerable/business-flow/reservations", {
@@ -197,6 +220,25 @@ export function HomePage() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ url: "https://127.0.0.1/admin" }),
+          }),
+        ];
+      case "security-config":
+        return [
+          fetch("/api/vulnerable/config/diagnostics", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              requestedOrigin: "https://untrusted.example",
+              includeDebugDetails: true,
+            }),
+          }),
+          fetch("/api/secure/config/diagnostics", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              requestedOrigin: "https://untrusted.example",
+              includeDebugDetails: true,
+            }),
           }),
         ];
       case "unsafe-consumption":

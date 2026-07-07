@@ -131,13 +131,15 @@ erDiagram
 - `LAB_MODE=local` is required for vulnerable APIs, and vulnerable APIs are disabled when `NODE_ENV=production`.
 - Screens that operate vulnerable APIs always display warnings that they are local-only and must not be publicly exposed.
 - Secure APIs validate user ID, role, and target resource ownership in the API layer.
+- Broken Function Level Authorization protection validates required feature permissions for administrative functions with deny-by-default behavior.
 - Sensitive Business Flows protection validates workflow order, per-user limits, stock constraints, and automation-abuse signals for critical reservation or purchase flows in the API layer.
 - SSRF protection returns validation previews for allowlists, private host rejection, redirect policy, and timeout policy without real network access.
+- Security Misconfiguration protection suppresses debug details, applies origin allowlists, disables caching for diagnostics, and sets security response headers.
 - Unsafe Consumption of APIs protection treats third-party API responses as input outside the trust boundary and validates provider identity, TLS assumptions, redirect allowlists, payload size, schema, and privileged fields.
 - Improper Inventory Management protection validates API environment, version, exposure, owner, documentation freshness, lifecycle state, and protection parity before processing.
 - Rate limiting currently applies per demo user and API route. Per-source limits are a future extension candidate.
 
-Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route handlers for health checks, lab samples, BOLA orders, authentication sessions, rate-limit search, business-flow reservations, profile updates, URL fetch previews, API inventory operations, and third-party profile imports. Vulnerable routes use the shared safety guard before returning a response.
+Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route handlers for health checks, lab samples, BOLA orders, authentication sessions, rate-limit search, admin invitations, business-flow reservations, profile updates, URL fetch previews, configuration diagnostics, API inventory operations, and third-party profile imports. Vulnerable routes use the shared safety guard before returning a response.
 
 ## API Foundation
 
@@ -168,12 +170,26 @@ Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route
 - The vulnerable SSRF route `/api/vulnerable/fetch-url` accepts arbitrary URLs for demonstration without real outbound network access. The secure route `/api/secure/fetch-url` returns a preview that requires HTTPS, rejects private hosts, and allows only `api.example.test`.
 - SSRF demos never perform real outbound network access; both vulnerable and secure routes return preview metadata only.
 
+## Broken Function Level Authorization Module Design
+
+- The vulnerable admin invitation route `/api/vulnerable/admin/invitations` accepts a synthetic administrative invitation request without checking feature-level permission after the local-only safety guard passes.
+- The secure admin invitation route `/api/secure/admin/invitations` validates the actor role and `admin:invitations:create` permission before returning an invitation preview.
+- The comparison UI runs the request as `user-demo-alice`, a learner without administrative permission. The vulnerable route accepts the request, while the secure route returns `403 FORBIDDEN`.
+- The function authorization demo uses synthetic actor and invitation metadata only; it does not send real email, create real accounts, use real personal data, or integrate with external services.
+
 ## Sensitive Business Flows Module Design
 
 - The vulnerable business-flow route `/api/vulnerable/business-flow/reservations` accepts limited-product reservation requests without workflow order or per-user limit checks after the local-only safety guard passes.
 - The secure business-flow route `/api/secure/business-flow/reservations` validates workflow order, per-user quantity limits, stock constraints, and automation-abuse concerns before reservation.
 - The comparison UI attempts to reserve four units of `product-demo-001` through `direct-checkout`. The vulnerable route accepts the request, while the secure route returns `403 FORBIDDEN`.
 - The business-flow demo uses synthetic limited-product data only; it does not use real products, orders, payments, personal data, or external service integrations.
+
+## Security Misconfiguration Module Design
+
+- The vulnerable configuration diagnostics route `/api/vulnerable/config/diagnostics` returns synthetic debug settings, a synthetic stack trace, and permissive CORS response metadata after the local-only safety guard passes.
+- The secure configuration diagnostics route `/api/secure/config/diagnostics` validates the requested origin, suppresses debug details, disables caching, and applies security response headers such as `X-Content-Type-Options`, `Content-Security-Policy`, and `Referrer-Policy`.
+- The comparison UI sends `https://untrusted.example` as the requested origin. The vulnerable route accepts it with wildcard CORS metadata, while the secure route returns `403 FORBIDDEN`.
+- The security misconfiguration demo uses synthetic diagnostic metadata only; it does not expose real configuration, secrets, personal data, internal logs, or real stack traces.
 
 ## Unsafe Consumption of APIs Module Design
 
@@ -211,7 +227,7 @@ flowchart TD
 ## Security Verification Design
 
 - `src/lib/security-verification.test.ts` verifies across all vulnerable APIs that production-like settings return `403 VULNERABLE_API_DISABLED`.
-- The same test verifies that secure APIs do not reproduce BOLA, weak authentication, missing rate limiting, business-flow abuse, Mass Assignment, SSRF, legacy API inventory gaps, or overtrusted third-party response behavior.
+- The same test verifies that secure APIs do not reproduce BOLA, weak authentication, missing rate limiting, broken function-level authorization, business-flow abuse, Mass Assignment, SSRF, security misconfiguration, legacy API inventory gaps, or overtrusted third-party response behavior.
 - `src/lib/openapi.test.ts` verifies that every vulnerable API operation documents local-only behavior and the disabled response for production-like settings.
 - UI text resources are tested for matching Japanese and English key structures to avoid mixed-language shared screen labels.
 
