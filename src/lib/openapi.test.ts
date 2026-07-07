@@ -30,6 +30,24 @@ describe("OpenAPI specification", () => {
     expect(openApiSpec.paths).toHaveProperty("/api/vulnerable/profile");
     expect(openApiSpec.paths).toHaveProperty("/api/secure/fetch-url");
     expect(openApiSpec.paths).toHaveProperty("/api/vulnerable/fetch-url");
+    expect(openApiSpec.paths).toHaveProperty(
+      "/api/secure/business-flow/reservations",
+    );
+    expect(openApiSpec.paths).toHaveProperty(
+      "/api/vulnerable/business-flow/reservations",
+    );
+    expect(openApiSpec.paths).toHaveProperty(
+      "/api/secure/third-party/profile-import",
+    );
+    expect(openApiSpec.paths).toHaveProperty(
+      "/api/vulnerable/third-party/profile-import",
+    );
+    expect(openApiSpec.paths).toHaveProperty(
+      "/api/secure/inventory/operations",
+    );
+    expect(openApiSpec.paths).toHaveProperty(
+      "/api/vulnerable/inventory/operations",
+    );
   });
 
   it("describes vulnerable routes as local-only", () => {

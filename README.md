@@ -4,7 +4,7 @@ A local-first learning and verification platform for understanding common API se
 
 ## Purpose
 
-Modern applications often depend on APIs as their main interface for data access and business operations. Authorization mistakes, weak authentication, excessive data exposure, missing rate limits, and unsafe outbound requests can lead to serious security incidents.
+Modern applications often depend on APIs as their main interface for data access and business operations. Authorization mistakes, weak authentication, excessive data exposure, missing rate limits, business-flow abuse, legacy API inventory gaps, unsafe outbound requests, and overtrusted third-party API responses can lead to serious security incidents.
 
 The purpose of this system is to provide an isolated environment for examining how API vulnerabilities occur and how secure design prevents them.
 
@@ -16,8 +16,11 @@ The purpose of this system is to provide an isolated environment for examining h
 - BOLA and object-level authorization scenarios
 - Authentication and token handling scenarios
 - Rate limiting and abuse prevention scenarios
+- Sensitive Business Flows and business-flow abuse prevention scenarios
 - Mass assignment and object property authorization scenarios
 - SSRF prevention scenario
+- API inventory and legacy version management scenario
+- Unsafe Consumption of APIs and third-party response validation scenario
 - Japanese-first interface with a shared English language switcher on every screen
 
 ## Implemented Capabilities
@@ -25,12 +28,12 @@ The purpose of this system is to provide an isolated environment for examining h
 - Next.js App Router, TypeScript, React, Zod, Vitest, ESLint, and Prettier are configured.
 - The learning UI includes a topic list, topic overview, vulnerable/secure comparison view, and implementation checklist.
 - UI text and learning module content are managed through Japanese and English resources instead of being embedded directly in the screen component.
-- Route separation is implemented across health checks, lab samples, BOLA orders, authentication sessions, rate-limit search, profile updates, and URL fetch previews under `/api/vulnerable/*` and `/api/secure/*`.
+- Route separation is implemented across health checks, lab samples, BOLA orders, authentication sessions, rate-limit search, business-flow reservations, profile updates, URL fetch previews, API inventory operations, and third-party profile imports under `/api/vulnerable/*` and `/api/secure/*`.
 - Shared API response helpers, Zod request validation, and safe local sample users/resources are available.
 - OpenAPI specification is available at [`docs/api/openapi.json`](docs/api/openapi.json).
 - The BOLA module includes runnable vulnerable and secure order APIs for comparing missing ownership checks with verified ownership checks.
 - The authentication module includes runnable vulnerable and secure session APIs for comparing insufficient token validation with signature, expiration, revocation, and permission validation.
-- Rate limiting, Mass Assignment, and SSRF modules include runnable vulnerable and secure APIs. SSRF demos return safe previews only and do not perform real outbound network access.
+- Rate limiting, Sensitive Business Flows, Mass Assignment, SSRF, Improper Inventory Management, and Unsafe Consumption of APIs modules include runnable vulnerable and secure APIs. Sensitive Business Flows demos use synthetic limited-product data only and perform no real purchase or external payment. Improper Inventory Management demos issue no real tokens and send no notifications. SSRF and Unsafe Consumption of APIs demos return safe previews or synthetic responses only and do not perform real outbound network access.
 - Security verification tests confirm that every vulnerable API is disabled in production-like settings, secure APIs do not reproduce the covered vulnerabilities, OpenAPI vulnerable-route descriptions remain local-only, and Japanese/English UI text resources stay aligned.
 
 ## Safety Policy
@@ -39,7 +42,7 @@ The vulnerable examples are for controlled local verification only. They must no
 
 Vulnerable API routes are enabled only when `LAB_MODE=local` and the application is not running with `NODE_ENV=production`. Secure routes remain available for comparison and verification.
 
-SSRF demos do not perform real outbound network access from either vulnerable or secure APIs; they return verification preview metadata only.
+SSRF and third-party API response demos do not perform real outbound network access from either vulnerable or secure APIs; they return verification preview metadata or synthetic responses only.
 
 ## Usage
 

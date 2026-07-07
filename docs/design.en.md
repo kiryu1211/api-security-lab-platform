@@ -131,10 +131,13 @@ erDiagram
 - `LAB_MODE=local` is required for vulnerable APIs, and vulnerable APIs are disabled when `NODE_ENV=production`.
 - Screens that operate vulnerable APIs always display warnings that they are local-only and must not be publicly exposed.
 - Secure APIs validate user ID, role, and target resource ownership in the API layer.
+- Sensitive Business Flows protection validates workflow order, per-user limits, stock constraints, and automation-abuse signals for critical reservation or purchase flows in the API layer.
 - SSRF protection returns validation previews for allowlists, private host rejection, redirect policy, and timeout policy without real network access.
+- Unsafe Consumption of APIs protection treats third-party API responses as input outside the trust boundary and validates provider identity, TLS assumptions, redirect allowlists, payload size, schema, and privileged fields.
+- Improper Inventory Management protection validates API environment, version, exposure, owner, documentation freshness, lifecycle state, and protection parity before processing.
 - Rate limiting currently applies per demo user and API route. Per-source limits are a future extension candidate.
 
-Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route handlers for health checks, lab samples, BOLA orders, authentication sessions, rate-limit search, profile updates, and URL fetch previews. Vulnerable routes use the shared safety guard before returning a response.
+Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route handlers for health checks, lab samples, BOLA orders, authentication sessions, rate-limit search, business-flow reservations, profile updates, URL fetch previews, API inventory operations, and third-party profile imports. Vulnerable routes use the shared safety guard before returning a response.
 
 ## API Foundation
 
@@ -165,6 +168,27 @@ Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route
 - The vulnerable SSRF route `/api/vulnerable/fetch-url` accepts arbitrary URLs for demonstration without real outbound network access. The secure route `/api/secure/fetch-url` returns a preview that requires HTTPS, rejects private hosts, and allows only `api.example.test`.
 - SSRF demos never perform real outbound network access; both vulnerable and secure routes return preview metadata only.
 
+## Sensitive Business Flows Module Design
+
+- The vulnerable business-flow route `/api/vulnerable/business-flow/reservations` accepts limited-product reservation requests without workflow order or per-user limit checks after the local-only safety guard passes.
+- The secure business-flow route `/api/secure/business-flow/reservations` validates workflow order, per-user quantity limits, stock constraints, and automation-abuse concerns before reservation.
+- The comparison UI attempts to reserve four units of `product-demo-001` through `direct-checkout`. The vulnerable route accepts the request, while the secure route returns `403 FORBIDDEN`.
+- The business-flow demo uses synthetic limited-product data only; it does not use real products, orders, payments, personal data, or external service integrations.
+
+## Unsafe Consumption of APIs Module Design
+
+- The vulnerable third-party profile import route `/api/vulnerable/third-party/profile-import` imports redirect targets and privileged fields from synthetic third-party API responses without validation after the local-only safety guard passes.
+- The secure third-party profile import route `/api/secure/third-party/profile-import` validates provider identity, TLS assumptions, redirect allowlists, payload size, response schema, and privileged fields before importing data.
+- The comparison UI attempts to import `partner-response-redirect-admin`. The vulnerable route accepts the admin role and unallowed redirect target, while the secure route returns `403 FORBIDDEN`.
+- The third-party API response demo performs no real external API calls and uses synthetic external responses only. It does not use real partners, personal data, credentials, or external service integrations.
+
+## Improper Inventory Management Module Design
+
+- The vulnerable API inventory route `/api/vulnerable/inventory/operations` processes a retired legacy API operation without lifecycle or exposure checks after the local-only safety guard passes.
+- The secure API inventory route `/api/secure/inventory/operations` validates API environment, version, exposure, owner, documentation freshness, lifecycle state, and protection parity, then rejects retired or unmanaged operations.
+- The comparison UI attempts to run `legacy-token-reset-v1` in `production`. The vulnerable route creates a preview, while the secure route returns `403 FORBIDDEN`.
+- The API inventory demo uses synthetic inventory and operation results only. It does not issue real tokens, send notifications, use real user data, use real logs, or integrate with external services.
+
 ## Multilingual UI Design
 
 The default UI language is Japanese. A shared language switcher should be placed in the common header or navigation area on every screen. The selected language is shared across the application and persists across screen transitions.
@@ -187,7 +211,7 @@ flowchart TD
 ## Security Verification Design
 
 - `src/lib/security-verification.test.ts` verifies across all vulnerable APIs that production-like settings return `403 VULNERABLE_API_DISABLED`.
-- The same test verifies that secure APIs do not reproduce BOLA, weak authentication, Mass Assignment, SSRF, or missing rate limiting behavior.
+- The same test verifies that secure APIs do not reproduce BOLA, weak authentication, missing rate limiting, business-flow abuse, Mass Assignment, SSRF, legacy API inventory gaps, or overtrusted third-party response behavior.
 - `src/lib/openapi.test.ts` verifies that every vulnerable API operation documents local-only behavior and the disabled response for production-like settings.
 - UI text resources are tested for matching Japanese and English key structures to avoid mixed-language shared screen labels.
 

@@ -57,8 +57,11 @@ export function HomePage() {
     bola: { loading: false },
     auth: { loading: false },
     "rate-limit": { loading: false },
+    "business-flow": { loading: false },
     "mass-assignment": { loading: false },
     ssrf: { loading: false },
+    "api-inventory": { loading: false },
+    "unsafe-consumption": { loading: false },
   });
   const t = uiText[language];
   const selectedModule = getLearningModule(selectedModuleId);
@@ -139,6 +142,29 @@ export function HomePage() {
             ),
           ]).then((responses) => responses[responses.length - 1]),
         ];
+      case "business-flow":
+        return [
+          fetch("/api/vulnerable/business-flow/reservations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: "user-demo-alice",
+              productId: "product-demo-001",
+              quantity: 4,
+              flowStep: "direct-checkout",
+            }),
+          }),
+          fetch("/api/secure/business-flow/reservations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: "user-demo-alice",
+              productId: "product-demo-001",
+              quantity: 4,
+              flowStep: "direct-checkout",
+            }),
+          }),
+        ];
       case "mass-assignment":
         return [
           fetch("/api/vulnerable/profile", {
@@ -171,6 +197,44 @@ export function HomePage() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ url: "https://127.0.0.1/admin" }),
+          }),
+        ];
+      case "unsafe-consumption":
+        return [
+          fetch("/api/vulnerable/third-party/profile-import", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              providerResponseId: "partner-response-redirect-admin",
+              expectedProvider: "trusted-profile-service",
+            }),
+          }),
+          fetch("/api/secure/third-party/profile-import", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              providerResponseId: "partner-response-redirect-admin",
+              expectedProvider: "trusted-profile-service",
+            }),
+          }),
+        ];
+      case "api-inventory":
+        return [
+          fetch("/api/vulnerable/inventory/operations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              endpointId: "legacy-token-reset-v1",
+              requestedEnvironment: "production",
+            }),
+          }),
+          fetch("/api/secure/inventory/operations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              endpointId: "legacy-token-reset-v1",
+              requestedEnvironment: "production",
+            }),
           }),
         ];
     }

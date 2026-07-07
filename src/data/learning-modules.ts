@@ -1,7 +1,14 @@
 import type { Language } from "@/lib/i18n";
 
 export type LearningModuleId =
-  "bola" | "auth" | "rate-limit" | "mass-assignment" | "ssrf";
+  | "bola"
+  | "auth"
+  | "rate-limit"
+  | "business-flow"
+  | "mass-assignment"
+  | "ssrf"
+  | "api-inventory"
+  | "unsafe-consumption";
 
 export type LearningModule = {
   id: LearningModuleId;
@@ -205,6 +212,68 @@ export const learningModules: LearningModule[] = [
     },
   },
   {
+    id: "business-flow",
+    riskCategory: "OWASP API6:2023 Sensitive Business Flows",
+    difficulty: "Advanced",
+    progress: "ready",
+    title: {
+      ja: "Sensitive Business Flowsと業務フロー悪用対策",
+      en: "Sensitive Business Flows and Abuse Controls",
+    },
+    summary: {
+      ja: "限定在庫の予約フローを例に、業務上重要なAPIが自動化やフロー飛ばしを制御できるかを比較します。",
+      en: "Use a limited-stock reservation flow to compare whether a business-critical API controls automation and skipped workflow steps.",
+    },
+    vulnerableCondition: {
+      ja: "購入や予約などの重要な業務フローで、フロー順序、ユーザー単位上限、在庫制約を確認していない。",
+      en: "A sensitive purchase or reservation flow does not verify workflow order, per-user limits, or stock constraints.",
+    },
+    defensiveDesign: {
+      ja: "業務上重要な操作を特定し、フロー順序、数量上限、在庫確認、自動化の兆候をAPI層で検証する。",
+      en: "Identify business-critical operations and validate workflow order, quantity limits, stock state, and automation signals in the API layer.",
+    },
+    vulnerable: {
+      route: "/api/vulnerable/business-flow/reservations",
+      request:
+        'POST /api/vulnerable/business-flow/reservations\n{\n  "userId": "user-demo-alice",\n  "productId": "product-demo-001",\n  "quantity": 4,\n  "flowStep": "direct-checkout"\n}',
+      response: {
+        ja: "フロー順序やユーザー単位上限を確認せず、過剰な予約を受け入れます。",
+        en: "Expected to accept excessive reservations without workflow or per-user limit checks.",
+      },
+      note: {
+        ja: "合成した限定商品データのみを使い、実際の購入や外部決済は行いません。",
+        en: "The demo uses synthetic limited-product data only and performs no real purchase or external payment.",
+      },
+    },
+    secure: {
+      route: "/api/secure/business-flow/reservations",
+      request:
+        'POST /api/secure/business-flow/reservations\n{\n  "userId": "user-demo-alice",\n  "productId": "product-demo-001",\n  "quantity": 4,\n  "flowStep": "direct-checkout"\n}',
+      response: {
+        ja: "フロー順序違反やユーザー単位上限超過を403で拒否します。",
+        en: "Expected to return 403 for skipped workflow steps or exceeded per-user limits.",
+      },
+      note: {
+        ja: "安全APIでは、業務フロー固有のルールを認可・不正利用対策として扱います。",
+        en: "The secure API treats business-flow rules as authorization and abuse-prevention controls.",
+      },
+    },
+    checklist: {
+      ja: [
+        "業務上重要なAPI操作を特定している。",
+        "フロー順序と状態遷移をAPI層で検証している。",
+        "ユーザー単位の数量上限や在庫制約を確認している。",
+        "自動化による過剰利用を検知・制限する観点を持っている。",
+      ],
+      en: [
+        "Business-critical API operations are identified.",
+        "Workflow order and state transitions are validated in the API layer.",
+        "Per-user quantity limits and stock constraints are checked.",
+        "Automated excessive use is considered and constrained.",
+      ],
+    },
+  },
+  {
     id: "mass-assignment",
     riskCategory: "OWASP API3:2023 Broken Object Property Level Authorization",
     difficulty: "Intermediate",
@@ -321,6 +390,130 @@ export const learningModules: LearningModule[] = [
         "Hosts outside the allowlist are rejected.",
         "Private IP ranges are rejected.",
         "Redirect counts and timeouts are controlled.",
+      ],
+    },
+  },
+  {
+    id: "unsafe-consumption",
+    riskCategory: "OWASP API10:2023 Unsafe Consumption of APIs",
+    difficulty: "Advanced",
+    progress: "ready",
+    title: {
+      ja: "外部API応答の過信と検証",
+      en: "Unsafe Consumption of Third-Party APIs",
+    },
+    summary: {
+      ja: "外部APIから返る合成応答を例に、提供元、リダイレクト先、応答スキーマ、権限フィールドを検証する重要性を比較します。",
+      en: "Use synthetic third-party API responses to compare validation of provider identity, redirect targets, response schema, and privileged fields.",
+    },
+    vulnerableCondition: {
+      ja: "信頼済みの外部APIから返ったデータだとみなし、リダイレクト先や権限に関わるフィールドを検証せずに取り込んでいる。",
+      en: "The API assumes third-party data is trusted and imports redirect targets or privileged fields without validation.",
+    },
+    defensiveDesign: {
+      ja: "外部API応答も利用者入力と同じ信頼境界の外側として扱い、提供元、TLS前提、リダイレクト許可先、応答サイズ、スキーマ、許可フィールドを検証する。",
+      en: "Treat third-party API responses as outside the trust boundary and validate provider identity, TLS assumptions, redirect allowlists, payload size, schema, and allowed fields.",
+    },
+    vulnerable: {
+      route: "/api/vulnerable/third-party/profile-import",
+      request:
+        'POST /api/vulnerable/third-party/profile-import\n{\n  "providerResponseId": "partner-response-redirect-admin",\n  "expectedProvider": "trusted-profile-service"\n}',
+      response: {
+        ja: "合成外部応答のリダイレクト先やadminロールを検証せずに受け入れます。",
+        en: "Expected to accept the synthetic partner redirect target and admin role without validation.",
+      },
+      note: {
+        ja: "実際の外部API通信は行わず、合成した外部応答だけを使用します。",
+        en: "The demo performs no real third-party API calls and uses synthetic external responses only.",
+      },
+    },
+    secure: {
+      route: "/api/secure/third-party/profile-import",
+      request:
+        'POST /api/secure/third-party/profile-import\n{\n  "providerResponseId": "partner-response-redirect-admin",\n  "expectedProvider": "trusted-profile-service"\n}',
+      response: {
+        ja: "許可されていないリダイレクト先や権限フィールドを検出して403で拒否します。",
+        en: "Expected to return 403 when an unallowed redirect target or privileged field is detected.",
+      },
+      note: {
+        ja: "安全APIでは、外部API応答を信頼境界外の入力として検証します。",
+        en: "The secure API validates third-party responses as untrusted input outside the trust boundary.",
+      },
+    },
+    checklist: {
+      ja: [
+        "外部API応答を利用者入力と同じように検証している。",
+        "リダイレクト先を許可リストで制限している。",
+        "外部応答から権限フィールドを取り込まない。",
+        "応答サイズ、スキーマ、提供元をAPI層で確認している。",
+      ],
+      en: [
+        "Third-party API responses are validated like user input.",
+        "Redirect targets are constrained with allowlists.",
+        "Privileged fields are not imported from external responses.",
+        "Payload size, schema, and provider identity are checked in the API layer.",
+      ],
+    },
+  },
+  {
+    id: "api-inventory",
+    riskCategory: "OWASP API9:2023 Improper Inventory Management",
+    difficulty: "Advanced",
+    progress: "ready",
+    title: {
+      ja: "APIインベントリと旧バージョン管理",
+      en: "API Inventory and Legacy Version Management",
+    },
+    summary: {
+      ja: "退役済みの旧API操作を例に、バージョン、公開範囲、所有者、保護策の管理が欠けるリスクを比較します。",
+      en: "Use a retired legacy API operation to compare risks caused by missing version, exposure, owner, and protection inventory controls.",
+    },
+    vulnerableCondition: {
+      ja: "旧APIや管理外エンドポイントが残り、退役状態、公開範囲、所有者、保護策の差分を確認しないまま利用できる。",
+      en: "Legacy or unmanaged endpoints remain usable without checking lifecycle state, exposure, ownership, or protection parity.",
+    },
+    defensiveDesign: {
+      ja: "APIインベントリで環境、バージョン、公開範囲、所有者、文書の鮮度、保護策の適用状況を管理し、退役済みや管理外の操作を拒否する。",
+      en: "Use an API inventory to track environment, version, exposure, owner, documentation freshness, and protection parity, then reject retired or unmanaged operations.",
+    },
+    vulnerable: {
+      route: "/api/vulnerable/inventory/operations",
+      request:
+        'POST /api/vulnerable/inventory/operations\n{\n  "endpointId": "legacy-token-reset-v1",\n  "requestedEnvironment": "production"\n}',
+      response: {
+        ja: "退役済みの旧API操作でも、状態や保護策を確認せずにプレビューを作成します。",
+        en: "Expected to create a preview for a retired legacy API operation without lifecycle or protection checks.",
+      },
+      note: {
+        ja: "実トークン発行や通知送信は行わず、合成した操作結果だけを返します。",
+        en: "The demo issues no real token and sends no notification; it returns synthetic operation results only.",
+      },
+    },
+    secure: {
+      route: "/api/secure/inventory/operations",
+      request:
+        'POST /api/secure/inventory/operations\n{\n  "endpointId": "legacy-token-reset-v1",\n  "requestedEnvironment": "production"\n}',
+      response: {
+        ja: "インベントリ上で退役済みのAPI操作を403で拒否します。",
+        en: "Expected to return 403 for an API operation marked as retired in the inventory.",
+      },
+      note: {
+        ja: "安全APIでは、APIの状態と保護策を処理前に確認します。",
+        en: "The secure API checks inventory state and protection controls before processing.",
+      },
+    },
+    checklist: {
+      ja: [
+        "APIの環境、バージョン、公開範囲を管理している。",
+        "退役済みAPIを実行経路から除外している。",
+        "API所有者と文書の鮮度を確認している。",
+        "旧バージョンにも現行APIと同等の保護策を適用している。",
+      ],
+      en: [
+        "API environment, version, and exposure are inventoried.",
+        "Retired APIs are excluded from executable paths.",
+        "API ownership and documentation freshness are checked.",
+        "Legacy versions receive protection parity with current APIs.",
       ],
     },
   },

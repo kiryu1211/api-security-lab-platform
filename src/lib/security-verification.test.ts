@@ -1,16 +1,22 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { POST as secureAuthSessionPost } from "@/app/api/secure/auth/session/route";
+import { POST as secureBusinessFlowPost } from "@/app/api/secure/business-flow/reservations/route";
 import { POST as secureFetchUrlPost } from "@/app/api/secure/fetch-url/route";
+import { POST as secureInventoryPost } from "@/app/api/secure/inventory/operations/route";
 import { GET as secureOrderGet } from "@/app/api/secure/orders/[orderId]/route";
 import { PATCH as secureProfilePatch } from "@/app/api/secure/profile/route";
 import { GET as secureRateLimitGet } from "@/app/api/secure/rate-limit/search/route";
+import { POST as secureProfileImportPost } from "@/app/api/secure/third-party/profile-import/route";
 import { POST as vulnerableAuthSessionPost } from "@/app/api/vulnerable/auth/session/route";
+import { POST as vulnerableBusinessFlowPost } from "@/app/api/vulnerable/business-flow/reservations/route";
 import { POST as vulnerableFetchUrlPost } from "@/app/api/vulnerable/fetch-url/route";
 import { GET as vulnerableHealthGet } from "@/app/api/vulnerable/health/route";
+import { POST as vulnerableInventoryPost } from "@/app/api/vulnerable/inventory/operations/route";
 import { GET as vulnerableLabSamplesGet } from "@/app/api/vulnerable/lab-samples/route";
 import { GET as vulnerableOrderGet } from "@/app/api/vulnerable/orders/[orderId]/route";
 import { PATCH as vulnerableProfilePatch } from "@/app/api/vulnerable/profile/route";
 import { GET as vulnerableRateLimitGet } from "@/app/api/vulnerable/rate-limit/search/route";
+import { POST as vulnerableProfileImportPost } from "@/app/api/vulnerable/third-party/profile-import/route";
 import { uiText } from "./i18n";
 import { resetRateLimitBuckets } from "./rate-limit-service";
 
@@ -82,6 +88,25 @@ describe("phase 7 security verification", () => {
           ),
       },
       {
+        name: "sensitive business flow reservation",
+        call: () =>
+          vulnerableBusinessFlowPost(
+            new Request(
+              "http://localhost/api/vulnerable/business-flow/reservations",
+              {
+                method: "POST",
+                headers: jsonHeaders,
+                body: JSON.stringify({
+                  userId: "user-demo-alice",
+                  productId: "product-demo-001",
+                  quantity: 4,
+                  flowStep: "direct-checkout",
+                }),
+              },
+            ),
+          ),
+      },
+      {
         name: "URL fetch preview",
         call: () =>
           vulnerableFetchUrlPost(
@@ -90,6 +115,40 @@ describe("phase 7 security verification", () => {
               headers: jsonHeaders,
               body: JSON.stringify({ url: "http://127.0.0.1/admin" }),
             }),
+          ),
+      },
+      {
+        name: "third-party profile import",
+        call: () =>
+          vulnerableProfileImportPost(
+            new Request(
+              "http://localhost/api/vulnerable/third-party/profile-import",
+              {
+                method: "POST",
+                headers: jsonHeaders,
+                body: JSON.stringify({
+                  providerResponseId: "partner-response-redirect-admin",
+                  expectedProvider: "trusted-profile-service",
+                }),
+              },
+            ),
+          ),
+      },
+      {
+        name: "API inventory operation",
+        call: () =>
+          vulnerableInventoryPost(
+            new Request(
+              "http://localhost/api/vulnerable/inventory/operations",
+              {
+                method: "POST",
+                headers: jsonHeaders,
+                body: JSON.stringify({
+                  endpointId: "legacy-token-reset-v1",
+                  requestedEnvironment: "production",
+                }),
+              },
+            ),
           ),
       },
     ];
@@ -140,6 +199,38 @@ describe("phase 7 security verification", () => {
         body: JSON.stringify({ url: "https://127.0.0.1/admin" }),
       }),
     );
+    const secureBusinessFlow = await secureBusinessFlowPost(
+      new Request("http://localhost/api/secure/business-flow/reservations", {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify({
+          userId: "user-demo-alice",
+          productId: "product-demo-001",
+          quantity: 4,
+          flowStep: "direct-checkout",
+        }),
+      }),
+    );
+    const secureProfileImport = await secureProfileImportPost(
+      new Request("http://localhost/api/secure/third-party/profile-import", {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify({
+          providerResponseId: "partner-response-redirect-admin",
+          expectedProvider: "trusted-profile-service",
+        }),
+      }),
+    );
+    const secureInventory = await secureInventoryPost(
+      new Request("http://localhost/api/secure/inventory/operations", {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify({
+          endpointId: "legacy-token-reset-v1",
+          requestedEnvironment: "production",
+        }),
+      }),
+    );
 
     const rateLimitRequests = await Promise.all([
       secureRateLimitGet(
@@ -176,6 +267,9 @@ describe("phase 7 security verification", () => {
       },
     });
     expect(secureSsrf.status).toBe(403);
+    expect(secureBusinessFlow.status).toBe(403);
+    expect(secureProfileImport.status).toBe(403);
+    expect(secureInventory.status).toBe(403);
     expect(rateLimitRequests.at(-1)?.status).toBe(429);
   });
 

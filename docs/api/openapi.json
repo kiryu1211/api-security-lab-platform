@@ -503,6 +503,222 @@
         }
       }
     },
+    "/api/vulnerable/business-flow/reservations": {
+      "post": {
+        "tags": ["vulnerable"],
+        "summary": "Local-only sensitive business flow vulnerable reservation",
+        "description": "Accepts excessive limited-product reservations without workflow order, per-user limit, or stock abuse checks. This route is local-only and must not be publicly deployed.",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/BusinessFlowReservationRequest"
+        },
+        "responses": {
+          "200": {
+            "description": "Reservation accepted without sensitive business flow controls when local mode is enabled",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Vulnerable route disabled outside local non-production mode",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/secure/business-flow/reservations": {
+      "post": {
+        "tags": ["secure"],
+        "summary": "Sensitive business flow protected reservation",
+        "description": "Applies workflow order, per-user quantity limit, stock, and automation-abuse checks to a synthetic limited-product reservation flow.",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/BusinessFlowReservationRequest"
+        },
+        "responses": {
+          "200": {
+            "description": "Reservation accepted after business flow controls",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Reservation rejected by sensitive business flow controls",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vulnerable/third-party/profile-import": {
+      "post": {
+        "tags": ["vulnerable"],
+        "summary": "Local-only unsafe third-party API consumption example",
+        "description": "Imports synthetic third-party profile data without validating redirect targets, response schema, or privileged fields. This route is local-only and must not be publicly deployed.",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ThirdPartyProfileImportRequest"
+        },
+        "responses": {
+          "200": {
+            "description": "Third-party profile response imported without trust-boundary validation when local mode is enabled",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Vulnerable route disabled outside local non-production mode",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/secure/third-party/profile-import": {
+      "post": {
+        "tags": ["secure"],
+        "summary": "Protected third-party API response import",
+        "description": "Validates synthetic third-party profile data with provider, transport, redirect allowlist, payload size, schema, and privileged-field controls without real external API calls.",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ThirdPartyProfileImportRequest"
+        },
+        "responses": {
+          "200": {
+            "description": "Third-party profile response accepted after trust-boundary controls",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Third-party response rejected by trust-boundary controls",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vulnerable/inventory/operations": {
+      "post": {
+        "tags": ["vulnerable"],
+        "summary": "Local-only unmanaged legacy API operation example",
+        "description": "Invokes a synthetic legacy API operation without checking inventory lifecycle, exposure, ownership, documentation freshness, or protection parity. This route is local-only and must not be publicly deployed.",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ApiInventoryOperationRequest"
+        },
+        "responses": {
+          "200": {
+            "description": "Legacy API operation preview created without inventory controls when local mode is enabled",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Vulnerable route disabled outside local non-production mode",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/secure/inventory/operations": {
+      "post": {
+        "tags": ["secure"],
+        "summary": "Protected API inventory operation",
+        "description": "Validates synthetic API operations against inventory lifecycle, exposure, owner, documentation freshness, and protection parity before allowing execution previews.",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ApiInventoryOperationRequest"
+        },
+        "responses": {
+          "200": {
+            "description": "API operation accepted after inventory controls",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "API operation rejected by inventory and lifecycle controls",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/secure/lab-samples": {
       "get": {
         "tags": ["secure"],
@@ -621,6 +837,50 @@
           "application/json": {
             "schema": { "$ref": "#/components/schemas/FetchUrlRequest" },
             "example": { "url": "https://api.example.test/resource" }
+          }
+        }
+      },
+      "BusinessFlowReservationRequest": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/BusinessFlowReservationRequest"
+            },
+            "example": {
+              "userId": "user-demo-alice",
+              "productId": "product-demo-001",
+              "quantity": 4,
+              "flowStep": "direct-checkout"
+            }
+          }
+        }
+      },
+      "ThirdPartyProfileImportRequest": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ThirdPartyProfileImportRequest"
+            },
+            "example": {
+              "providerResponseId": "partner-response-redirect-admin",
+              "expectedProvider": "trusted-profile-service"
+            }
+          }
+        }
+      },
+      "ApiInventoryOperationRequest": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ApiInventoryOperationRequest"
+            },
+            "example": {
+              "endpointId": "legacy-token-reset-v1",
+              "requestedEnvironment": "production"
+            }
           }
         }
       }
@@ -759,6 +1019,61 @@
         "required": ["url"],
         "properties": {
           "url": { "type": "string", "format": "uri" }
+        }
+      },
+      "BusinessFlowReservationRequest": {
+        "type": "object",
+        "required": ["productId", "quantity", "flowStep"],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "pattern": "^user-demo-[a-z-]+$",
+            "default": "user-demo-alice"
+          },
+          "productId": {
+            "type": "string",
+            "pattern": "^product-demo-[0-9]{3}$"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "flowStep": {
+            "type": "string",
+            "enum": ["cart-confirmed", "direct-checkout"]
+          }
+        }
+      },
+      "ThirdPartyProfileImportRequest": {
+        "type": "object",
+        "required": ["providerResponseId", "expectedProvider"],
+        "properties": {
+          "providerResponseId": {
+            "type": "string",
+            "enum": [
+              "partner-response-safe-profile",
+              "partner-response-redirect-admin"
+            ]
+          },
+          "expectedProvider": {
+            "type": "string",
+            "enum": ["trusted-profile-service"]
+          }
+        }
+      },
+      "ApiInventoryOperationRequest": {
+        "type": "object",
+        "required": ["endpointId", "requestedEnvironment"],
+        "properties": {
+          "endpointId": {
+            "type": "string",
+            "enum": ["legacy-token-reset-v1", "current-token-reset-v2"]
+          },
+          "requestedEnvironment": {
+            "type": "string",
+            "enum": ["production", "staging", "development"]
+          }
         }
       }
     }

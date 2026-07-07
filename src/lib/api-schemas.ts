@@ -50,3 +50,25 @@ export const profileUpdateBodySchema = z.object({
 export const fetchUrlBodySchema = z.object({
   url: z.string().url(),
 });
+
+export const businessFlowReservationBodySchema = z.object({
+  userId: labUserIdSchema.default("user-demo-alice"),
+  productId: z
+    .string()
+    .regex(/^product-demo-[0-9]{3}$/, "Use one of the local demo product IDs."),
+  quantity: z.number().int().min(1).max(10),
+  flowStep: z.enum(["cart-confirmed", "direct-checkout"]),
+});
+
+export const thirdPartyProfileImportBodySchema = z.object({
+  providerResponseId: z.enum([
+    "partner-response-safe-profile",
+    "partner-response-redirect-admin",
+  ]),
+  expectedProvider: z.enum(["trusted-profile-service"]),
+});
+
+export const apiInventoryOperationBodySchema = z.object({
+  endpointId: z.enum(["legacy-token-reset-v1", "current-token-reset-v2"]),
+  requestedEnvironment: z.enum(["production", "staging", "development"]),
+});
