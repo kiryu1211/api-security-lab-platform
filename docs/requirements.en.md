@@ -2,23 +2,23 @@
 
 ## Functional Requirements
 
-| ID    | Requirement                     | Description                                                                                                 |
-| ----- | ------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| FR-01 | Learning topic list             | Display API security learning topics.                                                                       |
-| FR-02 | Vulnerable API demo             | Run vulnerable API examples in a local-only environment.                                                    |
-| FR-03 | Secure API demo                 | Run secure implementations for the same topics.                                                             |
-| FR-04 | Comparison view                 | Compare requests, responses, and design differences between vulnerable and secure examples.                 |
-| FR-05 | BOLA scenario                   | Demonstrate object-level authorization flaws and mitigations.                                               |
-| FR-06 | Authentication scenario         | Demonstrate authentication and token handling issues and mitigations.                                       |
-| FR-07 | Rate limiting scenario          | Demonstrate designs for limiting excessive requests.                                                        |
-| FR-08 | Function authorization scenario | Demonstrate risks and mitigations for administrative functions exposed without feature-level authorization. |
-| FR-09 | Business flow scenario          | Demonstrate excessive use and skipped-step risks in sensitive reservation or purchase flows.                |
-| FR-10 | Mass assignment scenario        | Demonstrate unauthorized property update risks and mitigations.                                             |
-| FR-11 | SSRF scenario                   | Demonstrate risks and defenses for outbound URL fetching.                                                   |
-| FR-12 | Security configuration scenario | Demonstrate diagnostic exposure, permissive CORS, and missing security header risks and mitigations.        |
-| FR-13 | API inventory scenario          | Demonstrate risks and mitigations for executable legacy or unmanaged APIs.                                  |
-| FR-14 | Third-party response scenario   | Demonstrate overtrusted third-party API response risks and trust-boundary validation.                       |
-| FR-15 | Language switching              | All screens support switching between Japanese and English. The default UI language is Japanese.            |
+| ID    | Requirement                     | Description                                                                                                                                                            |
+| ----- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FR-01 | Learning topic list             | Display API security learning topics.                                                                                                                                  |
+| FR-02 | Vulnerable API demo             | Run vulnerable API examples in a local-only environment.                                                                                                               |
+| FR-03 | Secure API demo                 | Run secure implementations for the same topics.                                                                                                                        |
+| FR-04 | Comparison view                 | Compare requests, responses, design differences, the full API program flow, and implementation-flow problem/improvement points between vulnerable and secure examples. |
+| FR-05 | BOLA scenario                   | Demonstrate object-level authorization flaws and mitigations.                                                                                                          |
+| FR-06 | Authentication scenario         | Demonstrate authentication and token handling issues and mitigations.                                                                                                  |
+| FR-07 | Rate limiting scenario          | Demonstrate designs for limiting excessive requests.                                                                                                                   |
+| FR-08 | Function authorization scenario | Demonstrate risks and mitigations for administrative functions exposed without feature-level authorization.                                                            |
+| FR-09 | Business flow scenario          | Demonstrate excessive use and skipped-step risks in sensitive reservation or purchase flows.                                                                           |
+| FR-10 | Mass assignment scenario        | Demonstrate unauthorized property update risks and mitigations.                                                                                                        |
+| FR-11 | SSRF scenario                   | Demonstrate risks and defenses for outbound URL fetching.                                                                                                              |
+| FR-12 | Security configuration scenario | Demonstrate diagnostic exposure, permissive CORS, and missing security header risks and mitigations.                                                                   |
+| FR-13 | API inventory scenario          | Demonstrate risks and mitigations for executable legacy or unmanaged APIs.                                                                                             |
+| FR-14 | Third-party response scenario   | Demonstrate overtrusted third-party API response risks and trust-boundary validation.                                                                                  |
+| FR-15 | Language switching              | All screens support switching between Japanese and English. The default UI language is Japanese.                                                                       |
 
 ## Non-Functional Requirements
 

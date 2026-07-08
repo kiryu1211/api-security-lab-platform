@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import {
+  getImplementationWalkthrough,
+  getLearningContextNote,
   getLearningModule,
   learningModules,
+  type ImplementationLine,
   type LearningModuleId,
 } from "@/data/learning-modules";
 import { defaultLanguage, isLanguage, uiText, type Language } from "@/lib/i18n";
@@ -13,11 +16,11 @@ const languageStorageKey = "lab-ui-language";
 const progressLabels = {
   ja: {
     ready: "実装済み",
-    planned: "追加予定",
+    planned: "未実装",
   },
   en: {
     ready: "Foundation ready",
-    planned: "Planned",
+    planned: "Not implemented",
   },
 } as const;
 
@@ -67,6 +70,9 @@ export function HomePage() {
   });
   const t = uiText[language];
   const selectedModule = getLearningModule(selectedModuleId);
+  const implementationWalkthrough =
+    getImplementationWalkthrough(selectedModuleId);
+  const learningContextNote = getLearningContextNote(selectedModuleId);
   const selectedDemoModuleId = isDemoEnabledModule(selectedModule.id)
     ? selectedModule.id
     : undefined;
@@ -314,10 +320,45 @@ export function HomePage() {
     <div className="app-shell">
       <header className="site-header">
         <a className="brand" href="#top" aria-label={t.brand}>
-          <span className="brand-title">{t.brand}</span>
-          <span className="brand-subtitle">{t.subtitle}</span>
+          <span className="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 48 48" role="img" focusable="false">
+              <path
+                className="brand-mark-shield"
+                d="M24 4 39 10v12c0 10-6.2 17.3-15 22-8.8-4.7-15-12-15-22V10L24 4Z"
+              />
+              <path
+                className="brand-mark-route"
+                d="M16 18h8c4.4 0 8 3.6 8 8v4"
+              />
+              <path className="brand-mark-route" d="M16 30h7" />
+              <circle
+                className="brand-mark-node vulnerable-node"
+                cx="16"
+                cy="18"
+                r="2.6"
+              />
+              <circle
+                className="brand-mark-node secure-node"
+                cx="16"
+                cy="30"
+                r="2.6"
+              />
+              <circle
+                className="brand-mark-node secure-node"
+                cx="32"
+                cy="30"
+                r="2.6"
+              />
+            </svg>
+          </span>
+          <span className="brand-copy">
+            <span className="brand-title">{t.brand}</span>
+            <span className="brand-subtitle">{t.subtitle}</span>
+          </span>
         </a>
         <nav className="site-nav" aria-label={t.nav.label}>
+          <a href="#api-basics">{t.nav.apiBasics}</a>
+          <a href="#owasp-basics">{t.nav.owaspBasics}</a>
           <a href="#topics">{t.nav.topics}</a>
           <a href="#comparison">{t.nav.comparison}</a>
           <a href="#checklist">{t.nav.checklist}</a>
@@ -346,18 +387,51 @@ export function HomePage() {
             <span className="eyebrow">{t.hero.eyebrow}</span>
             <h1 id="hero-title">{t.hero.title}</h1>
             <p className="hero-lead">{t.hero.lead}</p>
-            <div className="route-tags" aria-label={t.routeSeparationLabel}>
-              <span className="route-tag vulnerable">/vulnerable/*</span>
-              <span className="route-tag secure">/secure/*</span>
-            </div>
+          </div>
+        </section>
+
+        <section
+          className="module-section foundation-section"
+          id="api-basics"
+          aria-labelledby="api-basics-heading"
+        >
+          <div className="section-copy wide">
+            <h2 className="section-heading" id="api-basics-heading">
+              {t.apiBasics.heading}
+            </h2>
+            <p>{t.apiBasics.lead}</p>
           </div>
 
-          <aside className="safety-card" aria-labelledby="safety-warning-title">
-            <p className="card-label" id="safety-warning-title">
-              {t.warning.label}
-            </p>
-            <p>{t.warning.text}</p>
-          </aside>
+          <article className="foundation-card">
+            <p>{t.apiBasics.text}</p>
+            <ul>
+              {t.apiBasics.points.map((point) => (
+                <li key={point}>{point}</li>
+              ))}
+            </ul>
+          </article>
+        </section>
+
+        <section
+          className="module-section foundation-section"
+          id="owasp-basics"
+          aria-labelledby="owasp-basics-heading"
+        >
+          <div className="section-copy wide">
+            <h2 className="section-heading" id="owasp-basics-heading">
+              {t.owaspBasics.heading}
+            </h2>
+            <p>{t.owaspBasics.lead}</p>
+          </div>
+
+          <article className="foundation-card accent-card">
+            <p>{t.owaspBasics.text}</p>
+            <ul>
+              {t.owaspBasics.points.map((point) => (
+                <li key={point}>{point}</li>
+              ))}
+            </ul>
+          </article>
         </section>
 
         <section className="module-section" aria-labelledby="status-heading">
@@ -434,6 +508,10 @@ export function HomePage() {
               <p>{selectedModule.summary[language]}</p>
               <dl className="detail-list">
                 <div>
+                  <dt>{t.detail.realWorldContext}</dt>
+                  <dd>{learningContextNote[language]}</dd>
+                </div>
+                <div>
                   <dt>{t.detail.vulnerableCondition}</dt>
                   <dd>{selectedModule.vulnerableCondition[language]}</dd>
                 </div>
@@ -461,6 +539,17 @@ export function HomePage() {
             </aside>
           </div>
 
+          <div className="route-tags" aria-label={t.routeSeparationLabel}>
+            <div className="route-explainer vulnerable">
+              <code>/vulnerable/*</code>
+              <p>{t.routeDescriptions.vulnerable}</p>
+            </div>
+            <div className="route-explainer secure">
+              <code>/secure/*</code>
+              <p>{t.routeDescriptions.secure}</p>
+            </div>
+          </div>
+
           <div className="comparison-grid">
             <ComparisonPanel
               badge={t.comparison.vulnerableBadge}
@@ -471,6 +560,8 @@ export function HomePage() {
               route={selectedModule.vulnerable.route}
               title={t.comparison.vulnerable}
               labels={t.comparison}
+              implementation={implementationWalkthrough.vulnerable}
+              language={language}
               result={
                 selectedDemoModuleId
                   ? demoState[selectedDemoModuleId].vulnerable
@@ -488,6 +579,8 @@ export function HomePage() {
               route={selectedModule.secure.route}
               title={t.comparison.secure}
               labels={t.comparison}
+              implementation={implementationWalkthrough.secure}
+              language={language}
               result={
                 selectedDemoModuleId
                   ? demoState[selectedDemoModuleId].secure
@@ -545,6 +638,8 @@ function ComparisonPanel({
   badge,
   kind,
   labels,
+  implementation,
+  language,
   note,
   noResultLabel,
   request,
@@ -557,6 +652,11 @@ function ComparisonPanel({
   badge: string;
   kind: "vulnerable" | "secure";
   labels: (typeof uiText)[Language]["comparison"];
+  implementation: {
+    summary: Record<Language, string>;
+    lines: ImplementationLine[];
+  };
+  language: Language;
   note: string;
   noResultLabel: string;
   request: string;
@@ -589,14 +689,71 @@ function ComparisonPanel({
         <span className="mini-label">{labels.designDifference}</span>
         <p>{note}</p>
       </div>
+      <ImplementationWalkthroughBlock
+        implementation={implementation}
+        kind={kind}
+        labels={labels}
+        language={language}
+      />
       <div className="api-result-box">
         <span className="mini-label">{resultTitle}</span>
         {result ? (
-          <pre>{`HTTP ${result.status}\n${JSON.stringify(result.body, null, 2)}`}</pre>
+          <>
+            <p className="demo-result-explanation">
+              <strong>{labels.resultMeaning}: </strong>
+              {response}
+            </p>
+            <pre>{`HTTP ${result.status}\n${JSON.stringify(result.body, null, 2)}`}</pre>
+          </>
         ) : (
           <p>{noResultLabel}</p>
         )}
       </div>
     </article>
+  );
+}
+
+function ImplementationWalkthroughBlock({
+  implementation,
+  kind,
+  labels,
+  language,
+}: {
+  implementation: {
+    summary: Record<Language, string>;
+    lines: ImplementationLine[];
+  };
+  kind: "vulnerable" | "secure";
+  labels: (typeof uiText)[Language]["comparison"];
+  language: Language;
+}) {
+  return (
+    <div className="implementation-walkthrough">
+      <span className="mini-label">{labels.implementation}</span>
+      <p>{implementation.summary[language]}</p>
+      <div className="code-walkthrough" role="list">
+        {implementation.lines.map((line, index) => {
+          const markerLabel =
+            line.highlight === "issue" ? labels.issueLabel : labels.fixLabel;
+
+          return (
+            <div
+              className="code-line"
+              data-highlight={line.highlight ?? "none"}
+              key={`${line.code}-${index}`}
+              role="listitem"
+            >
+              <code>{line.code}</code>
+              {line.highlight ? (
+                <span className="code-comment" data-kind={kind}>
+                  <strong>{markerLabel}: </strong>
+                  {line.comment?.[language]}
+                </span>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

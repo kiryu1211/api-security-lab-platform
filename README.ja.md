@@ -28,7 +28,7 @@
 ## 実装済みの内容
 
 - Next.js App Router、TypeScript、React、Zod、Vitest、ESLint、Prettierを設定済みです。
-- 学習UIとして、学習テーマ一覧、テーマ概要、脆弱APIと安全APIの比較、実装チェックリストを用意しています。
+- 学習UIとして、学習テーマ一覧、テーマ概要、脆弱APIと安全APIの比較、実装フローの視覚的な注釈、実装チェックリストを用意しています。
 - UI文言と学習モジュールの内容は、画面コンポーネントへ直接埋め込まず、日本語・英語のリソースとして管理しています。
 - ヘルスチェック、サンプルデータ、BOLA注文、認証セッション、レート制限検索、管理者招待、業務フロー予約、プロフィール更新、URL取得プレビュー、設定診断、APIインベントリ操作、外部プロフィール連携を `/api/vulnerable/*` と `/api/secure/*` に分けて実装しています。
 - 共通APIレスポンス、Zodによるリクエスト検証、安全なローカル用サンプルユーザー/リソースを用意しています。
@@ -36,6 +36,7 @@
 - BOLAモジュールでは、所有者確認がない脆弱な注文APIと、所有者確認を行う安全な注文APIを実行して比較できます。
 - 認証モジュールでは、不十分なトークン検証を行う脆弱なセッションAPIと、署名状態、期限、失効、権限を検証する安全なセッションAPIを実行して比較できます。
 - レート制限、Broken Function Level Authorization、Sensitive Business Flows、Mass Assignment、SSRF、Security Misconfiguration、Improper Inventory Management、Unsafe Consumption of APIsモジュールでは、脆弱APIと安全APIを実行して比較できます。Broken Function Level Authorizationデモは合成した招待プレビューだけを返し、実メール送信や実アカウント作成は行いません。Security Misconfigurationデモは合成した診断メタデータだけを使い、実設定、秘密情報、実ログを公開しません。Sensitive Business Flowsデモは合成した限定商品データだけを使い、実際の購入や外部決済は行いません。Improper Inventory Managementデモは実トークン発行や通知送信を行いません。SSRFデモとUnsafe Consumption of APIsデモは安全なプレビューまたは合成応答だけを返し、実際の外部ネットワークアクセスは行いません。
+- 比較画面では、API1からAPI10までの各テーマについて、`/api/vulnerable/*` と `/api/secure/*` のAPIプログラム全体の流れを表示し、問題箇所を赤、改善箇所を青で確認できます。
 - セキュリティ検証テストでは、公開環境に相当する設定ですべての脆弱APIが無効化されること、安全APIで各脆弱性が再現しないこと、OpenAPIの脆弱ルート説明がローカル限定であること、UI文言リソースが日英で揃っていることを確認します。
 
 ## OWASP API Security Top 10参照
@@ -71,7 +72,8 @@ SSRFデモと外部API応答デモは、脆弱APIと安全APIのどちらも実�
 2. `.env.example` を参考に、必要に応じてローカル用の環境変数を設定します。脆弱APIをローカルで確認する場合は `LAB_MODE=local` を使用します。
 3. `npm run dev` でローカル開発サーバーを起動します。
 4. ブラウザーで学習UIを開き、学習テーマを選択します。
-5. 比較画面の「APIデモを実行」から、脆弱APIと安全APIのレスポンス差分を確認します。
+5. 比較画面で、脆弱APIと安全APIのルート、リクエスト、レスポンス、赤/青の実装フロー注釈を確認します。
+6. 「APIデモを実行」から、脆弱APIと安全APIのレスポンス差分を確認します。
 
 脆弱APIはローカル検証専用です。共有環境や公開環境で実行しないでください。
 

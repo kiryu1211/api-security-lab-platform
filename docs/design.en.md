@@ -11,7 +11,7 @@ The current implementation prioritizes clear API specifications, request validat
 - Testing: Vitest
 - Linting and formatting: ESLint and Prettier
 - API Documentation: OpenAPI in `docs/api/openapi.json`
-- Database and ORM: not introduced yet; SQLite and Prisma are candidates for a later persistence phase
+- Database and ORM: not introduced; current demos use in-memory state and synthetic data
 
 TypeScript is suitable because API requests, responses, authorization targets, and learning modules can be managed with types. OpenAPI documents implemented API specifications and verification perspectives.
 
@@ -29,7 +29,7 @@ flowchart LR
     Guard --> API
 ```
 
-Current demo data is managed as synthetic data under `src/data/`. A local database can be introduced when persistence is needed.
+Current demo data is managed as synthetic data under `src/data/`. Persistence is outside the current implementation scope.
 
 ## Module Structure
 
@@ -137,7 +137,7 @@ erDiagram
 - Security Misconfiguration protection suppresses debug details, applies origin allowlists, disables caching for diagnostics, and sets security response headers.
 - Unsafe Consumption of APIs protection treats third-party API responses as input outside the trust boundary and validates provider identity, TLS assumptions, redirect allowlists, payload size, schema, and privileged fields.
 - Improper Inventory Management protection validates API environment, version, exposure, owner, documentation freshness, lifecycle state, and protection parity before processing.
-- Rate limiting currently applies per demo user and API route. Per-source limits are a future extension candidate.
+- Rate limiting currently applies per demo user and API route. Per-source limits are outside the current implementation scope.
 
 Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route handlers for health checks, lab samples, BOLA orders, authentication sessions, rate-limit search, admin invitations, business-flow reservations, profile updates, URL fetch previews, configuration diagnostics, API inventory operations, and third-party profile imports. Vulnerable routes use the shared safety guard before returning a response.
 
@@ -235,6 +235,6 @@ flowchart TD
 
 - Topic list: displays risk category, difficulty, progress, summary, and selected state for each module.
 - Learning detail: displays overview, vulnerable condition, and defensive design for the selected module.
-- Comparison view: displays side-by-side route, request, response, and design notes for vulnerable and secure APIs.
+- Comparison view: displays side-by-side route, request, response, design notes, and implementation flow for vulnerable and secure APIs. The implementation flow shows the full API program flow and highlights problem areas in `/api/vulnerable/*` in red and improvements in `/api/secure/*` in blue.
 - Checklist: displays defensive review points for the selected module. Progress is not currently saved.
 - Vulnerable comparison areas always display local-only and non-public deployment warnings.

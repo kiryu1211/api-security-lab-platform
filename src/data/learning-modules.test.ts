@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { learningModules } from "./learning-modules";
+import {
+  implementationWalkthroughs,
+  learningContextNotes,
+  learningModules,
+} from "./learning-modules";
 
 describe("learning modules", () => {
   it("covers every OWASP API Security Top 10 2023 category once", () => {
@@ -30,6 +34,21 @@ describe("learning modules", () => {
     );
   });
 
+  it("orders topics by OWASP API number", () => {
+    expect(learningModules.map((item) => item.riskCategory)).toEqual([
+      expect.stringContaining("API1:2023"),
+      expect.stringContaining("API2:2023"),
+      expect.stringContaining("API3:2023"),
+      expect.stringContaining("API4:2023"),
+      expect.stringContaining("API5:2023"),
+      expect.stringContaining("API6:2023"),
+      expect.stringContaining("API7:2023"),
+      expect.stringContaining("API8:2023"),
+      expect.stringContaining("API9:2023"),
+      expect.stringContaining("API10:2023"),
+    ]);
+  });
+
   it("defines translated content for every module", () => {
     for (const learningModule of learningModules) {
       expect(learningModule.title.ja).toBeTruthy();
@@ -58,5 +77,31 @@ describe("learning modules", () => {
     expect(ssrfModule?.vulnerable.response.en).toContain(
       "without performing real network access",
     );
+  });
+
+  it("defines implementation walkthroughs for every ready module", () => {
+    for (const learningModule of learningModules) {
+      const walkthrough = implementationWalkthroughs[learningModule.id];
+
+      expect(walkthrough.vulnerable.lines.length).toBeGreaterThan(0);
+      expect(walkthrough.secure.lines.length).toBeGreaterThan(0);
+      expect(
+        walkthrough.vulnerable.lines.some((line) => line.highlight === "issue"),
+      ).toBe(true);
+      expect(
+        walkthrough.secure.lines.some((line) => line.highlight === "fix"),
+      ).toBe(true);
+      expect(walkthrough.vulnerable.summary.ja).toBeTruthy();
+      expect(walkthrough.vulnerable.summary.en).toBeTruthy();
+      expect(walkthrough.secure.summary.ja).toBeTruthy();
+      expect(walkthrough.secure.summary.en).toBeTruthy();
+    }
+  });
+
+  it("defines real-world context notes for every module", () => {
+    for (const learningModule of learningModules) {
+      expect(learningContextNotes[learningModule.id].ja).toBeTruthy();
+      expect(learningContextNotes[learningModule.id].en).toBeTruthy();
+    }
   });
 });

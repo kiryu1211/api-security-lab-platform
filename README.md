@@ -28,7 +28,7 @@ The purpose of this system is to provide an isolated environment for examining h
 ## Implemented Capabilities
 
 - Next.js App Router, TypeScript, React, Zod, Vitest, ESLint, and Prettier are configured.
-- The learning UI includes a topic list, topic overview, vulnerable/secure comparison view, and implementation checklist.
+- The learning UI includes a topic list, topic overview, vulnerable/secure comparison view, visual implementation-flow annotations, and implementation checklist.
 - UI text and learning module content are managed through Japanese and English resources instead of being embedded directly in the screen component.
 - Route separation is implemented across health checks, lab samples, BOLA orders, authentication sessions, rate-limit search, admin invitations, business-flow reservations, profile updates, URL fetch previews, configuration diagnostics, API inventory operations, and third-party profile imports under `/api/vulnerable/*` and `/api/secure/*`.
 - Shared API response helpers, Zod request validation, and safe local sample users/resources are available.
@@ -36,6 +36,7 @@ The purpose of this system is to provide an isolated environment for examining h
 - The BOLA module includes runnable vulnerable and secure order APIs for comparing missing ownership checks with verified ownership checks.
 - The authentication module includes runnable vulnerable and secure session APIs for comparing insufficient token validation with signature, expiration, revocation, and permission validation.
 - Rate limiting, Broken Function Level Authorization, Sensitive Business Flows, Mass Assignment, SSRF, Security Misconfiguration, Improper Inventory Management, and Unsafe Consumption of APIs modules include runnable vulnerable and secure APIs. Broken Function Level Authorization demos use synthetic invitation previews only and send no real email or account creation. Security Misconfiguration demos use synthetic diagnostic metadata only and expose no real configuration, secrets, or logs. Sensitive Business Flows demos use synthetic limited-product data only and perform no real purchase or external payment. Improper Inventory Management demos issue no real tokens and send no notifications. SSRF and Unsafe Consumption of APIs demos return safe previews or synthetic responses only and do not perform real outbound network access.
+- The comparison view shows the full API program flow for every API1 through API10 topic, highlighting problem areas in `/api/vulnerable/*` in red and improvements in `/api/secure/*` in blue.
 - Security verification tests confirm that every vulnerable API is disabled in production-like settings, secure APIs do not reproduce the covered vulnerabilities, OpenAPI vulnerable-route descriptions remain local-only, and Japanese/English UI text resources stay aligned.
 
 ## OWASP API Security Top 10 Reference
@@ -71,7 +72,8 @@ SSRF and third-party API response demos do not perform real outbound network acc
 2. Use `.env.example` as a reference for local environment variables. Use `LAB_MODE=local` when verifying vulnerable APIs locally.
 3. Start the local development server with `npm run dev`.
 4. Open the learning UI in a browser and select a learning topic.
-5. Use `Run API demo` in the comparison view to inspect the response differences between vulnerable and secure APIs.
+5. In the comparison view, inspect the vulnerable and secure routes, requests, responses, and red/blue implementation-flow annotations.
+6. Use `Run API demo` to inspect the response differences between vulnerable and secure APIs.
 
 Vulnerable APIs are for local verification only. Do not run them in shared or public environments.
 

@@ -4,7 +4,7 @@
 
 Web services and mobile applications often rely on APIs as the center of their functionality. Since APIs are directly consumed by frontends, mobile clients, and external services, authorization flaws, weak authentication, excessive data exposure, missing rate limits, business-flow abuse, security misconfiguration, legacy API inventory gaps, and overtrusted third-party API responses can directly affect user data and business operations.
 
-This system is designed as an environment for examining representative API security issues by comparing vulnerable examples with secure implementations. The goal is not merely to demonstrate attacks, but to make it clear why each issue occurs and which design decisions prevent it.
+This system is designed as an environment for examining representative API security issues by comparing vulnerable examples with secure implementations. The goal is not merely to demonstrate attacks, but to explain API basics, OWASP API Security Top 10 perspectives, vulnerable conditions, and defensive design decisions in one learning flow.
 
 ## Objectives
 
@@ -21,7 +21,7 @@ This system is designed as an environment for examining representative API secur
 
 ## Scope
 
-- Covers BOLA, authentication and token validation, rate limiting, Broken Function Level Authorization, Sensitive Business Flows, Mass Assignment, SSRF, Security Misconfiguration, Improper Inventory Management, and Unsafe Consumption of APIs as learning topics.
+- Covers BOLA, authentication and token validation, Mass Assignment, rate limiting, Broken Function Level Authorization, Sensitive Business Flows, SSRF, Security Misconfiguration, Improper Inventory Management, and Unsafe Consumption of APIs as learning topics.
 - Separates `/api/vulnerable/*` and `/api/secure/*` so vulnerable and secure behavior can be compared for the same topic.
 - SSRF and third-party API response demos return verification preview metadata or synthetic responses only and do not perform real outbound network access.
 - The UI defaults to Japanese and can be switched to English through a shared language switcher.
@@ -36,16 +36,21 @@ However, because vulnerable API examples are included, local-only execution, non
 
 ```mermaid
 flowchart TD
-    A[Select learning topic] --> B[Review risk overview]
-    B --> C[Run vulnerable API locally]
-    C --> D[Observe vulnerable conditions]
-    D --> E[Compare with secure implementation]
-    E --> F[Review mitigations and design decisions]
-    F --> G[Implementation checklist]
+    A[Review API and OWASP API Security Top 10 basics] --> B[Select learning topic]
+    B --> C[Review risk overview and real-world context]
+    C --> D[Run vulnerable API locally]
+    D --> E[Review what the result means]
+    E --> F[Compare with secure implementation]
+    F --> G[Review red and blue implementation-flow annotations]
+    G --> H[Review mitigations and implementation checklist]
 ```
 
 ## UI/UX Direction
 
-Each learning module should provide a comparison screen for the vulnerable implementation, secure implementation, request example, response example, and mitigation guidance. Screens that operate vulnerable APIs must clearly state that they are local-only and must not be publicly deployed.
+Each learning module provides a comparison screen for the vulnerable implementation, secure implementation, request example, response example, design differences, implementation flow, and defensive checklist. The implementation flow shows the full API program flow, highlights vulnerable problem areas in red, and highlights secure improvements in blue. After an API demo runs, the UI shows both the response and what the result means.
+
+The top-level screen explains what an API is and how OWASP API Security Top 10 is used. Each topic detail separates the overview, real-world context and impact examples, vulnerable conditions, and defensive design so beginners can follow the purpose of each comparison.
+
+Comparison areas that operate vulnerable APIs must clearly state that they are local-only and must not be publicly deployed.
 
 The default UI language is Japanese, and every screen should include a shared language switcher. When English mode is selected, all visible UI text should be consistently displayed in English.
