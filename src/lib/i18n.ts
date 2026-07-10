@@ -31,14 +31,29 @@ export const uiText = {
         "同じシナリオに対する安全なAPI実装例です。認可、入力検証、レート制限、セキュリティヘッダー、外部入力の検証など、防御策を脆弱APIと比較できます。",
     },
     hero: {
-      eyebrow: "OWASP API Security Top 10対応",
+      eyebrow: "OWASP API Security Top 10",
       title: "APIセキュリティリスクラボ",
       lead: "脆弱なAPI例と安全なAPI例を並べ、リクエスト、レスポンス、設計の違い、確認項目を一連の流れで確認できます。",
+    },
+    opening: {
+      badge: "Local API Security Lab",
+      title: "APIを守る設計を、見える形に。",
+      lead: "OWASP API Security Top 10のAPI1からAPI10までを、脆弱な例と安全な例の比較で学べます。リクエスト、レスポンス、実装の違いから、攻撃を止める設計をローカル環境で確認できます。",
+      clientA: "クライアントA",
+      clientB: "クライアントB",
+      api: "API",
+      attacker: "攻撃者",
+      vulnerable: "脆弱な例",
+      secure: "安全な例",
+      request: "Request",
+      response: "Response",
+      blocked: "遮断",
+      skip: "スキップ",
     },
     apiBasics: {
       heading: "APIとは？",
       lead: "APIセキュリティを理解する前に、APIが何を公開し、どのようにアプリケーション同士をつなぎ、なぜ攻撃面になりやすいのかを確認します。",
-      text: "APIは、アプリケーション同士が決められた形式でリクエストとレスポンスをやり取りするためのインターフェースです。Web APIでは、クライアントがHTTPメソッド、URL、ヘッダー、本文を使ってサーバーに要求を送り、サーバーはJSONなどのデータとステータスコードで結果を返します。画面操作の裏側で注文、プロフィール更新、検索、外部サービス連携などを動かす入口になるため、APIエンドポイントは機能そのものだけでなく、データ、権限、業務フローへの入口にもなります。",
+      text: "APIはApplication Programming Interfaceの略で、アプリケーション同士が決められた形式でリクエストとレスポンスをやり取りするためのインターフェースです。Web APIでは、クライアントがHTTPメソッド、URL、ヘッダー、本文を使ってサーバーに要求を送り、サーバーはJSONなどのデータとステータスコードで結果を返します。画面操作の裏側で注文、プロフィール更新、検索、外部サービス連携などを動かす入口になるため、APIエンドポイントは機能そのものだけでなく、データ、権限、業務フローへの入口にもなります。",
       points: [
         "APIは画面とは別に直接呼び出せるため、フロントエンドの表示制御だけでは防御になりません。",
         "各エンドポイントでは、誰が、どのリソースに、どの操作を、どの条件で行えるかをサーバー側で確認する必要があります。",
@@ -57,22 +72,22 @@ export const uiText = {
     },
     warning: {
       label: "ローカル限定に関する注意",
-      text: "脆弱APIはローカルでの学習・検証専用です。外部公開、共有環境、本番環境では実行しないでください。",
+      text: "脆弱APIは、攻撃が成立する条件を観察するために意図的に防御を弱くしています。外部公開すると、所有者確認不足、弱い認証、過度な情報公開、SSRFのような挙動を第三者が直接試せる状態になり、合成データであっても攻撃手順の公開、環境情報の露出、運用環境への誤接続につながります。必ずローカルの学習・検証環境だけで実行し、共有環境や本番環境へ配置しないでください。",
     },
     status: {
       heading: "この環境で確認できること",
       items: [
         {
-          title: "ルート分離",
-          text: "脆弱APIと安全APIを分けて実装し、誤用を防ぎます。",
+          title: "なぜ危険なのか",
+          text: "ID、トークン、JSON、URLなどの扱いを少し誤るだけで、他人の情報の閲覧や権限の悪用につながる流れを確認できます。",
         },
         {
-          title: "安全ガード",
-          text: "LAB_MODEと実行環境を確認し、公開環境に相当する設定では脆弱APIを無効化します。",
+          title: "どう防ぐのか",
+          text: "認可、認証、入力検証、レート制限、外部通信の制御など、安全なAPIで追加すべき確認を脆弱な例と比べて学べます。",
         },
         {
-          title: "言語切替",
-          text: "初期表示は日本語です。画面全体を英語表示へ切り替えられます。",
+          title: "結果から何を読むか",
+          text: "実行結果、レスポンス、実装の流れを並べて見ながら、どの設計の違いが攻撃を止めているのかを追えます。",
         },
       ],
     },
@@ -82,7 +97,6 @@ export const uiText = {
       selectLabel: "このテーマを見る",
       selectedLabel: "選択中",
       difficultyLabel: "難易度",
-      progressLabel: "状態",
     },
     detail: {
       heading: "テーマの概要",
@@ -109,6 +123,7 @@ export const uiText = {
       vulnerableResult: "脆弱APIの結果",
       secureResult: "安全APIの結果",
       resultMeaning: "この結果が表すこと",
+      selectedTopic: "選択中のテーマ",
       noResult: "まだ実行していません。",
     },
     checklist: {
@@ -140,14 +155,29 @@ export const uiText = {
         "Secure API examples for the same scenarios. Compare authorization, input validation, rate limiting, security headers, and external-input checks against the vulnerable behavior.",
     },
     hero: {
-      eyebrow: "OWASP API Security Top 10 aligned",
+      eyebrow: "OWASP API Security Top 10",
       title: "API Security Risk Lab",
       lead: "Compare vulnerable and secure API examples side by side, then review requests, responses, design differences, and implementation checklist items in one learning flow.",
+    },
+    opening: {
+      badge: "Local API Security Lab",
+      title: "Make API Defenses Visible",
+      lead: "Explore OWASP API Security Top 10 from API1 through API10 by comparing vulnerable and secure examples. Review requests, responses, and implementation differences to see how local-only defenses stop attacks.",
+      clientA: "Client A",
+      clientB: "Client B",
+      api: "API",
+      attacker: "Attacker",
+      vulnerable: "Vulnerable",
+      secure: "Secure",
+      request: "Request",
+      response: "Response",
+      blocked: "Blocked",
+      skip: "Skip",
     },
     apiBasics: {
       heading: "What Is an API?",
       lead: "Before learning API security, review what APIs expose, how they connect applications, and why they become important attack surfaces.",
-      text: "An API is an interface that lets applications exchange requests and responses through agreed rules. In a Web API, a client sends an HTTP method, URL, headers, and body to a server, and the server returns data such as JSON plus a status code. Because APIs power actions such as orders, profile updates, search, and service integrations behind the UI, an API endpoint is also an entry point to data, permissions, and business workflows.",
+      text: "API stands for Application Programming Interface. It is an interface that lets applications exchange requests and responses through agreed rules. In a Web API, a client sends an HTTP method, URL, headers, and body to a server, and the server returns data such as JSON plus a status code. Because APIs power actions such as orders, profile updates, search, and service integrations behind the UI, an API endpoint is also an entry point to data, permissions, and business workflows.",
       points: [
         "APIs can be called directly outside the visible UI, so frontend display rules are not a security boundary.",
         "Each endpoint must verify who is calling, which resource is targeted, which operation is requested, and under what conditions it is allowed.",
@@ -166,22 +196,22 @@ export const uiText = {
     },
     warning: {
       label: "Local-only warning",
-      text: "Vulnerable APIs are for local learning and verification only. Do not run them in public, shared, or production environments.",
+      text: "Vulnerable APIs intentionally weaken defenses so you can observe how attacks become possible. If exposed outside a local lab, third parties could directly exercise missing ownership checks, weak authentication, excessive information disclosure, or SSRF-like behavior. Even with synthetic data, this can publish attack steps, expose environment details, or create accidental paths toward operational systems. Run these routes only in a local learning environment and never deploy them to shared or production environments.",
     },
     status: {
-      heading: "Current Foundation",
+      heading: "What You Can Learn Here",
       items: [
         {
-          title: "Route separation",
-          text: "Vulnerable and secure APIs stay separated to reduce accidental misuse.",
+          title: "Why It Is Risky",
+          text: "See how small mistakes in IDs, tokens, JSON bodies, or URLs can lead to data exposure or privilege abuse.",
         },
         {
-          title: "Safety guard",
-          text: "LAB_MODE and runtime environment checks disable vulnerable APIs in public-like environments.",
+          title: "How To Defend",
+          text: "Compare vulnerable behavior with the authorization, authentication, validation, rate limiting, and outbound-control checks secure APIs add.",
         },
         {
-          title: "Language switching",
-          text: "Japanese is the default, with a shared switcher for English UI text.",
+          title: "How To Read Results",
+          text: "Review responses and implementation flow side by side to see which design differences stop each attack pattern.",
         },
       ],
     },
@@ -191,7 +221,6 @@ export const uiText = {
       selectLabel: "Show topic",
       selectedLabel: "Selected",
       difficultyLabel: "Difficulty",
-      progressLabel: "Status",
     },
     detail: {
       heading: "Learning Detail",
@@ -218,6 +247,7 @@ export const uiText = {
       vulnerableResult: "Vulnerable API result",
       secureResult: "Secure API result",
       resultMeaning: "What this result means",
+      selectedTopic: "Selected topic",
       noResult: "Not run yet.",
     },
     checklist: {

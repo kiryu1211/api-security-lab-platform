@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
   getImplementationWalkthrough,
   getLearningContextNote,
@@ -12,17 +12,7 @@ import {
 import { defaultLanguage, isLanguage, uiText, type Language } from "@/lib/i18n";
 
 const languageStorageKey = "lab-ui-language";
-
-const progressLabels = {
-  ja: {
-    ready: "実装済み",
-    planned: "未実装",
-  },
-  en: {
-    ready: "Foundation ready",
-    planned: "Not implemented",
-  },
-} as const;
+const openingStorageKey = "api-security-lab-opening-seen";
 
 const difficultyLabels = {
   ja: {
@@ -51,7 +41,13 @@ type ModuleDemoState = {
 type DemoEnabledModuleId = LearningModuleId;
 
 export function HomePage() {
+  const openingAutoCloseTimerRef = useRef<number | null>(null);
   const [language, setLanguage] = useState<Language>(defaultLanguage);
+  const [openingChecked, setOpeningChecked] = useState(false);
+  const [openingVisible, setOpeningVisible] = useState(false);
+  const [openingLeaving, setOpeningLeaving] = useState(false);
+  const [openingCompleted, setOpeningCompleted] = useState(false);
+  const [contentRevealReady, setContentRevealReady] = useState(false);
   const [selectedModuleId, setSelectedModuleId] =
     useState<LearningModuleId>("bola");
   const [demoState, setDemoState] = useState<
@@ -76,22 +72,146 @@ export function HomePage() {
   const selectedDemoModuleId = isDemoEnabledModule(selectedModule.id)
     ? selectedModule.id
     : undefined;
+  const openingActive = !openingChecked || openingVisible;
 
   useEffect(() => {
+    let cancelled = false;
     const savedLanguage = window.localStorage.getItem(languageStorageKey);
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
 
     if (isLanguage(savedLanguage)) {
       setLanguage(savedLanguage);
+      document.documentElement.lang = savedLanguage;
     }
+
+    if (
+      reduceMotion ||
+      window.sessionStorage.getItem(openingStorageKey) === "seen"
+    ) {
+      setOpeningChecked(true);
+      setContentRevealReady(true);
+      return;
+    }
+
+    void document.fonts.ready.then(() => {
+      if (cancelled) {
+        return;
+      }
+
+      setOpeningVisible(true);
+      setOpeningChecked(true);
+
+      openingAutoCloseTimerRef.current = window.setTimeout(() => {
+        openingAutoCloseTimerRef.current = null;
+        setOpeningLeaving(true);
+        setOpeningCompleted(true);
+      }, 5000);
+    });
+
+    return () => {
+      cancelled = true;
+
+      if (openingAutoCloseTimerRef.current !== null) {
+        window.clearTimeout(openingAutoCloseTimerRef.current);
+        openingAutoCloseTimerRef.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
-    document.documentElement.lang = language;
-    window.localStorage.setItem(languageStorageKey, language);
-  }, [language]);
+    if (openingChecked && !openingVisible) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [openingChecked, openingVisible]);
+
+  useEffect(() => {
+    if (!openingLeaving) {
+      return;
+    }
+
+    const closeTimer = window.setTimeout(() => {
+      window.sessionStorage.setItem(openingStorageKey, "seen");
+      setOpeningVisible(false);
+      setOpeningLeaving(false);
+    }, 520);
+
+    return () => window.clearTimeout(closeTimer);
+  }, [openingLeaving]);
+
+  useEffect(() => {
+    if (!openingCompleted) {
+      return;
+    }
+
+    const titleCharacterCount = Array.from(t.hero.title).length;
+    const heroSequenceDuration =
+      860 + Math.max(titleCharacterCount - 1, 0) * 38 + 680;
+    const contentRevealTimer = window.setTimeout(() => {
+      setContentRevealReady(true);
+    }, heroSequenceDuration);
+
+    return () => window.clearTimeout(contentRevealTimer);
+  }, [openingCompleted, t.hero.title]);
+
+  useEffect(() => {
+    if (!contentRevealReady) {
+      return;
+    }
+
+    const revealTargets = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-reveal]"),
+    );
+
+    if (
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      !("IntersectionObserver" in window)
+    ) {
+      revealTargets.forEach((target) => {
+        target.dataset.inView = "true";
+      });
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.setAttribute("data-in-view", "true");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { rootMargin: "0px 0px -10% 0px", threshold: 0.16 },
+    );
+
+    revealTargets.forEach((target) => observer.observe(target));
+
+    return () => observer.disconnect();
+  }, [contentRevealReady, language, selectedModuleId]);
 
   function handleLanguageChange(nextLanguage: Language) {
     setLanguage(nextLanguage);
+    document.documentElement.lang = nextLanguage;
+    window.localStorage.setItem(languageStorageKey, nextLanguage);
+  }
+
+  function handleSkipOpening() {
+    if (openingAutoCloseTimerRef.current !== null) {
+      window.clearTimeout(openingAutoCloseTimerRef.current);
+      openingAutoCloseTimerRef.current = null;
+    }
+
+    setOpeningLeaving(true);
+    setOpeningCompleted(true);
   }
 
   function isDemoEnabledModule(
@@ -317,8 +437,29 @@ export function HomePage() {
   }
 
   return (
-    <div className="app-shell">
-      <header className="site-header">
+    <div
+      className="app-shell"
+      data-entry={
+        !openingChecked || (openingVisible && !openingLeaving)
+          ? "opening"
+          : openingCompleted
+            ? "opening-exit"
+            : undefined
+      }
+    >
+      {!openingChecked || openingVisible ? (
+        <OpeningAnimation
+          ready={openingChecked}
+          leaving={openingLeaving}
+          onSkip={handleSkipOpening}
+          text={t.opening}
+        />
+      ) : null}
+      <header
+        className="site-header"
+        aria-hidden={openingActive ? true : undefined}
+        inert={openingActive ? true : undefined}
+      >
         <a className="brand" href="#top" aria-label={t.brand}>
           <span className="brand-mark" aria-hidden="true">
             <svg viewBox="0 0 48 48" role="img" focusable="false">
@@ -381,12 +522,44 @@ export function HomePage() {
         </div>
       </header>
 
-      <main className="main-content" id="top">
+      <main
+        className="main-content"
+        id="top"
+        aria-hidden={openingActive ? true : undefined}
+        inert={openingActive ? true : undefined}
+      >
         <section className="hero" aria-labelledby="hero-title">
           <div>
             <span className="eyebrow">{t.hero.eyebrow}</span>
-            <h1 id="hero-title">{t.hero.title}</h1>
-            <p className="hero-lead">{t.hero.lead}</p>
+            <h1 id="hero-title" aria-label={t.hero.title}>
+              <span className="hero-title-characters" aria-hidden="true">
+                {Array.from(t.hero.title).map((character, index) => (
+                  <span
+                    className="hero-title-character"
+                    key={`${character}-${index}`}
+                    style={
+                      {
+                        "--character-delay": `${440 + index * 38}ms`,
+                      } as CSSProperties
+                    }
+                  >
+                    {character === " " ? "\u00a0" : character}
+                  </span>
+                ))}
+              </span>
+            </h1>
+            <p
+              className="hero-lead"
+              style={
+                {
+                  "--hero-lead-delay": `${
+                    860 + Math.max(Array.from(t.hero.title).length - 1, 0) * 38
+                  }ms`,
+                } as CSSProperties
+              }
+            >
+              {t.hero.lead}
+            </p>
           </div>
         </section>
 
@@ -394,6 +567,7 @@ export function HomePage() {
           className="module-section foundation-section"
           id="api-basics"
           aria-labelledby="api-basics-heading"
+          data-reveal
         >
           <div className="section-copy wide">
             <h2 className="section-heading" id="api-basics-heading">
@@ -402,7 +576,7 @@ export function HomePage() {
             <p>{t.apiBasics.lead}</p>
           </div>
 
-          <article className="foundation-card">
+          <article className="foundation-card" data-reveal>
             <p>{t.apiBasics.text}</p>
             <ul>
               {t.apiBasics.points.map((point) => (
@@ -416,6 +590,7 @@ export function HomePage() {
           className="module-section foundation-section"
           id="owasp-basics"
           aria-labelledby="owasp-basics-heading"
+          data-reveal
         >
           <div className="section-copy wide">
             <h2 className="section-heading" id="owasp-basics-heading">
@@ -424,7 +599,7 @@ export function HomePage() {
             <p>{t.owaspBasics.lead}</p>
           </div>
 
-          <article className="foundation-card accent-card">
+          <article className="foundation-card accent-card" data-reveal>
             <p>{t.owaspBasics.text}</p>
             <ul>
               {t.owaspBasics.points.map((point) => (
@@ -434,13 +609,17 @@ export function HomePage() {
           </article>
         </section>
 
-        <section className="module-section" aria-labelledby="status-heading">
+        <section
+          className="module-section"
+          aria-labelledby="status-heading"
+          data-reveal
+        >
           <h2 className="section-heading" id="status-heading">
             {t.status.heading}
           </h2>
           <div className="status-grid">
             {t.status.items.map((item) => (
-              <article className="status-card" key={item.title}>
+              <article className="status-card" key={item.title} data-reveal>
                 <strong>{item.title}</strong>
                 <p>{item.text}</p>
               </article>
@@ -452,6 +631,7 @@ export function HomePage() {
           className="module-section"
           id="topics"
           aria-labelledby="topics-heading"
+          data-reveal
         >
           <div className="section-copy">
             <h2 className="section-heading" id="topics-heading">
@@ -469,6 +649,7 @@ export function HomePage() {
                   <button
                     className="topic-card"
                     data-selected={isSelected}
+                    data-reveal
                     key={module.id}
                     type="button"
                     onClick={() => setSelectedModuleId(module.id)}
@@ -476,12 +657,6 @@ export function HomePage() {
                   >
                     <span className="topic-card-topline">
                       <span>{module.riskCategory}</span>
-                      <span
-                        className="progress-pill"
-                        data-progress={module.progress}
-                      >
-                        {progressLabels[language][module.progress]}
-                      </span>
                     </span>
                     <strong>{module.title[language]}</strong>
                     <span className="topic-summary">
@@ -501,7 +676,12 @@ export function HomePage() {
               })}
             </div>
 
-            <article className="detail-panel" aria-labelledby="detail-heading">
+            <article
+              className="detail-panel"
+              aria-labelledby="detail-heading"
+              data-reveal
+              key={selectedModule.id}
+            >
               <span className="eyebrow">{selectedModule.riskCategory}</span>
               <h2 id="detail-heading">{t.detail.heading}</h2>
               <h3>{selectedModule.title[language]}</h3>
@@ -528,32 +708,41 @@ export function HomePage() {
           className="module-section"
           id="comparison"
           aria-labelledby="comparison-heading"
+          data-reveal
         >
           <div className="comparison-heading-row">
-            <h2 className="section-heading" id="comparison-heading">
-              {t.comparison.heading}
-            </h2>
-            <aside className="inline-warning" aria-label={t.warning.label}>
+            <div>
+              <h2 className="section-heading" id="comparison-heading">
+                {t.comparison.heading}
+              </h2>
+              <article className="selected-topic-summary" data-reveal>
+                <span className="mini-label">{t.comparison.selectedTopic}</span>
+                <h3>{selectedModule.title[language]}</h3>
+                <p>{selectedModule.riskCategory}</p>
+                <div className="selected-topic-meta">
+                  <span>
+                    {t.topics.difficultyLabel}:{" "}
+                    {difficultyLabels[language][selectedModule.difficulty]}
+                  </span>
+                </div>
+              </article>
+            </div>
+            <aside
+              className="inline-warning"
+              aria-label={t.warning.label}
+              data-reveal
+            >
               <strong>{t.warning.label}</strong>
               <span>{t.warning.text}</span>
             </aside>
-          </div>
-
-          <div className="route-tags" aria-label={t.routeSeparationLabel}>
-            <div className="route-explainer vulnerable">
-              <code>/vulnerable/*</code>
-              <p>{t.routeDescriptions.vulnerable}</p>
-            </div>
-            <div className="route-explainer secure">
-              <code>/secure/*</code>
-              <p>{t.routeDescriptions.secure}</p>
-            </div>
           </div>
 
           <div className="comparison-grid">
             <ComparisonPanel
               badge={t.comparison.vulnerableBadge}
               kind="vulnerable"
+              routeDescription={t.routeDescriptions.vulnerable}
+              routePattern="/vulnerable/*"
               note={selectedModule.vulnerable.note[language]}
               request={selectedModule.vulnerable.request}
               response={selectedModule.vulnerable.response[language]}
@@ -569,10 +758,13 @@ export function HomePage() {
               }
               resultTitle={t.comparison.vulnerableResult}
               noResultLabel={t.comparison.noResult}
+              key={`vulnerable-${selectedModule.id}`}
             />
             <ComparisonPanel
               badge={t.comparison.secureBadge}
               kind="secure"
+              routeDescription={t.routeDescriptions.secure}
+              routePattern="/secure/*"
               note={selectedModule.secure.note[language]}
               request={selectedModule.secure.request}
               response={selectedModule.secure.response[language]}
@@ -588,10 +780,11 @@ export function HomePage() {
               }
               resultTitle={t.comparison.secureResult}
               noResultLabel={t.comparison.noResult}
+              key={`secure-${selectedModule.id}`}
             />
           </div>
 
-          <div className="demo-action-row">
+          <div className="demo-action-row" data-reveal>
             {selectedDemoModuleId ? (
               <button
                 className="run-demo-button"
@@ -613,6 +806,7 @@ export function HomePage() {
           className="module-section"
           id="checklist"
           aria-labelledby="checklist-heading"
+          data-reveal
         >
           <div className="section-copy">
             <h2 className="section-heading" id="checklist-heading">
@@ -620,9 +814,9 @@ export function HomePage() {
             </h2>
             <p>{t.checklist.lead}</p>
           </div>
-          <div className="checklist-card">
+          <div className="checklist-card" data-reveal key={selectedModule.id}>
             {selectedModule.checklist[language].map((item) => (
-              <label className="checklist-item" key={item}>
+              <label className="checklist-item" key={item} data-reveal>
                 <input type="checkbox" />
                 <span>{item}</span>
               </label>
@@ -631,6 +825,99 @@ export function HomePage() {
         </section>
       </main>
     </div>
+  );
+}
+
+function OpeningAnimation({
+  ready,
+  leaving,
+  onSkip,
+  text,
+}: {
+  ready: boolean;
+  leaving: boolean;
+  onSkip: () => void;
+  text: (typeof uiText)[Language]["opening"];
+}) {
+  const skipButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (ready && !leaving) {
+      skipButtonRef.current?.focus();
+    }
+  }, [leaving, ready]);
+
+  return (
+    <section
+      className="opening-overlay"
+      data-state={leaving ? "leaving" : ready ? "visible" : "pending"}
+      aria-label={text.title}
+      aria-modal="true"
+      role="dialog"
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          onSkip();
+        }
+
+        if (event.key === "Tab") {
+          event.preventDefault();
+          skipButtonRef.current?.focus();
+        }
+      }}
+    >
+      <div className="opening-grid" aria-hidden="true" />
+      <div className="opening-card">
+        <div className="opening-copy">
+          <span className="opening-badge">{text.badge}</span>
+          <h2>{text.title}</h2>
+          <p>{text.lead}</p>
+        </div>
+
+        <div className="api-opening-diagram" aria-hidden="true">
+          <div className="api-node client-a-node">
+            <span>{text.clientA}</span>
+          </div>
+          <div className="api-node api-bridge-node">
+            <span>{text.api}</span>
+          </div>
+          <div className="api-node client-b-node">
+            <span>{text.clientB}</span>
+          </div>
+          <div className="api-node attacker-node">
+            <span>{text.attacker}</span>
+          </div>
+          <div className="opening-lane vulnerable-lane">
+            <span>{text.vulnerable}</span>
+          </div>
+          <div className="opening-lane secure-lane">
+            <span>{text.secure}</span>
+          </div>
+          <div className="api-line client-a-line" />
+          <div className="api-line client-b-line" />
+          <div className="api-line attack-line" />
+          <div className="api-line rejected-line" />
+          <div className="api-packet request-packet">{text.request}</div>
+          <div className="api-packet response-packet">{text.response}</div>
+          <div className="api-packet attack-packet">Attack</div>
+          <div className="defense-shield">
+            <span>{text.blocked}</span>
+          </div>
+        </div>
+
+        <div className="opening-progress" aria-hidden="true">
+          <span />
+        </div>
+        <button
+          className="opening-skip"
+          ref={skipButtonRef}
+          type="button"
+          onClick={onSkip}
+        >
+          {text.skip}
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -647,6 +934,8 @@ function ComparisonPanel({
   result,
   resultTitle,
   route,
+  routeDescription,
+  routePattern,
   title,
 }: {
   badge: string;
@@ -664,16 +953,22 @@ function ComparisonPanel({
   result?: DemoResult;
   resultTitle: string;
   route: string;
+  routeDescription: string;
+  routePattern: string;
   title: string;
 }) {
   return (
-    <article className="comparison-panel" data-kind={kind}>
+    <article className="comparison-panel" data-kind={kind} data-reveal>
       <div className="comparison-panel-header">
         <div>
           <span className="comparison-badge">{badge}</span>
           <h3>{title}</h3>
         </div>
         <code>{route}</code>
+      </div>
+      <div className={`route-explainer ${kind}`}>
+        <code>{routePattern}</code>
+        <p>{routeDescription}</p>
       </div>
       <div className="request-response-grid">
         <div>
@@ -695,16 +990,19 @@ function ComparisonPanel({
         labels={labels}
         language={language}
       />
-      <div className="api-result-box">
+      <div
+        className="api-result-box"
+        data-has-result={result ? "true" : "false"}
+      >
         <span className="mini-label">{resultTitle}</span>
         {result ? (
-          <>
+          <div className="demo-result-content">
             <p className="demo-result-explanation">
               <strong>{labels.resultMeaning}: </strong>
               {response}
             </p>
             <pre>{`HTTP ${result.status}\n${JSON.stringify(result.body, null, 2)}`}</pre>
-          </>
+          </div>
         ) : (
           <p>{noResultLabel}</p>
         )}
