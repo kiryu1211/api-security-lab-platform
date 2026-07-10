@@ -57,6 +57,81 @@
 - OpenAPI仕様に、実装済みAPIのルート、入力、エラーレスポンス、安全上の注意が記述されていることを確認する。
 - 日本語表示と英語表示で、画面内の文言が同じ言語に統一されていることを確認する。
 
+### 要件と検証のトレーサビリティ
+
+次の図は、代表的な安全要件と、それを満たす実装要素または検証要素の関係を示します。要件の完全な一覧と詳細は、上の要件表を正とします。
+
+```mermaid
+requirementDiagram
+    requirement local_only {
+        id: "SR-01"
+        text: "脆弱APIはローカル限定で実行する"
+        risk: High
+        verifymethod: Test
+    }
+
+    requirement route_separation {
+        id: "SR-02"
+        text: "脆弱APIと安全APIのルートを分離する"
+        risk: High
+        verifymethod: Inspection
+    }
+
+    functionalRequirement secure_controls {
+        id: "SR-03..SR-11"
+        text: "安全APIに各リスクへの防御を適用する"
+        risk: High
+        verifymethod: Test
+    }
+
+    designConstraint secret_exclusion {
+        id: "SR-12"
+        text: "環境変数、鍵、トークンをGit管理から除外する"
+        risk: High
+        verifymethod: Inspection
+    }
+
+    functionalRequirement bilingual_ui {
+        id: "FR-15"
+        text: "日本語と英語のUIを一貫して提供する"
+        risk: Medium
+        verifymethod: Test
+    }
+
+    element security_tests {
+        type: "Vitestテストスイート"
+        docref: "src/lib/security-verification.test.ts"
+    }
+
+    element openapi_contract {
+        type: "OpenAPI仕様と検証"
+        docref: "docs/api/openapi.json / src/lib/openapi.test.ts"
+    }
+
+    element route_handlers {
+        type: "Next.js Route Handlers"
+        docref: "src/app/api/secure / src/app/api/vulnerable"
+    }
+
+    element repository_exclusions {
+        type: "Git除外設定"
+        docref: ".gitignore"
+    }
+
+    element ui_resources {
+        type: "日英UIリソース"
+        docref: "src/lib/i18n.ts"
+    }
+
+    security_tests - verifies -> local_only
+    security_tests - verifies -> secure_controls
+    openapi_contract - verifies -> route_separation
+    route_handlers - satisfies -> route_separation
+    route_handlers - satisfies -> secure_controls
+    repository_exclusions - satisfies -> secret_exclusion
+    ui_resources - satisfies -> bilingual_ui
+```
+
 ## 学習モジュール状態遷移
 
 ```mermaid

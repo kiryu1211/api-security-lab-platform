@@ -139,6 +139,25 @@ erDiagram
 - Improper Inventory Management対策では、APIの環境、バージョン、公開範囲、所有者、文書の鮮度、退役状態、保護策の適用状況を処理前に検証する。
 - レート制限は、現在はデモユーザーとAPIルート単位で適用する。送信元単位の制限は現在の実装範囲に含めない。
 
+### ルート分離と脆弱API安全ガード
+
+安全APIは各モジュールの検証を通過した場合だけ合成データを処理します。脆弱APIはそれに加えて共通の安全ガードを通り、ローカル学習環境の条件を満たさない場合はデモ処理へ進みません。
+
+```mermaid
+flowchart TD
+    Request["APIリクエスト"] --> Route{"ルート種別"}
+    Route -- "/api/secure/*" --> SecureChecks["入力検証とモジュール別の防御"]
+    SecureChecks --> SyntheticData["合成データまたはインメモリ状態"]
+    SyntheticData --> Response["共通形式のAPIレスポンス"]
+
+    Route -- "/api/vulnerable/*" --> LocalMode{"LAB_MODE = local"}
+    LocalMode -- "いいえ" --> Disabled["403 VULNERABLE_API_DISABLED"]
+    LocalMode -- "はい" --> Production{"NODE_ENV = production"}
+    Production -- "はい" --> Disabled
+    Production -- "いいえ" --> VulnerableDemo["ローカル限定の脆弱デモ処理"]
+    VulnerableDemo --> SyntheticData
+```
+
 ヘルスチェック、サンプルデータ、BOLA注文、認証セッション、レート制限検索、管理者招待、業務フロー予約、プロフィール更新、URL取得プレビュー、設定診断、APIインベントリ操作、外部プロフィール連携の各Route Handlerを `/api/vulnerable/*` と `/api/secure/*` に分けます。脆弱APIルートは、レスポンスを返す前に共通の安全ガードを通します。
 
 ## API基盤
@@ -166,7 +185,7 @@ erDiagram
 ## レート制限・Mass Assignment・SSRFモジュール設計
 
 - 脆弱なレート制限ルート `/api/vulnerable/rate-limit/search` は、繰り返しリクエストに制限を適用しない。安全なルート `/api/secure/rate-limit/search` は、ルートとデモユーザーをキーにしたインメモリの制限を適用し、デモ用の上限を超えた場合は `429 RATE_LIMITED` を返す。
-- 脆弱なMass Assignmentルート `/api/vulnerable/profile` は、`ownerId` や `role` など権限が必要な項目も含め、受け入れたプロパティをそのまま適用する。安全なルート `/api/secure/profile` は、許可リストに含まれるプロフィール項目だけを適用し、拒否したプロパティを返す。
+- 脆弱なMass Assignmentルート `/api/vulnerable/profile` は、`ownerId` や `role` など権限が必要な項目も含め、受け入れたプロパティをそのまま適用する。安全なルート `/api/secure/profile` は、通常更新で許可するプロフィール項目を許可リストで制限し、権限項目や所有者項目が含まれる場合は403で拒否する。
 - 脆弱なSSRFルート `/api/vulnerable/fetch-url` は、任意URLを受け入れる例として動作する。ただし、実際の外部ネットワークアクセスは行わない。安全なルート `/api/secure/fetch-url` はHTTPSを必須とし、プライベートホストを拒否し、`api.example.test` のみを許可するプレビューを返す。
 - SSRFデモでは実際の外部ネットワークアクセスを行わず、脆弱APIと安全APIのどちらもプレビュー用メタデータだけを返す。
 
@@ -204,6 +223,20 @@ erDiagram
 - 安全なAPIインベントリルート `/api/secure/inventory/operations` は、APIの環境、バージョン、公開範囲、所有者、文書の鮮度、退役状態、保護策の適用状況を確認し、退役済みや管理外の操作を拒否する。
 - 比較UIでは、`legacy-token-reset-v1` を `production` で実行しようとするリクエストを使用する。脆弱ルートではプレビューが作成され、安全ルートでは `403 FORBIDDEN` が返ることを確認できる。
 - APIインベントリデモでは合成したインベントリと操作結果だけを使用し、実トークン発行、通知送信、実在する利用者データ、実ログ、外部サービス連携は行わない。
+
+次の図は、APIインベントリで管理する概念的なライフサイクルを示します。実際の日程や公開計画ではなく、安全APIが操作前に確認する状態と管理観点を表します。
+
+```mermaid
+timeline
+    title APIインベントリのライフサイクル
+    Active : 所有者、環境、公開範囲を確認
+           : 現行仕様と保護策を確認
+           : 文書の鮮度を維持
+    Deprecated : 後継バージョンを明示
+               : 利用範囲と移行状況を追跡
+    Retired : 操作を拒否
+            : ルートと関連処理を無効化
+```
 
 ## 多言語UI設計
 

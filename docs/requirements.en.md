@@ -57,6 +57,81 @@
 - OpenAPI must document implemented API routes, inputs, error responses, and safety notes.
 - Japanese and English UI modes must keep visible text consistent within the selected language.
 
+### Requirements-to-Verification Traceability
+
+The following diagram connects representative safety requirements to the implementation or verification elements that satisfy them. The requirement tables above remain the source of truth for the complete list and details.
+
+```mermaid
+requirementDiagram
+    requirement local_only {
+        id: "SR-01"
+        text: "Run vulnerable APIs locally only"
+        risk: High
+        verifymethod: Test
+    }
+
+    requirement route_separation {
+        id: "SR-02"
+        text: "Separate vulnerable and secure API routes"
+        risk: High
+        verifymethod: Inspection
+    }
+
+    functionalRequirement secure_controls {
+        id: "SR-03..SR-11"
+        text: "Apply risk-specific controls to secure APIs"
+        risk: High
+        verifymethod: Test
+    }
+
+    designConstraint secret_exclusion {
+        id: "SR-12"
+        text: "Exclude environment files, keys, and tokens from Git"
+        risk: High
+        verifymethod: Inspection
+    }
+
+    functionalRequirement bilingual_ui {
+        id: "FR-15"
+        text: "Provide consistent Japanese and English UI modes"
+        risk: Medium
+        verifymethod: Test
+    }
+
+    element security_tests {
+        type: "Vitest test suite"
+        docref: "src/lib/security-verification.test.ts"
+    }
+
+    element openapi_contract {
+        type: "OpenAPI specification and verification"
+        docref: "docs/api/openapi.json / src/lib/openapi.test.ts"
+    }
+
+    element route_handlers {
+        type: "Next.js Route Handlers"
+        docref: "src/app/api/secure / src/app/api/vulnerable"
+    }
+
+    element repository_exclusions {
+        type: "Git exclusion rules"
+        docref: ".gitignore"
+    }
+
+    element ui_resources {
+        type: "Japanese and English UI resources"
+        docref: "src/lib/i18n.ts"
+    }
+
+    security_tests - verifies -> local_only
+    security_tests - verifies -> secure_controls
+    openapi_contract - verifies -> route_separation
+    route_handlers - satisfies -> route_separation
+    route_handlers - satisfies -> secure_controls
+    repository_exclusions - satisfies -> secret_exclusion
+    ui_resources - satisfies -> bilingual_ui
+```
+
 ## Learning Module State Transition
 
 ```mermaid

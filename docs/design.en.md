@@ -139,6 +139,25 @@ erDiagram
 - Improper Inventory Management protection validates API environment, version, exposure, owner, documentation freshness, lifecycle state, and protection parity before processing.
 - Rate limiting currently applies per demo user and API route. Per-source limits are outside the current implementation scope.
 
+### Route Separation And Vulnerable API Safety Guard
+
+Secure APIs process synthetic data only after module-specific validation succeeds. Vulnerable APIs additionally pass through the shared safety guard and cannot reach demo processing unless the local learning environment conditions are satisfied.
+
+```mermaid
+flowchart TD
+    Request["API request"] --> Route{"Route family"}
+    Route -- "/api/secure/*" --> SecureChecks["Input validation and module-specific controls"]
+    SecureChecks --> SyntheticData["Synthetic data or in-memory state"]
+    SyntheticData --> Response["Shared API response shape"]
+
+    Route -- "/api/vulnerable/*" --> LocalMode{"LAB_MODE = local"}
+    LocalMode -- "No" --> Disabled["403 VULNERABLE_API_DISABLED"]
+    LocalMode -- "Yes" --> Production{"NODE_ENV = production"}
+    Production -- "Yes" --> Disabled
+    Production -- "No" --> VulnerableDemo["Local-only vulnerable demo processing"]
+    VulnerableDemo --> SyntheticData
+```
+
 Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route handlers for health checks, lab samples, BOLA orders, authentication sessions, rate-limit search, admin invitations, business-flow reservations, profile updates, URL fetch previews, configuration diagnostics, API inventory operations, and third-party profile imports. Vulnerable routes use the shared safety guard before returning a response.
 
 ## API Foundation
@@ -166,7 +185,7 @@ Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route
 ## Rate Limiting, Mass Assignment, And SSRF Module Design
 
 - The vulnerable rate-limit route `/api/vulnerable/rate-limit/search` accepts repeated requests without applying limits. The secure route `/api/secure/rate-limit/search` applies a route and demo-user keyed in-memory limit and returns `429 RATE_LIMITED` after the demo threshold.
-- The vulnerable Mass Assignment route `/api/vulnerable/profile` applies all accepted properties, including privileged fields such as `ownerId` and `role`. The secure route `/api/secure/profile` applies only allowlisted profile fields and reports rejected properties.
+- The vulnerable Mass Assignment route `/api/vulnerable/profile` applies all accepted properties, including privileged fields such as `ownerId` and `role`. The secure route `/api/secure/profile` restricts normal updates to allowlisted profile fields and returns 403 when privileged or ownership fields are present.
 - The vulnerable SSRF route `/api/vulnerable/fetch-url` accepts arbitrary URLs for demonstration without real outbound network access. The secure route `/api/secure/fetch-url` returns a preview that requires HTTPS, rejects private hosts, and allows only `api.example.test`.
 - SSRF demos never perform real outbound network access; both vulnerable and secure routes return preview metadata only.
 
@@ -204,6 +223,20 @@ Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route
 - The secure API inventory route `/api/secure/inventory/operations` validates API environment, version, exposure, owner, documentation freshness, lifecycle state, and protection parity, then rejects retired or unmanaged operations.
 - The comparison UI attempts to run `legacy-token-reset-v1` in `production`. The vulnerable route creates a preview, while the secure route returns `403 FORBIDDEN`.
 - The API inventory demo uses synthetic inventory and operation results only. It does not issue real tokens, send notifications, use real user data, use real logs, or integrate with external services.
+
+The following diagram shows the conceptual lifecycle managed by the API inventory. It is not a delivery schedule or publication plan; it represents the states and governance checks evaluated by the secure API before an operation.
+
+```mermaid
+timeline
+    title API Inventory Lifecycle
+    Active : Verify owner, environment, and exposure
+           : Verify current specification and controls
+           : Keep documentation current
+    Deprecated : Identify the replacement version
+               : Track usage and migration
+    Retired : Reject operations
+            : Disable routes and related processing
+```
 
 ## Multilingual UI Design
 
