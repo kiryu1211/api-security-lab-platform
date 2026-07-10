@@ -59,10 +59,42 @@ describe("phase 6 demo routes", () => {
     );
     const body = await response.json();
 
-    expect(response.status).toBe(200);
-    expect(body.data.profile.rejectedProperties).toEqual(
+    expect(response.status).toBe(403);
+    expect(body.error.details.rejectedProperties).toEqual(
       expect.arrayContaining(["ownerId", "role"]),
     );
+  });
+
+  it("secure profile route rejects unknown properties", async () => {
+    const response = await secureProfilePatch(
+      new Request("http://localhost/api/secure/profile", {
+        method: "PATCH",
+        body: JSON.stringify({ displayLabel: "Demo", isAdmin: true }),
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.error.details.rejectedProperties).toEqual(["isAdmin"]);
+  });
+
+  it("secure profile route accepts allowlisted properties", async () => {
+    const response = await secureProfilePatch(
+      new Request("http://localhost/api/secure/profile", {
+        method: "PATCH",
+        body: JSON.stringify({
+          displayLabel: "Updated demo profile",
+          notificationsEnabled: false,
+        }),
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.profile.data).toMatchObject({
+      displayLabel: "Updated demo profile",
+      notificationsEnabled: false,
+    });
   });
 
   it("vulnerable SSRF route accepts private URL previews", async () => {

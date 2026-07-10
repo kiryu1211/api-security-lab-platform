@@ -503,6 +503,14 @@
                 "schema": { "$ref": "#/components/schemas/ApiError" }
               }
             }
+          },
+          "403": {
+            "description": "Profile update contains properties outside the normal user update allowlist",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
           }
         }
       }

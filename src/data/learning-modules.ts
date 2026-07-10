@@ -449,8 +449,8 @@ const learningModuleDefinitions: LearningModule[] = [
       request:
         'PATCH /api/secure/profile\n{\n  "displayLabel": "changed-label",\n  "ownerId": "user-demo-bob",\n  "role": "reviewer"\n}',
       response: {
-        ja: "HTTP 400または403は、許可リスト外の項目や権限が必要な項目を検出し、通常のプロフィール更新として保存しなかったことを表します。",
-        en: "HTTP 400 or 403 means fields outside the allowlist or privileged fields were detected and not saved as a normal profile update.",
+        ja: "HTTP 403は、許可リスト外の項目や権限が必要な項目を検出し、通常のプロフィール更新として保存せず拒否したことを表します。",
+        en: "HTTP 403 means fields outside the allowlist or privileged fields were detected and rejected instead of being saved as a normal profile update.",
       },
       note: {
         ja: "安全APIでは、Zodスキーマと許可リストで更新項目を絞り込みます。",
@@ -955,6 +955,7 @@ export const implementationWalkthroughs: Record<
             en: "Fix: fields such as role and ownerId are separated from normal updates.",
           },
         },
+        { code: "  if (hasPrivilegedFields(body)) return forbidden();" },
         { code: "  return json({ profile: updateProfile(allowed) });" },
         { code: "}" },
       ],

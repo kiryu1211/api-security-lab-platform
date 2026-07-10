@@ -312,11 +312,11 @@ describe("phase 7 security verification", () => {
     expect(secureBola.status).toBe(403);
     expect(secureAuth.status).toBe(401);
     expect(secureInvitation.status).toBe(403);
-    expect(secureProfile.status).toBe(200);
+    expect(secureProfile.status).toBe(403);
     expect(await secureProfile.json()).toMatchObject({
-      data: {
-        profile: {
-          ownerId: "user-demo-alice",
+      error: {
+        code: "FORBIDDEN",
+        details: {
           rejectedProperties: expect.arrayContaining(["ownerId", "role"]),
         },
       },

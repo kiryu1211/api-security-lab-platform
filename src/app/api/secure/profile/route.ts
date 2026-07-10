@@ -5,10 +5,8 @@ import { readJsonBody, validateWithSchema } from "@/lib/request-validation";
 
 export async function PATCH(request: Request) {
   const meta = secureRouteMeta();
-  const validation = validateWithSchema(
-    profileUpdateBodySchema,
-    await readJsonBody(request),
-  );
+  const body = await readJsonBody(request);
+  const validation = validateWithSchema(profileUpdateBodySchema, body);
 
   if (!validation.ok) {
     return apiError(
@@ -17,6 +15,23 @@ export async function PATCH(request: Request) {
       "Request body does not match the expected profile update schema.",
       meta,
       validation.issues,
+    );
+  }
+
+  const rejectedProperties = Object.keys(
+    body as Record<string, unknown>,
+  ).filter((key) => key !== "displayLabel" && key !== "notificationsEnabled");
+
+  if (rejectedProperties.length > 0) {
+    return apiError(
+      403,
+      "FORBIDDEN",
+      "Profile update contains properties that are not allowed for normal user updates.",
+      meta,
+      {
+        rejectedProperties,
+        allowedProperties: ["displayLabel", "notificationsEnabled"],
+      },
     );
   }
 
