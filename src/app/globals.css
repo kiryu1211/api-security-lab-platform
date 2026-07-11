@@ -550,7 +550,8 @@ a {
 }
 
 .response-packet {
-  --packet-start: 44%;
+  --packet-end: 10%;
+  --packet-start: 78%;
   top: 65%;
   left: var(--packet-start);
   background: var(--secure);
@@ -1896,7 +1897,7 @@ a {
   }
 
   .response-packet {
-    --packet-start: 42%;
+    --packet-end: 4%;
   }
 }
 
