@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { POST as secureProfileImportPost } from "@/app/api/secure/third-party/profile-import/route";
 import { POST as vulnerableProfileImportPost } from "@/app/api/vulnerable/third-party/profile-import/route";
 
@@ -9,7 +9,14 @@ const body = JSON.stringify({
 });
 
 describe("unsafe consumption demo routes", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("vulnerable route imports untrusted third-party response fields", async () => {
+    vi.stubEnv("LAB_MODE", "local");
+    vi.stubEnv("NODE_ENV", "test");
+
     const response = await vulnerableProfileImportPost(
       new Request(
         "http://localhost/api/vulnerable/third-party/profile-import",
@@ -40,6 +47,8 @@ describe("unsafe consumption demo routes", () => {
     const responseBody = await response.json();
 
     expect(response.status).toBe(403);
-    expect(responseBody.error.details.reason).toBe("redirect-host-not-allowed");
+    expect(responseBody.error.details.reason).toBe(
+      "redirect-origin-not-allowed",
+    );
   });
 });

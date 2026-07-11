@@ -1,8 +1,8 @@
 import { apiError, apiSuccess, vulnerableRouteMeta } from "@/lib/api-response";
 import { assertVulnerableApisEnabled } from "@/lib/env";
 
-export function GET() {
-  const guard = assertVulnerableApisEnabled();
+export function GET(request: Request) {
+  const guard = assertVulnerableApisEnabled(request);
   const meta = vulnerableRouteMeta();
 
   if (!guard.ok) {

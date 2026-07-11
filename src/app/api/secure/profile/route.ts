@@ -1,12 +1,20 @@
 import { apiError, apiSuccess, secureRouteMeta } from "@/lib/api-response";
 import { profileUpdateBodySchema } from "@/lib/api-schemas";
 import { safeProfileUpdate } from "@/lib/mass-assignment-service";
-import { readJsonBody, validateWithSchema } from "@/lib/request-validation";
+import { parseJsonRequest, validateWithSchema } from "@/lib/request-validation";
 
 export async function PATCH(request: Request) {
   const meta = secureRouteMeta();
-  const body = await readJsonBody(request);
-  const validation = validateWithSchema(profileUpdateBodySchema, body);
+  const parsedBody = await parseJsonRequest(request, meta);
+
+  if (!parsedBody.ok) {
+    return parsedBody.response;
+  }
+
+  const validation = validateWithSchema(
+    profileUpdateBodySchema,
+    parsedBody.value,
+  );
 
   if (!validation.ok) {
     return apiError(
@@ -19,7 +27,7 @@ export async function PATCH(request: Request) {
   }
 
   const rejectedProperties = Object.keys(
-    body as Record<string, unknown>,
+    parsedBody.value as Record<string, unknown>,
   ).filter((key) => key !== "displayLabel" && key !== "notificationsEnabled");
 
   if (rejectedProperties.length > 0) {

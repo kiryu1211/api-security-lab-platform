@@ -10,6 +10,9 @@
 *.pfx
 *.crt
 *.cer
+*.jks
+*.keystore
+*.p8
 id_rsa
 id_rsa.pub
 secrets/

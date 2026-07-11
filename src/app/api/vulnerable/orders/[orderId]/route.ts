@@ -8,9 +8,9 @@ type RouteContext = {
   params: Promise<{ orderId: string }>;
 };
 
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET(request: Request, context: RouteContext) {
   const meta = vulnerableRouteMeta();
-  const guard = assertVulnerableApisEnabled();
+  const guard = assertVulnerableApisEnabled(request);
 
   if (!guard.ok) {
     return apiError(

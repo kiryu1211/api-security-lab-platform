@@ -1,14 +1,17 @@
 import { apiError, apiSuccess, secureRouteMeta } from "@/lib/api-response";
 import { fetchUrlBodySchema } from "@/lib/api-schemas";
-import { readJsonBody, validateWithSchema } from "@/lib/request-validation";
+import { parseJsonRequest, validateWithSchema } from "@/lib/request-validation";
 import { safeFetchPreview } from "@/lib/ssrf-service";
 
 export async function POST(request: Request) {
   const meta = secureRouteMeta();
-  const validation = validateWithSchema(
-    fetchUrlBodySchema,
-    await readJsonBody(request),
-  );
+  const parsedBody = await parseJsonRequest(request, meta);
+
+  if (!parsedBody.ok) {
+    return parsedBody.response;
+  }
+
+  const validation = validateWithSchema(fetchUrlBodySchema, parsedBody.value);
 
   if (!validation.ok) {
     return apiError(

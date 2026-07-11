@@ -1,6 +1,6 @@
 import { apiError, apiSuccess, secureRouteMeta } from "@/lib/api-response";
 import { securityConfigAuditBodySchema } from "@/lib/api-schemas";
-import { readJsonBody, validateWithSchema } from "@/lib/request-validation";
+import { parseJsonRequest, validateWithSchema } from "@/lib/request-validation";
 import {
   safeAuditSecurityConfig,
   secureMisconfigurationHeaders,
@@ -8,9 +8,15 @@ import {
 
 export async function POST(request: Request) {
   const meta = secureRouteMeta();
+  const parsedBody = await parseJsonRequest(request, meta);
+
+  if (!parsedBody.ok) {
+    return parsedBody.response;
+  }
+
   const validation = validateWithSchema(
     securityConfigAuditBodySchema,
-    await readJsonBody(request),
+    parsedBody.value,
   );
 
   if (!validation.ok) {
@@ -23,7 +29,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const decision = safeAuditSecurityConfig(validation.value);
+  const decision = safeAuditSecurityConfig(validation.value, {
+    originHeader: request.headers.get("Origin"),
+    requestUrl: request.url,
+  });
 
   if (!decision.allowed) {
     const response = apiError(
@@ -46,6 +55,7 @@ export async function POST(request: Request) {
   return apiSuccess(
     {
       diagnostics: {
+        auditScenario: decision.auditScenario,
         publicConfiguration: decision.publicConfiguration,
         controls: decision.controls,
       },

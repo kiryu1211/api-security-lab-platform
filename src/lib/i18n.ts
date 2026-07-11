@@ -72,6 +72,8 @@ export const uiText = {
     },
     warning: {
       label: "ローカル限定に関する注意",
+      shortText:
+        "脆弱APIを含む比較デモです。ローカル環境だけで実行し、外部へ公開しないでください。",
       text: "脆弱APIは、攻撃が成立する条件を観察するために意図的に防御を弱くしています。外部公開すると、所有者確認不足、弱い認証、過度な情報公開、SSRFのような挙動を第三者が直接試せる状態になり、合成データであっても攻撃手順の公開、環境情報の露出、運用環境への誤接続につながります。必ずローカルの学習・検証環境だけで実行し、共有環境や本番環境へ配置しないでください。",
     },
     status: {
@@ -120,6 +122,8 @@ export const uiText = {
       runDemo: "APIデモを実行",
       demoUnavailable: "このテーマでは実行可能なAPIデモが定義されていません。",
       demoLoading: "APIを実行しています...",
+      demoError:
+        "APIデモを完了できませんでした。ローカルサーバーの状態を確認して、もう一度実行してください。",
       vulnerableResult: "脆弱APIの結果",
       secureResult: "安全APIの結果",
       resultMeaning: "この結果が表すこと",
@@ -196,6 +200,8 @@ export const uiText = {
     },
     warning: {
       label: "Local-only warning",
+      shortText:
+        "This comparison runs vulnerable APIs. Use it only in a local environment and never expose it publicly.",
       text: "Vulnerable APIs intentionally weaken defenses so you can observe how attacks become possible. If exposed outside a local lab, third parties could directly exercise missing ownership checks, weak authentication, excessive information disclosure, or SSRF-like behavior. Even with synthetic data, this can publish attack steps, expose environment details, or create accidental paths toward operational systems. Run these routes only in a local learning environment and never deploy them to shared or production environments.",
     },
     status: {
@@ -244,6 +250,8 @@ export const uiText = {
       runDemo: "Run API demo",
       demoUnavailable: "No runnable API demo is defined for this topic.",
       demoLoading: "Running APIs...",
+      demoError:
+        "The API demo could not be completed. Check the local server and try again.",
       vulnerableResult: "Vulnerable API result",
       secureResult: "Secure API result",
       resultMeaning: "What this result means",

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { POST as secureInvitationPost } from "@/app/api/secure/admin/invitations/route";
 import { POST as vulnerableInvitationPost } from "@/app/api/vulnerable/admin/invitations/route";
 
@@ -10,7 +10,14 @@ const body = JSON.stringify({
 });
 
 describe("function authorization demo routes", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("vulnerable route accepts administrative functions without feature permission", async () => {
+    vi.stubEnv("LAB_MODE", "local");
+    vi.stubEnv("NODE_ENV", "test");
+
     const response = await vulnerableInvitationPost(
       new Request("http://localhost/api/vulnerable/admin/invitations", {
         method: "POST",

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { POST as secureAuthPost } from "@/app/api/secure/auth/session/route";
 import { POST as vulnerableAuthPost } from "@/app/api/vulnerable/auth/session/route";
 
@@ -6,12 +6,21 @@ const weakTokenBody = {
   tokenId: "demo-token-expired-admin",
   requiredPermission: "admin:read",
 };
+const jsonHeaders = { "Content-Type": "application/json" };
 
 describe("authentication demo routes", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("vulnerable route accepts a weak demo token in local mode", async () => {
+    vi.stubEnv("LAB_MODE", "local");
+    vi.stubEnv("NODE_ENV", "test");
+
     const response = await vulnerableAuthPost(
       new Request("http://localhost/api/vulnerable/auth/session", {
         method: "POST",
+        headers: jsonHeaders,
         body: JSON.stringify(weakTokenBody),
       }),
     );
@@ -39,6 +48,7 @@ describe("authentication demo routes", () => {
     const response = await secureAuthPost(
       new Request("http://localhost/api/secure/auth/session", {
         method: "POST",
+        headers: jsonHeaders,
         body: JSON.stringify(weakTokenBody),
       }),
     );

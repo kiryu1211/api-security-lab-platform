@@ -580,8 +580,8 @@ const learningModuleDefinitions: LearningModule[] = [
       request:
         'POST /api/vulnerable/config/diagnostics\n{\n  "requestedOrigin": "https://untrusted.example",\n  "includeDebugDetails": true\n}',
       response: {
-        ja: "HTTP 200で診断情報が返る場合、デバッグ状態、合成スタックトレース、広すぎるCORSメタデータなど、本来公開しない情報を返していることを表します。",
-        en: "HTTP 200 with diagnostics means debug state, a synthetic stack trace, and overly broad CORS metadata are exposed.",
+        ja: "HTTP 200で診断情報が返る場合、共通のブラウザー保護ヘッダーは維持されますが、デバッグ状態、合成スタックトレース、広すぎるCORS方針の合成メタデータなど、本来公開しない情報を返していることを表します。",
+        en: "HTTP 200 with diagnostics keeps the platform baseline browser headers, but exposes debug state, a synthetic stack trace, and synthetic metadata representing an overly broad CORS policy.",
       },
       note: {
         ja: "返す値は合成メタデータだけで、実設定、秘密情報、実ログは含めません。",
@@ -593,8 +593,8 @@ const learningModuleDefinitions: LearningModule[] = [
       request:
         'POST /api/secure/config/diagnostics\n{\n  "requestedOrigin": "https://untrusted.example",\n  "includeDebugDetails": true\n}',
       response: {
-        ja: "HTTP 403は、許可されていないOriginからの診断要求を拒否し、内部パスや詳細エラーを返さない制御が働いたことを表します。",
-        en: "HTTP 403 means the diagnostics request came from an unallowed origin and internal paths or verbose errors were not returned.",
+        ja: "HTTP 200は、実際のリクエストがsame-originであることを確認し、本文のrequestedOriginを認可に使わず、公開可能な診断情報だけを返したことを表します。実Originが異なる場合はHTTP 403で拒否します。",
+        en: "HTTP 200 means the actual request passed the same-origin check, the body requestedOrigin was not used for authorization, and only public diagnostics were returned. An actual cross-origin request is rejected with HTTP 403.",
       },
       note: {
         ja: "安全APIでは、診断情報の公開範囲を最小化し、詳細エラーや内部パスを返しません。",
@@ -1165,7 +1165,7 @@ export const implementationWalkthroughs: Record<
         { code: "  assertVulnerableApiEnabled();" },
         { code: "  const body = await readJsonBody(request);" },
         {
-          code: '  return json({ debug: true, stackTrace, cors: "*", internalPath });',
+          code: "  return json({ debug: true, stackTrace, syntheticCorsPolicy, internalPath });",
           highlight: "issue",
           comment: {
             ja: "問題: 公開不要な診断情報と広すぎるCORS設定を返しています。",
@@ -1186,11 +1186,11 @@ export const implementationWalkthroughs: Record<
           code: "  const body = diagnosticsSchema.parse(await readJsonBody(request));",
         },
         {
-          code: "  requireAllowedOrigin(body.requestedOrigin);",
+          code: "  requireSameOrigin(request.headers.get('Origin'), request.url);",
           highlight: "fix",
           comment: {
-            ja: "改善: 許可Origin以外からの診断要求を拒否します。",
-            en: "Fix: diagnostics requests from unallowed origins are rejected.",
+            ja: "改善: 本文値ではなく実際のOriginヘッダーをリクエスト先と比較します。",
+            en: "Fix: the actual Origin header is compared with the request target instead of trusting a body value.",
           },
         },
         {

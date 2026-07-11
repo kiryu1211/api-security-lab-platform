@@ -6,6 +6,24 @@ import {
 } from "@/lib/request-validation";
 import { checkRateLimit, unsafeSearch } from "@/lib/rate-limit-service";
 
+function rateLimitHeaders(
+  decision: ReturnType<typeof checkRateLimit>,
+  includeRetryAfter = false,
+) {
+  const resetInSeconds = Math.max(1, Math.ceil(decision.resetInMs / 1000));
+  const headers = new Headers({
+    "RateLimit-Limit": String(decision.limit),
+    "RateLimit-Remaining": String(decision.remaining),
+    "RateLimit-Reset": String(resetInSeconds),
+  });
+
+  if (includeRetryAfter) {
+    headers.set("Retry-After", String(resetInSeconds));
+  }
+
+  return headers;
+}
+
 export function GET(request: Request) {
   const meta = secureRouteMeta();
   const url = new URL(request.url);
@@ -36,6 +54,7 @@ export function GET(request: Request) {
       "The demo rate limit has been exceeded.",
       meta,
       decision,
+      { headers: rateLimitHeaders(decision, true) },
     );
   }
 
@@ -48,5 +67,6 @@ export function GET(request: Request) {
       },
     },
     meta,
+    { headers: rateLimitHeaders(decision) },
   );
 }

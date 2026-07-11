@@ -9,7 +9,7 @@ import { unsafeSearch } from "@/lib/rate-limit-service";
 
 export function GET(request: Request) {
   const meta = vulnerableRouteMeta();
-  const guard = assertVulnerableApisEnabled();
+  const guard = assertVulnerableApisEnabled(request);
 
   if (!guard.ok) {
     return apiError(

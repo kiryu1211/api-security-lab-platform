@@ -4,16 +4,28 @@ export type ApiRouteType = "secure" | "vulnerable";
 
 export type ApiErrorCode =
   | "VALIDATION_ERROR"
+  | "INVALID_JSON"
+  | "PAYLOAD_TOO_LARGE"
+  | "UNSUPPORTED_MEDIA_TYPE"
   | "VULNERABLE_API_DISABLED"
   | "NOT_FOUND"
   | "UNAUTHORIZED"
   | "RATE_LIMITED"
   | "FORBIDDEN";
 
-type ApiMeta = {
+export type ApiMeta = {
   routeType: ApiRouteType;
   localOnly?: boolean;
 };
+
+function apiResponseInit(init?: ResponseInit): ResponseInit {
+  const headers = new Headers(init?.headers);
+  headers.set("Cache-Control", "no-store");
+  headers.set("Referrer-Policy", "no-referrer");
+  headers.set("X-Content-Type-Options", "nosniff");
+
+  return { ...init, headers };
+}
 
 export function apiSuccess<TData>(
   data: TData,
@@ -26,7 +38,7 @@ export function apiSuccess<TData>(
       data,
       meta,
     },
-    init,
+    apiResponseInit(init),
   );
 }
 
@@ -36,6 +48,7 @@ export function apiError(
   message: string,
   meta: ApiMeta,
   details?: unknown,
+  init?: ResponseInit,
 ) {
   return NextResponse.json(
     {
@@ -47,7 +60,7 @@ export function apiError(
       },
       meta,
     },
-    { status },
+    apiResponseInit({ ...init, status }),
   );
 }
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { POST as secureInventoryPost } from "@/app/api/secure/inventory/operations/route";
 import { POST as vulnerableInventoryPost } from "@/app/api/vulnerable/inventory/operations/route";
 
@@ -9,7 +9,14 @@ const body = JSON.stringify({
 });
 
 describe("API inventory demo routes", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("vulnerable route invokes a retired legacy operation preview", async () => {
+    vi.stubEnv("LAB_MODE", "local");
+    vi.stubEnv("NODE_ENV", "test");
+
     const response = await vulnerableInventoryPost(
       new Request("http://localhost/api/vulnerable/inventory/operations", {
         method: "POST",

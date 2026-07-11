@@ -2,11 +2,11 @@ import { apiError, apiSuccess, vulnerableRouteMeta } from "@/lib/api-response";
 import { authSessionBodySchema } from "@/lib/api-schemas";
 import { createWeakSession, toSessionResponse } from "@/lib/auth-token-service";
 import { assertVulnerableApisEnabled } from "@/lib/env";
-import { readJsonBody, validateWithSchema } from "@/lib/request-validation";
+import { parseJsonRequest, validateWithSchema } from "@/lib/request-validation";
 
 export async function POST(request: Request) {
   const meta = vulnerableRouteMeta();
-  const guard = assertVulnerableApisEnabled();
+  const guard = assertVulnerableApisEnabled(request);
 
   if (!guard.ok) {
     return apiError(
@@ -18,9 +18,15 @@ export async function POST(request: Request) {
     );
   }
 
+  const parsedBody = await parseJsonRequest(request, meta);
+
+  if (!parsedBody.ok) {
+    return parsedBody.response;
+  }
+
   const validation = validateWithSchema(
     authSessionBodySchema,
-    await readJsonBody(request),
+    parsedBody.value,
   );
 
   if (!validation.ok) {

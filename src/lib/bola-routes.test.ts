@@ -1,9 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { GET as secureOrderGet } from "@/app/api/secure/orders/[orderId]/route";
 import { GET as vulnerableOrderGet } from "@/app/api/vulnerable/orders/[orderId]/route";
 
 describe("BOLA order routes", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("vulnerable route returns another user's order in local mode", async () => {
+    vi.stubEnv("LAB_MODE", "local");
+    vi.stubEnv("NODE_ENV", "test");
+
     const response = await vulnerableOrderGet(
       new Request("http://localhost/api/vulnerable/orders/order-demo-002"),
       {

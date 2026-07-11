@@ -1,12 +1,12 @@
 import { apiError, apiSuccess, vulnerableRouteMeta } from "@/lib/api-response";
 import { fetchUrlBodySchema } from "@/lib/api-schemas";
 import { assertVulnerableApisEnabled } from "@/lib/env";
-import { readJsonBody, validateWithSchema } from "@/lib/request-validation";
+import { parseJsonRequest, validateWithSchema } from "@/lib/request-validation";
 import { unsafeFetchPreview } from "@/lib/ssrf-service";
 
 export async function POST(request: Request) {
   const meta = vulnerableRouteMeta();
-  const guard = assertVulnerableApisEnabled();
+  const guard = assertVulnerableApisEnabled(request);
 
   if (!guard.ok) {
     return apiError(
@@ -18,10 +18,13 @@ export async function POST(request: Request) {
     );
   }
 
-  const validation = validateWithSchema(
-    fetchUrlBodySchema,
-    await readJsonBody(request),
-  );
+  const parsedBody = await parseJsonRequest(request, meta);
+
+  if (!parsedBody.ok) {
+    return parsedBody.response;
+  }
+
+  const validation = validateWithSchema(fetchUrlBodySchema, parsedBody.value);
 
   if (!validation.ok) {
     return apiError(

@@ -2,17 +2,37 @@ import { describe, expect, it } from "vitest";
 import { assertVulnerableApisEnabled, getLabRuntimeSafety } from "./env";
 
 describe("lab runtime safety", () => {
-  it("enables vulnerable APIs only in local non-production mode", () => {
+  const localTestEnv = { LAB_MODE: "local", NODE_ENV: "test" };
+  const localhostRequest = new Request(
+    "http://localhost/api/vulnerable/health",
+  );
+
+  it("keeps vulnerable APIs disabled when LAB_MODE is unset", () => {
+    expect(getLabRuntimeSafety({ NODE_ENV: "development" })).toMatchObject({
+      labMode: "disabled",
+      vulnerableApisEnabled: false,
+    });
+    expect(
+      assertVulnerableApisEnabled(localhostRequest, {
+        NODE_ENV: "development",
+      }),
+    ).toMatchObject({ ok: false, status: 403 });
+  });
+
+  it("enables vulnerable APIs only in local development or test mode", () => {
     expect(
       getLabRuntimeSafety({ LAB_MODE: "local", NODE_ENV: "development" }),
     ).toMatchObject({
+      vulnerableApisEnabled: true,
+    });
+    expect(getLabRuntimeSafety(localTestEnv)).toMatchObject({
       vulnerableApisEnabled: true,
     });
   });
 
   it("disables vulnerable APIs in production even when LAB_MODE is local", () => {
     expect(
-      assertVulnerableApisEnabled({
+      assertVulnerableApisEnabled(localhostRequest, {
         LAB_MODE: "local",
         NODE_ENV: "production",
       }),
@@ -22,9 +42,24 @@ describe("lab runtime safety", () => {
     });
   });
 
+  it("disables vulnerable APIs in staging", () => {
+    expect(
+      assertVulnerableApisEnabled(localhostRequest, {
+        LAB_MODE: "local",
+        NODE_ENV: "staging",
+      }),
+    ).toMatchObject({ ok: false, status: 403 });
+  });
+
+  it("disables vulnerable APIs when NODE_ENV is unset", () => {
+    expect(
+      assertVulnerableApisEnabled(localhostRequest, { LAB_MODE: "local" }),
+    ).toMatchObject({ ok: false, status: 403 });
+  });
+
   it("disables vulnerable APIs when LAB_MODE is disabled", () => {
     expect(
-      assertVulnerableApisEnabled({
+      assertVulnerableApisEnabled(localhostRequest, {
         LAB_MODE: "disabled",
         NODE_ENV: "development",
       }),
@@ -32,5 +67,56 @@ describe("lab runtime safety", () => {
       ok: false,
       status: 403,
     });
+  });
+
+  it("requires a request", () => {
+    expect(assertVulnerableApisEnabled(undefined, localTestEnv)).toMatchObject({
+      ok: false,
+      status: 403,
+    });
+  });
+
+  it("rejects a non-loopback URL hostname", () => {
+    expect(
+      assertVulnerableApisEnabled(
+        new Request("https://lab.example/api/vulnerable/health"),
+        localTestEnv,
+      ),
+    ).toMatchObject({ ok: false, status: 403 });
+  });
+
+  it("rejects a non-loopback Host header", () => {
+    expect(
+      assertVulnerableApisEnabled(
+        new Request("http://localhost/api/vulnerable/health", {
+          headers: { Host: "lab.example" },
+        }),
+        localTestEnv,
+      ),
+    ).toMatchObject({ ok: false, status: 403 });
+  });
+
+  it.each([
+    "http://localhost/api/vulnerable/health",
+    "http://127.0.0.1/api/vulnerable/health",
+    "http://[::1]/api/vulnerable/health",
+  ])("allows the loopback request hostname in %s", (url) => {
+    expect(assertVulnerableApisEnabled(new Request(url), localTestEnv)).toEqual(
+      {
+        ok: true,
+        safety: { vulnerableApisEnabled: true },
+      },
+    );
+  });
+
+  it("allows a loopback Host header with a port", () => {
+    expect(
+      assertVulnerableApisEnabled(
+        new Request("http://localhost/api/vulnerable/health", {
+          headers: { Host: "[::1]:3000" },
+        }),
+        localTestEnv,
+      ),
+    ).toMatchObject({ ok: true });
   });
 });

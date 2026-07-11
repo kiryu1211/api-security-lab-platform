@@ -1,16 +1,22 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import {
   safeProfileUpdate,
   unsafeProfileUpdate,
 } from "./mass-assignment-service";
 import {
   checkRateLimit,
+  getRateLimitBucketCount,
+  RATE_LIMIT_MAX_BUCKETS,
   resetRateLimitBuckets,
   unsafeSearch,
 } from "./rate-limit-service";
 import { safeFetchPreview, unsafeFetchPreview } from "./ssrf-service";
 
 describe("rate limit service", () => {
+  beforeEach(() => {
+    resetRateLimitBuckets();
+  });
+
   it("keeps vulnerable search unrestricted", () => {
     expect(unsafeSearch("user-demo-alice", "demo")).toMatchObject({
       limitApplied: false,
@@ -18,8 +24,6 @@ describe("rate limit service", () => {
   });
 
   it("blocks after the safe request limit", () => {
-    resetRateLimitBuckets();
-
     expect(checkRateLimit("user-demo-alice", "/demo", 1000).allowed).toBe(true);
     expect(checkRateLimit("user-demo-alice", "/demo", 1001).allowed).toBe(true);
     expect(checkRateLimit("user-demo-alice", "/demo", 1002).allowed).toBe(true);
@@ -27,6 +31,26 @@ describe("rate limit service", () => {
       allowed: false,
       remaining: 0,
     });
+  });
+
+  it("removes all expired buckets before adding a new one", () => {
+    checkRateLimit("user-demo-alice", "/first", 1_000);
+    checkRateLimit("user-demo-bob", "/second", 1_001);
+
+    checkRateLimit("user-demo-admin", "/third", 61_000);
+
+    expect(getRateLimitBucketCount()).toBe(2);
+  });
+
+  it("keeps the bucket store within its finite capacity", () => {
+    for (let index = 0; index < RATE_LIMIT_MAX_BUCKETS + 10; index += 1) {
+      checkRateLimit("user-demo-alice", `/demo/${index}`, 1_000 + index);
+    }
+
+    expect(getRateLimitBucketCount()).toBe(RATE_LIMIT_MAX_BUCKETS);
+    expect(checkRateLimit("user-demo-alice", "/demo/109", 2_000)).toMatchObject(
+      { remaining: 1 },
+    );
   });
 });
 

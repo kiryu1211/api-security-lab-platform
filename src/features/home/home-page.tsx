@@ -34,6 +34,7 @@ type DemoResult = {
 
 type ModuleDemoState = {
   loading: boolean;
+  failed?: boolean;
   vulnerable?: DemoResult;
   secure?: DemoResult;
 };
@@ -76,7 +77,16 @@ export function HomePage() {
 
   useEffect(() => {
     let cancelled = false;
-    const savedLanguage = window.localStorage.getItem(languageStorageKey);
+    let savedLanguage: string | null = null;
+    let openingSeen = false;
+
+    try {
+      savedLanguage = window.localStorage.getItem(languageStorageKey);
+      openingSeen = window.sessionStorage.getItem(openingStorageKey) === "seen";
+    } catch {
+      // Storage is optional; privacy settings must not block the application.
+    }
+
     const reduceMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
@@ -86,16 +96,15 @@ export function HomePage() {
       document.documentElement.lang = savedLanguage;
     }
 
-    if (
-      reduceMotion ||
-      window.sessionStorage.getItem(openingStorageKey) === "seen"
-    ) {
+    if (reduceMotion || openingSeen) {
       setOpeningChecked(true);
       setContentRevealReady(true);
       return;
     }
 
-    void document.fonts.ready.then(() => {
+    const fontsReady = document.fonts?.ready ?? Promise.resolve();
+
+    void fontsReady.then(() => {
       if (cancelled) {
         return;
       }
@@ -139,7 +148,12 @@ export function HomePage() {
     }
 
     const closeTimer = window.setTimeout(() => {
-      window.sessionStorage.setItem(openingStorageKey, "seen");
+      try {
+        window.sessionStorage.setItem(openingStorageKey, "seen");
+      } catch {
+        // The opening remains session-only when storage is unavailable.
+      }
+
       setOpeningVisible(false);
       setOpeningLeaving(false);
     }, 520);
@@ -201,7 +215,12 @@ export function HomePage() {
   function handleLanguageChange(nextLanguage: Language) {
     setLanguage(nextLanguage);
     document.documentElement.lang = nextLanguage;
-    window.localStorage.setItem(languageStorageKey, nextLanguage);
+
+    try {
+      window.localStorage.setItem(languageStorageKey, nextLanguage);
+    } catch {
+      // Keep the in-memory selection when persistence is unavailable.
+    }
   }
 
   function handleSkipOpening() {
@@ -255,20 +274,22 @@ export function HomePage() {
           fetch(
             "/api/vulnerable/rate-limit/search?userId=user-demo-alice&q=demo",
           ),
-          Promise.all([
-            fetch(
-              "/api/secure/rate-limit/search?userId=user-demo-alice&q=demo",
+          fetch("/api/secure/rate-limit/search?userId=user-demo-alice&q=demo")
+            .then(() =>
+              fetch(
+                "/api/secure/rate-limit/search?userId=user-demo-alice&q=demo",
+              ),
+            )
+            .then(() =>
+              fetch(
+                "/api/secure/rate-limit/search?userId=user-demo-alice&q=demo",
+              ),
+            )
+            .then(() =>
+              fetch(
+                "/api/secure/rate-limit/search?userId=user-demo-alice&q=demo",
+              ),
             ),
-            fetch(
-              "/api/secure/rate-limit/search?userId=user-demo-alice&q=demo",
-            ),
-            fetch(
-              "/api/secure/rate-limit/search?userId=user-demo-alice&q=demo",
-            ),
-            fetch(
-              "/api/secure/rate-limit/search?userId=user-demo-alice&q=demo",
-            ),
-          ]).then((responses) => responses[responses.length - 1]),
         ];
       case "function-auth":
         return [
@@ -411,29 +432,36 @@ export function HomePage() {
   async function handleRunDemo(moduleId: DemoEnabledModuleId) {
     setDemoState((current) => ({ ...current, [moduleId]: { loading: true } }));
 
-    const [vulnerableResponse, secureResponse] = await Promise.all(
-      demoRequests(moduleId),
-    );
+    try {
+      const [vulnerableResponse, secureResponse] = await Promise.all(
+        demoRequests(moduleId),
+      );
 
-    const [vulnerableBody, secureBody] = await Promise.all([
-      vulnerableResponse.json(),
-      secureResponse.json(),
-    ]);
+      const [vulnerableBody, secureBody] = await Promise.all([
+        vulnerableResponse.json(),
+        secureResponse.json(),
+      ]);
 
-    setDemoState((current) => ({
-      ...current,
-      [moduleId]: {
-        loading: false,
-        vulnerable: {
-          status: vulnerableResponse.status,
-          body: vulnerableBody,
+      setDemoState((current) => ({
+        ...current,
+        [moduleId]: {
+          loading: false,
+          vulnerable: {
+            status: vulnerableResponse.status,
+            body: vulnerableBody,
+          },
+          secure: {
+            status: secureResponse.status,
+            body: secureBody,
+          },
         },
-        secure: {
-          status: secureResponse.status,
-          body: secureBody,
-        },
-      },
-    }));
+      }));
+    } catch {
+      setDemoState((current) => ({
+        ...current,
+        [moduleId]: { loading: false, failed: true },
+      }));
+    }
   }
 
   return (
@@ -742,7 +770,7 @@ export function HomePage() {
               badge={t.comparison.vulnerableBadge}
               kind="vulnerable"
               routeDescription={t.routeDescriptions.vulnerable}
-              routePattern="/vulnerable/*"
+              routePattern="/api/vulnerable/*"
               note={selectedModule.vulnerable.note[language]}
               request={selectedModule.vulnerable.request}
               response={selectedModule.vulnerable.response[language]}
@@ -764,7 +792,7 @@ export function HomePage() {
               badge={t.comparison.secureBadge}
               kind="secure"
               routeDescription={t.routeDescriptions.secure}
-              routePattern="/secure/*"
+              routePattern="/api/secure/*"
               note={selectedModule.secure.note[language]}
               request={selectedModule.secure.request}
               response={selectedModule.secure.response[language]}
@@ -784,18 +812,39 @@ export function HomePage() {
             />
           </div>
 
-          <div className="demo-action-row" data-reveal>
+          <div
+            className="demo-action-row"
+            data-reveal
+            aria-busy={
+              selectedDemoModuleId
+                ? demoState[selectedDemoModuleId].loading
+                : undefined
+            }
+            aria-live="polite"
+          >
             {selectedDemoModuleId ? (
-              <button
-                className="run-demo-button"
-                type="button"
-                onClick={() => handleRunDemo(selectedDemoModuleId)}
-                disabled={demoState[selectedDemoModuleId].loading}
-              >
-                {demoState[selectedDemoModuleId].loading
-                  ? t.comparison.demoLoading
-                  : t.comparison.runDemo}
-              </button>
+              <>
+                <p className="demo-safety-reminder" id="demo-local-warning">
+                  <strong>{t.warning.label}: </strong>
+                  {t.warning.shortText}
+                </p>
+                <button
+                  className="run-demo-button"
+                  type="button"
+                  aria-describedby="demo-local-warning"
+                  onClick={() => handleRunDemo(selectedDemoModuleId)}
+                  disabled={demoState[selectedDemoModuleId].loading}
+                >
+                  {demoState[selectedDemoModuleId].loading
+                    ? t.comparison.demoLoading
+                    : t.comparison.runDemo}
+                </button>
+                {demoState[selectedDemoModuleId].failed ? (
+                  <p className="demo-error" role="alert">
+                    {t.comparison.demoError}
+                  </p>
+                ) : null}
+              </>
             ) : (
               <p>{t.comparison.demoUnavailable}</p>
             )}

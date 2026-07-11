@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 export type ThirdPartyProfileImportRequest = {
   providerResponseId:
     "partner-response-safe-profile" | "partner-response-redirect-admin";
@@ -19,11 +21,31 @@ type SyntheticPartnerResponse = {
 };
 
 const allowedProvider = "trusted-profile-service";
-const allowedRedirectHost = "profile-api.example.test";
+const allowedRedirectOrigin = "https://profile-api.example.test";
 const maxPayloadBytes = 2048;
 
-const syntheticPartnerResponses: SyntheticPartnerResponse[] = [
-  {
+const syntheticPartnerResponseSchema = z.strictObject({
+  id: z.enum([
+    "partner-response-safe-profile",
+    "partner-response-redirect-admin",
+  ]),
+  provider: z.string().min(1),
+  transport: z.enum(["https", "http"]),
+  redirectTo: z.string().min(1).optional(),
+  payloadBytes: z.number().int().nonnegative(),
+  body: z.strictObject({
+    displayLabel: z.string().min(1).max(80),
+    profileTier: z.enum(["standard", "premium"]),
+    role: z.enum(["learner", "admin"]).optional(),
+    externalNotes: z.string().max(4096).optional(),
+  }),
+});
+
+const syntheticPartnerResponses: Record<
+  ThirdPartyProfileImportRequest["providerResponseId"],
+  unknown
+> = {
+  "partner-response-safe-profile": {
     id: "partner-response-safe-profile",
     provider: allowedProvider,
     transport: "https",
@@ -35,7 +57,7 @@ const syntheticPartnerResponses: SyntheticPartnerResponse[] = [
       externalNotes: "synthetic-safe-response",
     },
   },
-  {
+  "partner-response-redirect-admin": {
     id: "partner-response-redirect-admin",
     provider: allowedProvider,
     transport: "https",
@@ -48,36 +70,40 @@ const syntheticPartnerResponses: SyntheticPartnerResponse[] = [
       externalNotes: "synthetic-compromised-response",
     },
   },
-];
+};
 
 function findSyntheticResponse(
   providerResponseId: ThirdPartyProfileImportRequest["providerResponseId"],
 ) {
-  return syntheticPartnerResponses.find(
-    (response) => response.id === providerResponseId,
-  );
+  return syntheticPartnerResponses[providerResponseId];
 }
 
-function redirectHost(redirectTo?: string) {
-  if (!redirectTo) {
+function actualPayloadBytes(rawResponse: unknown) {
+  try {
+    const serialized = JSON.stringify(rawResponse);
+
+    return serialized === undefined
+      ? undefined
+      : new TextEncoder().encode(serialized).byteLength;
+  } catch {
     return undefined;
   }
-
-  return new URL(redirectTo).hostname;
 }
 
 export function unsafeImportThirdPartyProfile(
   request: ThirdPartyProfileImportRequest,
 ) {
-  const partnerResponse = findSyntheticResponse(request.providerResponseId);
+  const rawResponse = findSyntheticResponse(request.providerResponseId);
 
-  if (!partnerResponse) {
+  if (!rawResponse) {
     return {
       imported: false,
       reason: "unknown-response",
       providerResponseId: request.providerResponseId,
     };
   }
+
+  const partnerResponse = rawResponse as SyntheticPartnerResponse;
 
   return {
     imported: true,
@@ -100,24 +126,45 @@ export function unsafeImportThirdPartyProfile(
   };
 }
 
-export function safeImportThirdPartyProfile(
-  request: ThirdPartyProfileImportRequest,
+export function validateThirdPartyProfileResponse(
+  rawResponse: unknown,
+  expectedProvider: ThirdPartyProfileImportRequest["expectedProvider"] = allowedProvider,
 ) {
-  const partnerResponse = findSyntheticResponse(request.providerResponseId);
+  const payloadBytes = actualPayloadBytes(rawResponse);
 
-  if (!partnerResponse) {
+  if (payloadBytes === undefined) {
     return {
       allowed: false,
-      reason: "unknown-response",
-      providerResponseId: request.providerResponseId,
+      reason: "invalid-response-payload",
     };
   }
 
-  if (partnerResponse.provider !== request.expectedProvider) {
+  if (payloadBytes > maxPayloadBytes) {
+    return {
+      allowed: false,
+      reason: "payload-too-large",
+      payloadBytes,
+      maxPayloadBytes,
+    };
+  }
+
+  const validation = syntheticPartnerResponseSchema.safeParse(rawResponse);
+
+  if (!validation.success) {
+    return {
+      allowed: false,
+      reason: "invalid-response-schema",
+      issues: validation.error.issues,
+    };
+  }
+
+  const partnerResponse = validation.data;
+
+  if (partnerResponse.provider !== expectedProvider) {
     return {
       allowed: false,
       reason: "provider-mismatch",
-      expectedProvider: request.expectedProvider,
+      expectedProvider,
       receivedProvider: partnerResponse.provider,
     };
   }
@@ -130,23 +177,37 @@ export function safeImportThirdPartyProfile(
     };
   }
 
-  if (partnerResponse.payloadBytes > maxPayloadBytes) {
+  if (!partnerResponse.redirectTo) {
     return {
       allowed: false,
-      reason: "payload-too-large",
-      payloadBytes: partnerResponse.payloadBytes,
-      maxPayloadBytes,
+      reason: "redirect-required",
     };
   }
 
-  const host = redirectHost(partnerResponse.redirectTo);
+  let redirect: URL;
 
-  if (host !== allowedRedirectHost) {
+  try {
+    redirect = new URL(partnerResponse.redirectTo);
+  } catch {
     return {
       allowed: false,
-      reason: "redirect-host-not-allowed",
+      reason: "invalid-redirect-url",
       redirectTo: partnerResponse.redirectTo,
-      allowedRedirectHost,
+    };
+  }
+
+  if (
+    redirect.protocol !== "https:" ||
+    redirect.port !== "" ||
+    redirect.username !== "" ||
+    redirect.password !== "" ||
+    redirect.origin !== allowedRedirectOrigin
+  ) {
+    return {
+      allowed: false,
+      reason: "redirect-origin-not-allowed",
+      redirectTo: partnerResponse.redirectTo,
+      allowedRedirectOrigin,
     };
   }
 
@@ -170,7 +231,27 @@ export function safeImportThirdPartyProfile(
       redirectAllowlistChecked: true,
       responseSchemaChecked: true,
       privilegedFieldsRejected: true,
+      payloadBytesMeasured: payloadBytes,
       networkAccessPerformed: false,
     },
   };
+}
+
+export function safeImportThirdPartyProfile(
+  request: ThirdPartyProfileImportRequest,
+) {
+  const rawResponse = findSyntheticResponse(request.providerResponseId);
+
+  if (!rawResponse) {
+    return {
+      allowed: false,
+      reason: "unknown-response",
+      providerResponseId: request.providerResponseId,
+    };
+  }
+
+  return validateThirdPartyProfileResponse(
+    rawResponse,
+    request.expectedProvider,
+  );
 }

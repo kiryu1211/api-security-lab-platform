@@ -1,13 +1,19 @@
 import { apiError, apiSuccess, secureRouteMeta } from "@/lib/api-response";
 import { thirdPartyProfileImportBodySchema } from "@/lib/api-schemas";
-import { readJsonBody, validateWithSchema } from "@/lib/request-validation";
+import { parseJsonRequest, validateWithSchema } from "@/lib/request-validation";
 import { safeImportThirdPartyProfile } from "@/lib/unsafe-consumption-service";
 
 export async function POST(request: Request) {
   const meta = secureRouteMeta();
+  const parsedBody = await parseJsonRequest(request, meta);
+
+  if (!parsedBody.ok) {
+    return parsedBody.response;
+  }
+
   const validation = validateWithSchema(
     thirdPartyProfileImportBodySchema,
-    await readJsonBody(request),
+    parsedBody.value,
   );
 
   if (!validation.ok) {

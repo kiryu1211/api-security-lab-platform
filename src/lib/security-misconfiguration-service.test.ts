@@ -10,7 +10,7 @@ const untrustedDebugRequest = {
 };
 
 describe("security-misconfiguration-service", () => {
-  it("shows the vulnerable flow exposing debug configuration and wildcard CORS", () => {
+  it("shows the vulnerable flow reflecting its synthetic origin with credentials", () => {
     const result = unsafeAuditSecurityConfig(untrustedDebugRequest);
 
     expect(result.accepted).toBe(true);
@@ -19,30 +19,38 @@ describe("security-misconfiguration-service", () => {
       "DemoError",
     );
     expect(result.responsePolicy).toMatchObject({
-      corsOriginReflected: "*",
-      credentialsAllowedWithWildcardOrigin: true,
-      securityHeadersApplied: false,
+      syntheticCorsOriginReflection: "https://untrusted.example",
+      syntheticCredentialsAllowed: true,
+      platformBaselineHeadersApplied: true,
+      diagnosticExposureControlsApplied: false,
     });
   });
 
-  it("rejects untrusted origins before returning diagnostics", () => {
-    const result = safeAuditSecurityConfig(untrustedDebugRequest);
+  it("rejects an actual Origin that differs from the request URL origin", () => {
+    const result = safeAuditSecurityConfig(untrustedDebugRequest, {
+      originHeader: "https://untrusted.example",
+      requestUrl: "http://localhost/api/secure/config/diagnostics",
+    });
 
     expect(result).toMatchObject({
       allowed: false,
-      reason: "origin-not-allowed",
+      reason: "origin-mismatch",
+      auditScenario: {
+        requestedOrigin: "https://untrusted.example",
+        usedForAuthorization: false,
+      },
       controls: {
-        corsAllowlistChecked: true,
+        requestOriginChecked: true,
         debugDetailsSuppressed: true,
         securityHeadersApplied: true,
       },
     });
   });
 
-  it("returns minimal public configuration for allowed origins", () => {
-    const result = safeAuditSecurityConfig({
-      requestedOrigin: "https://lab.example.test",
-      includeDebugDetails: true,
+  it("allows no-Origin calls regardless of the synthetic requested origin", () => {
+    const result = safeAuditSecurityConfig(untrustedDebugRequest, {
+      originHeader: null,
+      requestUrl: "http://localhost/api/secure/config/diagnostics",
     });
 
     expect(result).toMatchObject({
@@ -52,9 +60,19 @@ describe("security-misconfiguration-service", () => {
         stackTraceEnabled: false,
       },
       controls: {
-        corsAllowlistChecked: true,
+        requestOriginChecked: true,
+        originHeaderPresent: false,
         verboseErrorsReturned: false,
       },
     });
+  });
+
+  it("allows an actual same-origin browser call", () => {
+    const result = safeAuditSecurityConfig(untrustedDebugRequest, {
+      originHeader: "http://localhost",
+      requestUrl: "http://localhost/api/secure/config/diagnostics",
+    });
+
+    expect(result.allowed).toBe(true);
   });
 });

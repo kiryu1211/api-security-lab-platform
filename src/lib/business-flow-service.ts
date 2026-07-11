@@ -23,6 +23,15 @@ const demoProducts: DemoProduct[] = [
   },
 ];
 
+const automationWindowMs = 60_000;
+const maxAttemptsPerWindow = 3;
+const remainingStockByProduct = new Map<string, number>();
+const reservedByUserAndProduct = new Map<string, number>();
+const attemptsByUserAndProduct = new Map<
+  string,
+  { count: number; resetAt: number }
+>();
+
 function findProduct(productId: string) {
   return demoProducts.find((product) => product.id === productId);
 }
@@ -48,7 +57,10 @@ export function unsafeReserveSensitiveFlow(request: ReservationRequest) {
   };
 }
 
-export function safeReserveSensitiveFlow(request: ReservationRequest) {
+export function safeReserveSensitiveFlow(
+  request: ReservationRequest,
+  now = Date.now(),
+) {
   const product = findProduct(request.productId);
 
   if (!product) {
@@ -59,6 +71,27 @@ export function safeReserveSensitiveFlow(request: ReservationRequest) {
       productId: request.productId,
     };
   }
+
+  const stateKey = `${request.userId}:${request.productId}`;
+  const currentAttempts = attemptsByUserAndProduct.get(stateKey);
+  const attempts =
+    !currentAttempts || currentAttempts.resetAt <= now
+      ? { count: 0, resetAt: now + automationWindowMs }
+      : currentAttempts;
+
+  if (attempts.count >= maxAttemptsPerWindow) {
+    return {
+      allowed: false,
+      reason: "automation-attempt-limit-exceeded",
+      userId: request.userId,
+      productId: request.productId,
+      maxAttempts: maxAttemptsPerWindow,
+      retryAfterMs: attempts.resetAt - now,
+    };
+  }
+
+  attempts.count += 1;
+  attemptsByUserAndProduct.set(stateKey, attempts);
 
   if (request.flowStep !== "cart-confirmed") {
     return {
@@ -71,27 +104,38 @@ export function safeReserveSensitiveFlow(request: ReservationRequest) {
     };
   }
 
-  if (product.sensitiveFlow && request.quantity > product.maxPerUser) {
+  const reservedByUser = reservedByUserAndProduct.get(stateKey) ?? 0;
+  const cumulativeQuantity = reservedByUser + request.quantity;
+
+  if (product.sensitiveFlow && cumulativeQuantity > product.maxPerUser) {
     return {
       allowed: false,
       reason: "per-user-limit-exceeded",
       userId: request.userId,
       productId: request.productId,
       requestedQuantity: request.quantity,
+      alreadyReservedQuantity: reservedByUser,
       maxPerUser: product.maxPerUser,
     };
   }
 
-  if (request.quantity > product.availableStock) {
+  const remainingStock =
+    remainingStockByProduct.get(product.id) ?? product.availableStock;
+
+  if (request.quantity > remainingStock) {
     return {
       allowed: false,
       reason: "stock-limit-exceeded",
       userId: request.userId,
       productId: request.productId,
       requestedQuantity: request.quantity,
-      availableStock: product.availableStock,
+      availableStock: remainingStock,
     };
   }
+
+  const updatedRemainingStock = remainingStock - request.quantity;
+  remainingStockByProduct.set(product.id, updatedRemainingStock);
+  reservedByUserAndProduct.set(stateKey, cumulativeQuantity);
 
   return {
     allowed: true,
@@ -100,6 +144,8 @@ export function safeReserveSensitiveFlow(request: ReservationRequest) {
       productLabel: product.label,
       userId: request.userId,
       reservedQuantity: request.quantity,
+      cumulativeReservedQuantity: cumulativeQuantity,
+      remainingStock: updatedRemainingStock,
       flowStep: request.flowStep,
       controls: {
         flowOrderChecked: true,
@@ -109,4 +155,10 @@ export function safeReserveSensitiveFlow(request: ReservationRequest) {
       },
     },
   };
+}
+
+export function resetBusinessFlowState() {
+  remainingStockByProduct.clear();
+  reservedByUserAndProduct.clear();
+  attemptsByUserAndProduct.clear();
 }

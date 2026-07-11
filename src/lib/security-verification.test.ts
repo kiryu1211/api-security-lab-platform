@@ -30,6 +30,7 @@ type RouteCall = {
 };
 
 const jsonHeaders = { "Content-Type": "application/json" };
+const disabledRouteHeaders = { "Content-Type": "text/plain" };
 
 describe("phase 7 security verification", () => {
   afterEach(() => {
@@ -37,14 +38,17 @@ describe("phase 7 security verification", () => {
     resetRateLimitBuckets();
   });
 
-  it("disables every vulnerable API route in production-like settings", async () => {
+  it("disables every vulnerable API route before parsing request bodies", async () => {
     vi.stubEnv("LAB_MODE", "local");
     vi.stubEnv("NODE_ENV", "production");
 
     const vulnerableRoutes: RouteCall[] = [
       {
         name: "health",
-        call: () => vulnerableHealthGet(),
+        call: () =>
+          vulnerableHealthGet(
+            new Request("http://localhost/api/vulnerable/health"),
+          ),
       },
       {
         name: "lab samples",
@@ -66,7 +70,7 @@ describe("phase 7 security verification", () => {
           vulnerableAuthSessionPost(
             new Request("http://localhost/api/vulnerable/auth/session", {
               method: "POST",
-              headers: jsonHeaders,
+              headers: disabledRouteHeaders,
               body: JSON.stringify({ tokenId: "demo-token-expired-admin" }),
             }),
           ),
@@ -86,7 +90,7 @@ describe("phase 7 security verification", () => {
           vulnerableInvitationPost(
             new Request("http://localhost/api/vulnerable/admin/invitations", {
               method: "POST",
-              headers: jsonHeaders,
+              headers: disabledRouteHeaders,
               body: JSON.stringify({
                 actorUserId: "user-demo-alice",
                 targetEmailAlias: "analyst.demo",
@@ -101,7 +105,7 @@ describe("phase 7 security verification", () => {
           vulnerableProfilePatch(
             new Request("http://localhost/api/vulnerable/profile", {
               method: "PATCH",
-              headers: jsonHeaders,
+              headers: disabledRouteHeaders,
               body: JSON.stringify({ ownerId: "user-demo-bob" }),
             }),
           ),
@@ -114,7 +118,7 @@ describe("phase 7 security verification", () => {
               "http://localhost/api/vulnerable/business-flow/reservations",
               {
                 method: "POST",
-                headers: jsonHeaders,
+                headers: disabledRouteHeaders,
                 body: JSON.stringify({
                   userId: "user-demo-alice",
                   productId: "product-demo-001",
@@ -131,7 +135,7 @@ describe("phase 7 security verification", () => {
           vulnerableFetchUrlPost(
             new Request("http://localhost/api/vulnerable/fetch-url", {
               method: "POST",
-              headers: jsonHeaders,
+              headers: disabledRouteHeaders,
               body: JSON.stringify({ url: "http://127.0.0.1/admin" }),
             }),
           ),
@@ -142,7 +146,7 @@ describe("phase 7 security verification", () => {
           vulnerableConfigDiagnosticsPost(
             new Request("http://localhost/api/vulnerable/config/diagnostics", {
               method: "POST",
-              headers: jsonHeaders,
+              headers: disabledRouteHeaders,
               body: JSON.stringify({
                 requestedOrigin: "https://untrusted.example",
                 includeDebugDetails: true,
@@ -158,7 +162,7 @@ describe("phase 7 security verification", () => {
               "http://localhost/api/vulnerable/third-party/profile-import",
               {
                 method: "POST",
-                headers: jsonHeaders,
+                headers: disabledRouteHeaders,
                 body: JSON.stringify({
                   providerResponseId: "partner-response-redirect-admin",
                   expectedProvider: "trusted-profile-service",
@@ -175,7 +179,7 @@ describe("phase 7 security verification", () => {
               "http://localhost/api/vulnerable/inventory/operations",
               {
                 method: "POST",
-                headers: jsonHeaders,
+                headers: disabledRouteHeaders,
                 body: JSON.stringify({
                   endpointId: "legacy-token-reset-v1",
                   requestedEnvironment: "production",
@@ -246,7 +250,10 @@ describe("phase 7 security verification", () => {
     const secureConfigDiagnostics = await secureConfigDiagnosticsPost(
       new Request("http://localhost/api/secure/config/diagnostics", {
         method: "POST",
-        headers: jsonHeaders,
+        headers: {
+          ...jsonHeaders,
+          Origin: "https://untrusted.example",
+        },
         body: JSON.stringify({
           requestedOrigin: "https://untrusted.example",
           includeDebugDetails: true,

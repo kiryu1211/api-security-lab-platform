@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const labModeSchema = z.enum(["local", "disabled"]).default("local");
+const labModeSchema = z.enum(["local", "disabled"]).default("disabled");
 
 export type LabMode = z.infer<typeof labModeSchema>;
 
@@ -10,37 +10,76 @@ export type LabRuntimeSafety = {
   vulnerableApisEnabled: boolean;
 };
 
-export function getLabMode(value = process.env.LAB_MODE): LabMode {
+type LabEnvironment = {
+  LAB_MODE?: string;
+  NODE_ENV?: string;
+};
+
+export function getLabMode(value?: string): LabMode {
   return labModeSchema.parse(value || undefined);
 }
 
 export function getLabRuntimeSafety(
-  env: NodeJS.ProcessEnv = process.env,
+  env: LabEnvironment = process.env,
 ): LabRuntimeSafety {
   const labMode = getLabMode(env.LAB_MODE);
-  const nodeEnv = env.NODE_ENV || "development";
+  const nodeEnv = env.NODE_ENV || "";
 
   return {
     labMode,
     nodeEnv,
-    vulnerableApisEnabled: labMode === "local" && nodeEnv !== "production",
+    vulnerableApisEnabled:
+      labMode === "local" && (nodeEnv === "development" || nodeEnv === "test"),
   };
 }
 
 export function assertVulnerableApisEnabled(
-  env: NodeJS.ProcessEnv = process.env,
+  request?: Request,
+  env: LabEnvironment = process.env,
 ) {
   const safety = getLabRuntimeSafety(env);
+  const requestIsLoopback = isLoopbackRequest(request);
+  const publicSafety = {
+    vulnerableApisEnabled: safety.vulnerableApisEnabled && requestIsLoopback,
+  };
 
-  if (!safety.vulnerableApisEnabled) {
+  if (!publicSafety.vulnerableApisEnabled) {
     return {
       ok: false as const,
       status: 403,
       message:
-        "Vulnerable APIs are disabled unless LAB_MODE=local and NODE_ENV is not production.",
-      safety,
+        "Vulnerable APIs require LAB_MODE=local, NODE_ENV=development or test, and a loopback request.",
+      safety: publicSafety,
     };
   }
 
-  return { ok: true as const, safety };
+  return { ok: true as const, safety: publicSafety };
+}
+
+function isLoopbackRequest(request?: Request): boolean {
+  if (!(request instanceof Request)) {
+    return false;
+  }
+
+  const urlHostname = new URL(request.url).hostname;
+  const hostHeader = request.headers.get("host");
+
+  return (
+    isLoopbackHostname(urlHostname) &&
+    (hostHeader === null || isLoopbackHostHeader(hostHeader))
+  );
+}
+
+function isLoopbackHostHeader(host: string): boolean {
+  return (
+    /^(?:localhost|127\.0\.0\.1)(?::\d+)?$/i.test(host) ||
+    /^\[::1\](?::\d+)?$/i.test(host) ||
+    host.toLowerCase() === "::1"
+  );
+}
+
+function isLoopbackHostname(hostname: string): boolean {
+  return ["localhost", "127.0.0.1", "::1", "[::1]"].includes(
+    hostname.toLowerCase(),
+  );
 }
