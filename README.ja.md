@@ -62,14 +62,16 @@ OWASP API Security Top 10は、API固有の代表的で影響の大きいセキ�
 
 脆弱なAPI例は、制御されたローカル環境での検証専用です。公開環境へデプロイしてはいけません。脆弱なルートと安全なルートは明確に分離し、脆弱シナリオを利用する画面では警告を表示します。
 
-脆弱APIルートは、`LAB_MODE=local` かつ `NODE_ENV=production` ではない場合にのみ有効化します。安全APIルートは、比較と検証のために常に利用できます。
+脆弱APIルートは既定で無効です。明示的に `LAB_MODE=local` を設定し、かつ `NODE_ENV=production` ではない場合にのみ有効化します。`npm run dev` と `npm run start` は `127.0.0.1` だけで待ち受けます。安全APIルートは、比較と検証のために利用できます。
 
 SSRFデモと外部API応答デモは、脆弱APIと安全APIのどちらも実際の外部ネットワークアクセスを行わず、検証用のプレビュー情報または合成応答のみを返します。
 
+HTMLとAPIレスポンスには、フレーム埋め込み拒否、Content Security Policy、MIME sniffing拒否、Referrer制御、APIキャッシュ禁止などの共通ヘッダーを適用します。JSON本文は `application/json` のみを受け付け、16 KiBを上限とします。
+
 ## 使い方
 
-1. `npm install` で依存関係をインストールします。
-2. `.env.example` を参考に、必要に応じてローカル用の環境変数を設定します。脆弱APIをローカルで確認する場合は `LAB_MODE=local` を使用します。
+1. `npm ci` でロックファイルどおりに依存関係をインストールします。
+2. `.env.example` を参考に、追跡対象外の `.env.local` を作成します。脆弱APIをローカルで確認する場合だけ `LAB_MODE=local` を明示し、確認後は `disabled` に戻します。
 3. `npm run dev` でローカル開発サーバーを起動します。
 4. ブラウザーで学習UIを開き、学習テーマを選択します。
 5. 比較画面で、脆弱APIと安全APIのルート、リクエスト、レスポンス、赤/青の実装フロー注釈を確認します。
@@ -79,8 +81,9 @@ SSRFデモと外部API応答デモは、脆弱APIと安全APIのどちらも実�
 
 ## 開発コマンド
 
-- `npm install`: `package-lock.json` に基づいて依存関係をインストールする。
-- `npm run dev`: ローカル開発サーバーを起動する。
+- `npm ci`: `package-lock.json` に固定された依存関係を再現可能な形でインストールする。
+- `npm run dev`: `127.0.0.1` 限定でローカル開発サーバーを起動する。
+- `npm run security:audit`: 依存関係の既知の脆弱性を監査する。
 - `npm run lint`: ESLintを実行する。
 - `npm run format`: Prettierでフォーマットを確認する。
 - `npm run typecheck`: TypeScriptの型チェックを実行する。

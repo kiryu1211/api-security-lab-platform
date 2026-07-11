@@ -3,7 +3,7 @@
   "info": {
     "title": "API Security Lab Platform API",
     "version": "0.1.0",
-    "description": "Local-first API specification for comparing vulnerable and secure API examples. Vulnerable routes are local-only and must not be publicly deployed."
+    "description": "Local-first API specification for comparing vulnerable and secure API examples. Vulnerable routes are local-only, disabled by default, require explicit LAB_MODE=local in a non-production loopback environment, and must not be publicly deployed. JSON request bodies require application/json and are limited to 16 KiB."
   },
   "servers": [
     {
@@ -227,6 +227,12 @@
                 }
               }
             }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
           }
         }
       }
@@ -289,6 +295,12 @@
                 }
               }
             }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
           }
         }
       }
@@ -348,6 +360,17 @@
         "responses": {
           "200": {
             "description": "Search accepted within the rate limit",
+            "headers": {
+              "RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiSuccess" }
@@ -364,6 +387,20 @@
           },
           "429": {
             "description": "Demo rate limit exceeded",
+            "headers": {
+              "RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -405,6 +442,12 @@
                 "schema": { "$ref": "#/components/schemas/ApiError" }
               }
             }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
           }
         }
       }
@@ -441,6 +484,12 @@
                 "schema": { "$ref": "#/components/schemas/ApiError" }
               }
             }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
           }
         }
       }
@@ -476,6 +525,12 @@
                 "schema": { "$ref": "#/components/schemas/ApiError" }
               }
             }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
           }
         }
       }
@@ -511,6 +566,12 @@
                 "schema": { "$ref": "#/components/schemas/ApiError" }
               }
             }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
           }
         }
       }
@@ -545,6 +606,12 @@
                 "schema": { "$ref": "#/components/schemas/ApiError" }
               }
             }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
           }
         }
       }
@@ -579,6 +646,12 @@
                 "schema": { "$ref": "#/components/schemas/ApiError" }
               }
             }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
           }
         }
       }
@@ -615,6 +688,12 @@
                 "schema": { "$ref": "#/components/schemas/ApiError" }
               }
             }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
           }
         }
       }
@@ -630,6 +709,17 @@
         "responses": {
           "200": {
             "description": "Minimal diagnostics returned after configuration exposure controls",
+            "headers": {
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/ContentSecurityPolicy"
+              },
+              "Cross-Origin-Resource-Policy": {
+                "$ref": "#/components/headers/CrossOriginResourcePolicy"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/VaryOrigin"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiSuccess" }
@@ -646,11 +736,28 @@
           },
           "403": {
             "description": "Diagnostics rejected by origin or configuration exposure policy",
+            "headers": {
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/ContentSecurityPolicy"
+              },
+              "Cross-Origin-Resource-Policy": {
+                "$ref": "#/components/headers/CrossOriginResourcePolicy"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/VaryOrigin"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
               }
             }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
           }
         }
       }
@@ -687,6 +794,12 @@
                 "schema": { "$ref": "#/components/schemas/ApiError" }
               }
             }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
           }
         }
       }
@@ -723,6 +836,12 @@
                 "schema": { "$ref": "#/components/schemas/ApiError" }
               }
             }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
           }
         }
       }
@@ -759,6 +878,12 @@
                 "schema": { "$ref": "#/components/schemas/ApiError" }
               }
             }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
           }
         }
       }
@@ -795,6 +920,12 @@
                 "schema": { "$ref": "#/components/schemas/ApiError" }
               }
             }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
           }
         }
       }
@@ -831,6 +962,12 @@
                 "schema": { "$ref": "#/components/schemas/ApiError" }
               }
             }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
           }
         }
       }
@@ -867,6 +1004,12 @@
                 "schema": { "$ref": "#/components/schemas/ApiError" }
               }
             }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
           }
         }
       }
@@ -958,6 +1101,7 @@
     "requestBodies": {
       "AuthSessionRequest": {
         "required": true,
+        "description": "Requires application/json. The shared parser returns 400 for invalid JSON, 413 above 16 KiB, and 415 for unsupported media types.",
         "content": {
           "application/json": {
             "schema": {
@@ -972,6 +1116,7 @@
       },
       "AdminInvitationRequest": {
         "required": true,
+        "description": "Requires application/json. The shared parser returns 400 for invalid JSON, 413 above 16 KiB, and 415 for unsupported media types.",
         "content": {
           "application/json": {
             "schema": {
@@ -987,6 +1132,7 @@
       },
       "ProfileUpdateRequest": {
         "required": true,
+        "description": "Requires application/json. The shared parser returns 400 for invalid JSON, 413 above 16 KiB, and 415 for unsupported media types.",
         "content": {
           "application/json": {
             "schema": { "$ref": "#/components/schemas/ProfileUpdateRequest" },
@@ -1000,6 +1146,7 @@
       },
       "FetchUrlRequest": {
         "required": true,
+        "description": "Requires application/json. The shared parser returns 400 for invalid JSON, 413 above 16 KiB, and 415 for unsupported media types.",
         "content": {
           "application/json": {
             "schema": { "$ref": "#/components/schemas/FetchUrlRequest" },
@@ -1009,6 +1156,7 @@
       },
       "SecurityConfigAuditRequest": {
         "required": true,
+        "description": "Requires application/json. requestedOrigin is a synthetic audit scenario value, not the browser authorization origin. The shared parser returns 400 for invalid JSON, 413 above 16 KiB, and 415 for unsupported media types.",
         "content": {
           "application/json": {
             "schema": {
@@ -1023,6 +1171,7 @@
       },
       "BusinessFlowReservationRequest": {
         "required": true,
+        "description": "Requires application/json. The shared parser returns 400 for invalid JSON, 413 above 16 KiB, and 415 for unsupported media types.",
         "content": {
           "application/json": {
             "schema": {
@@ -1039,6 +1188,7 @@
       },
       "ThirdPartyProfileImportRequest": {
         "required": true,
+        "description": "Requires application/json. The shared parser returns 400 for invalid JSON, 413 above 16 KiB, and 415 for unsupported media types.",
         "content": {
           "application/json": {
             "schema": {
@@ -1053,6 +1203,7 @@
       },
       "ApiInventoryOperationRequest": {
         "required": true,
+        "description": "Requires application/json. The shared parser returns 400 for invalid JSON, 413 above 16 KiB, and 415 for unsupported media types.",
         "content": {
           "application/json": {
             "schema": {
@@ -1073,7 +1224,12 @@
         "required": false,
         "schema": {
           "type": "string",
-          "pattern": "^user-demo-[a-z-]+$"
+          "enum": [
+            "user-demo-alice",
+            "user-demo-bob",
+            "user-demo-reviewer",
+            "user-demo-admin"
+          ]
         }
       },
       "UserIdRequired": {
@@ -1082,7 +1238,12 @@
         "required": true,
         "schema": {
           "type": "string",
-          "pattern": "^user-demo-[a-z-]+$"
+          "enum": [
+            "user-demo-alice",
+            "user-demo-bob",
+            "user-demo-reviewer",
+            "user-demo-admin"
+          ]
         }
       },
       "OrderId": {
@@ -1112,6 +1273,57 @@
           "minLength": 1,
           "maxLength": 40,
           "default": "demo"
+        }
+      }
+    },
+    "headers": {
+      "RateLimitLimit": {
+        "description": "Maximum requests permitted in the current demo window.",
+        "schema": { "type": "integer", "minimum": 0 }
+      },
+      "RateLimitRemaining": {
+        "description": "Requests remaining in the current demo window.",
+        "schema": { "type": "integer", "minimum": 0 }
+      },
+      "RateLimitReset": {
+        "description": "Seconds until the current demo window resets.",
+        "schema": { "type": "integer", "minimum": 1 }
+      },
+      "RetryAfter": {
+        "description": "Seconds to wait before retrying the request.",
+        "schema": { "type": "integer", "minimum": 1 }
+      },
+      "ContentSecurityPolicy": {
+        "description": "Restrictive policy applied to protected diagnostic responses.",
+        "schema": {
+          "type": "string",
+          "const": "default-src 'none'; frame-ancestors 'none'"
+        }
+      },
+      "CrossOriginResourcePolicy": {
+        "description": "Restricts protected diagnostic responses to the same origin.",
+        "schema": { "type": "string", "const": "same-origin" }
+      },
+      "VaryOrigin": {
+        "description": "Indicates that the response policy depends on the Origin header.",
+        "schema": { "type": "string", "const": "Origin" }
+      }
+    },
+    "responses": {
+      "PayloadTooLarge": {
+        "description": "The JSON request body exceeds the 16 KiB limit.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ApiError" }
+          }
+        }
+      },
+      "UnsupportedMediaType": {
+        "description": "Content-Type is not application/json with an optional charset.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ApiError" }
+          }
         }
       }
     },
@@ -1173,6 +1385,7 @@
       },
       "AuthSessionRequest": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["tokenId"],
         "properties": {
           "tokenId": {
@@ -1188,11 +1401,17 @@
       },
       "AdminInvitationRequest": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["targetEmailAlias", "requestedRole"],
         "properties": {
           "actorUserId": {
             "type": "string",
-            "pattern": "^user-demo-[a-z-]+$",
+            "enum": [
+              "user-demo-alice",
+              "user-demo-bob",
+              "user-demo-reviewer",
+              "user-demo-admin"
+            ],
             "default": "user-demo-alice"
           },
           "targetEmailAlias": {
@@ -1208,14 +1427,27 @@
       "ProfileUpdateRequest": {
         "type": "object",
         "properties": {
-          "displayLabel": { "type": "string" },
+          "displayLabel": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
           "notificationsEnabled": { "type": "boolean" },
-          "ownerId": { "type": "string", "pattern": "^user-demo-[a-z-]+$" },
+          "ownerId": {
+            "type": "string",
+            "enum": [
+              "user-demo-alice",
+              "user-demo-bob",
+              "user-demo-reviewer",
+              "user-demo-admin"
+            ]
+          },
           "role": { "type": "string", "enum": ["learner", "reviewer"] }
         }
       },
       "FetchUrlRequest": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["url"],
         "properties": {
           "url": { "type": "string", "format": "uri" }
@@ -1223,6 +1455,7 @@
       },
       "SecurityConfigAuditRequest": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["requestedOrigin"],
         "properties": {
           "requestedOrigin": {
@@ -1237,11 +1470,17 @@
       },
       "BusinessFlowReservationRequest": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["productId", "quantity", "flowStep"],
         "properties": {
           "userId": {
             "type": "string",
-            "pattern": "^user-demo-[a-z-]+$",
+            "enum": [
+              "user-demo-alice",
+              "user-demo-bob",
+              "user-demo-reviewer",
+              "user-demo-admin"
+            ],
             "default": "user-demo-alice"
           },
           "productId": {
@@ -1261,6 +1500,7 @@
       },
       "ThirdPartyProfileImportRequest": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["providerResponseId", "expectedProvider"],
         "properties": {
           "providerResponseId": {
@@ -1278,6 +1518,7 @@
       },
       "ApiInventoryOperationRequest": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["endpointId", "requestedEnvironment"],
         "properties": {
           "endpointId": {

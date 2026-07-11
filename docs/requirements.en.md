@@ -44,6 +44,9 @@
 | SR-10 | API inventory management     | Secure APIs validate API environment, version, exposure, owner, lifecycle state, and protection parity before processing.                     |
 | SR-11 | External response validation | Third-party API responses are treated as untrusted input and validated for provider identity, redirect target, schema, and privileged fields. |
 | SR-12 | Secret management            | `.env`, keys, and tokens are excluded from Git tracking.                                                                                      |
+| SR-13 | Request boundary             | JSON bodies require `application/json`, valid syntax, and a maximum size of 16 KiB.                                                           |
+| SR-14 | Browser defenses             | Shared responses apply CSP, frame denial, MIME-sniffing prevention, referrer restrictions, and feature restrictions.                          |
+| SR-15 | Secure development process   | Vulnerable APIs default to disabled with loopback binding, while CI runs dependency audit, formatting, lint, tests, type-checking, and build. |
 
 ## Verification Requirements
 
@@ -56,6 +59,9 @@
 - Third-party API response demos must not perform real external API calls from either vulnerable or secure APIs.
 - OpenAPI must document implemented API routes, inputs, error responses, and safety notes.
 - Japanese and English UI modes must keep visible text consistent within the selected language.
+- Tests verify that an unset `LAB_MODE` keeps vulnerable APIs disabled and that only explicit local mode enables them.
+- Malformed JSON, non-JSON content types, and bodies larger than 16 KiB are rejected with consistent 400, 415, and 413 responses.
+- HTML and API responses apply baseline security headers, and API responses use `no-store`.
 
 ### Requirements-to-Verification Traceability
 
@@ -91,6 +97,13 @@ requirementDiagram
         verifymethod: Inspection
     }
 
+    designConstraint platform_hardening {
+        id: "SR-13..SR-15"
+        text: "Apply request boundaries, browser defenses, and secure delivery checks"
+        risk: High
+        verifymethod: Test
+    }
+
     functionalRequirement bilingual_ui {
         id: "FR-15"
         text: "Provide consistent Japanese and English UI modes"
@@ -123,6 +136,11 @@ requirementDiagram
         docref: "src/lib/i18n.ts"
     }
 
+    element shared_security_pipeline {
+        type: "Shared request handling, response headers, and CI"
+        docref: "src/lib/request-validation.ts / next.config.ts / .github/workflows"
+    }
+
     security_tests - verifies -> local_only
     security_tests - verifies -> secure_controls
     openapi_contract - verifies -> route_separation
@@ -130,6 +148,7 @@ requirementDiagram
     route_handlers - satisfies -> secure_controls
     repository_exclusions - satisfies -> secret_exclusion
     ui_resources - satisfies -> bilingual_ui
+    shared_security_pipeline - satisfies -> platform_hardening
 ```
 
 ## Learning Module State Transition

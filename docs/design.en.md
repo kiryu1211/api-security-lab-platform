@@ -128,16 +128,18 @@ erDiagram
 ## Security Design
 
 - Vulnerable APIs are clearly separated under `/api/vulnerable/*`, while secure APIs use `/api/secure/*`.
-- `LAB_MODE=local` is required for vulnerable APIs, and vulnerable APIs are disabled when `NODE_ENV=production`.
+- Vulnerable APIs default to disabled and require explicit `LAB_MODE=local` in a non-production environment. Development and start commands bind only to `127.0.0.1`.
 - Screens that operate vulnerable APIs always display warnings that they are local-only and must not be publicly exposed.
 - Secure APIs validate user ID, role, and target resource ownership in the API layer.
 - Broken Function Level Authorization protection validates required feature permissions for administrative functions with deny-by-default behavior.
 - Sensitive Business Flows protection validates workflow order, per-user limits, stock constraints, and automation-abuse signals for critical reservation or purchase flows in the API layer.
 - SSRF protection returns validation previews for allowlists, private host rejection, redirect policy, and timeout policy without real network access.
-- Security Misconfiguration protection suppresses debug details, applies origin allowlists, disables caching for diagnostics, and sets security response headers.
-- Unsafe Consumption of APIs protection treats third-party API responses as input outside the trust boundary and validates provider identity, TLS assumptions, redirect allowlists, payload size, schema, and privileged fields.
+- Security Misconfiguration protection suppresses debug details, compares the actual `Origin` header with the request target for same-origin access, disables diagnostic caching, and sets security response headers. The body `requestedOrigin` remains a synthetic audit-scenario input and is never used for authorization.
+- Unsafe Consumption of APIs protection treats third-party API responses as `unknown` and validates a strict Zod schema, provider identity, the complete HTTPS origin, actual payload size, and privileged fields.
 - Improper Inventory Management protection validates API environment, version, exposure, owner, documentation freshness, lifecycle state, and protection parity before processing.
-- Rate limiting currently applies per demo user and API route. Per-source limits are outside the current implementation scope.
+- Rate limiting applies to a finite set of known demo users and API routes, removes expired buckets, and caps the in-memory store at 100 entries. Cross-process sharing and per-source limits are outside the current implementation scope.
+- HTML responses apply CSP, frame denial, MIME-sniffing prevention, referrer restrictions, and Permissions Policy. API responses add `Cache-Control: no-store`.
+- CI forces `LAB_MODE=disabled` and sequentially runs `npm ci`, dependency audit, formatting, lint, tests, type-checking, and build.
 
 ### Route Separation And Vulnerable API Safety Guard
 
@@ -163,10 +165,16 @@ Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route
 ## API Foundation
 
 - Shared API response helpers are defined in `src/lib/api-response.ts` and return `{ ok, data, meta }` for success or `{ ok, error, meta }` for errors.
-- Shared request validation is defined in `src/lib/request-validation.ts` and uses Zod schemas from `src/lib/api-schemas.ts`.
+- Shared request validation is defined in `src/lib/request-validation.ts`. JSON bodies require `application/json`; declared and actual body sizes are capped at 16 KiB before Zod schemas from `src/lib/api-schemas.ts` run. Malformed JSON, oversized bodies, and unsupported content types map to consistent 400, 413, and 415 errors.
 - Local sample users and resources are defined in `src/data/lab-samples.ts`. They use synthetic demo identifiers and do not include real personal data, logs, credentials, or tokens.
 - `src/lib/lab-sample-service.ts` provides filtered sample data for API modules without introducing database dependencies before persistence is added.
 - `docs/api/openapi.json` documents implemented routes, separated secure/vulnerable tags, shared success/error response shapes, and local-only vulnerable route behavior.
+
+### Demo Trust Boundary
+
+The `userId`, `actorUserId`, and demo token IDs in this lab are finite synthetic scenario inputs used to compare authentication and authorization patterns. They are not sessions or Bearer tokens that authenticate real users, and each secure API example is scoped to the defensive concern of that module. A real service must derive its principal from a server-validated session or signed token and must never use a client-supplied ID as the authenticated principal.
+
+The in-memory rate limits, reservation totals, stock, and attempt counters are single-process local-demo controls. Multi-instance or persistent operation additionally requires an atomic shared store, trustworthy source identification, audit logging, key management, and TLS termination.
 
 ## BOLA Module Design
 
@@ -207,7 +215,7 @@ Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route
 
 - The vulnerable configuration diagnostics route `/api/vulnerable/config/diagnostics` returns synthetic debug settings, a synthetic stack trace, and permissive CORS response metadata after the local-only safety guard passes.
 - The secure configuration diagnostics route `/api/secure/config/diagnostics` validates the requested origin, suppresses debug details, disables caching, and applies security response headers such as `X-Content-Type-Options`, `Content-Security-Policy`, and `Referrer-Policy`.
-- The comparison UI sends `https://untrusted.example` as the requested origin. The vulnerable route accepts it with wildcard CORS metadata, while the secure route returns `403 FORBIDDEN`.
+- The comparison UI places `https://untrusted.example` in the body `requestedOrigin` as a synthetic audit-scenario input. The vulnerable route returns debug details and synthetic metadata for an overly broad CORS policy. The secure route compares the actual `Origin` header with the request target, returns only public diagnostics for same-origin requests, and returns `403 FORBIDDEN` when the actual origin differs.
 - The security misconfiguration demo uses synthetic diagnostic metadata only; it does not expose real configuration, secrets, personal data, internal logs, or real stack traces.
 
 ## Unsafe Consumption of APIs Module Design
@@ -271,3 +279,6 @@ flowchart TD
 - Comparison view: displays side-by-side route, request, response, design notes, and implementation flow for vulnerable and secure APIs. The implementation flow shows the full API program flow and highlights problem areas in `/api/vulnerable/*` in red and improvements in `/api/secure/*` in blue.
 - Checklist: displays defensive review points for the selected module. Progress is not currently saved.
 - Vulnerable comparison areas always display local-only and non-public deployment warnings.
+- The local-only warning is repeated immediately before the API demo button and connected to the action with `aria-describedby`.
+- Web Storage persistence for language and opening state is optional; blocked storage falls back to the default language and usable application screen.
+- Network or JSON failures during API demos always clear the running state and announce a localized error.

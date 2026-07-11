@@ -44,6 +44,9 @@
 | SR-10 | API管理          | 安全APIではAPIの環境、バージョン、公開範囲、所有者、退役状態、保護策の適用状況を確認する。                                      |
 | SR-11 | 外部応答検証     | 外部API応答を信頼境界外の入力として扱い、提供元、リダイレクト先、応答スキーマ、権限フィールドを検証する。                       |
 | SR-12 | 秘密情報管理     | `.env`、鍵、トークンをGit管理対象に含めない。                                                                                   |
+| SR-13 | リクエスト境界   | JSON本文は`application/json`に限定し、構文を検証し、16 KiBを超える本文を拒否する。                                              |
+| SR-14 | ブラウザー防御   | CSP、フレーム埋め込み拒否、MIME sniffing拒否、Referrer制御、機能制限を共通レスポンスへ適用する。                                |
+| SR-15 | 安全な開発工程   | 脆弱APIを既定無効かつloopback待受とし、CIで依存監査、整形、lint、テスト、型検査、ビルドを実行する。                             |
 
 ## 検証要件
 
@@ -56,6 +59,9 @@
 - 外部API応答デモでは、脆弱APIと安全APIのどちらも実際の外部API通信を行わないことを確認する。
 - OpenAPI仕様に、実装済みAPIのルート、入力、エラーレスポンス、安全上の注意が記述されていることを確認する。
 - 日本語表示と英語表示で、画面内の文言が同じ言語に統一されていることを確認する。
+- 未設定の`LAB_MODE`で脆弱APIが無効となり、明示的なローカル設定でのみ有効になることを確認する。
+- 不正JSON、非JSON Content-Type、16 KiBを超える本文が統一した400、415、413レスポンスで拒否されることを確認する。
+- HTMLとAPIに共通セキュリティヘッダーが適用され、APIレスポンスが`no-store`となることを確認する。
 
 ### 要件と検証のトレーサビリティ
 
@@ -91,6 +97,13 @@ requirementDiagram
         verifymethod: Inspection
     }
 
+    designConstraint platform_hardening {
+        id: "SR-13..SR-15"
+        text: "入力境界、ブラウザー防御、安全な開発工程を適用する"
+        risk: High
+        verifymethod: Test
+    }
+
     functionalRequirement bilingual_ui {
         id: "FR-15"
         text: "日本語と英語のUIを一貫して提供する"
@@ -123,6 +136,11 @@ requirementDiagram
         docref: "src/lib/i18n.ts"
     }
 
+    element shared_security_pipeline {
+        type: "共通入力処理、レスポンスヘッダー、CI"
+        docref: "src/lib/request-validation.ts / next.config.ts / .github/workflows"
+    }
+
     security_tests - verifies -> local_only
     security_tests - verifies -> secure_controls
     openapi_contract - verifies -> route_separation
@@ -130,6 +148,7 @@ requirementDiagram
     route_handlers - satisfies -> secure_controls
     repository_exclusions - satisfies -> secret_exclusion
     ui_resources - satisfies -> bilingual_ui
+    shared_security_pipeline - satisfies -> platform_hardening
 ```
 
 ## 学習モジュール状態遷移

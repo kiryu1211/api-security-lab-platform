@@ -62,14 +62,16 @@ Official reference: <https://owasp.org/API-Security/editions/2023/en/0x11-t10/>
 
 The vulnerable examples are for controlled local verification only. They must not be deployed to a public environment. The system should clearly separate vulnerable routes from secure routes and display warnings whenever a vulnerable scenario is used.
 
-Vulnerable API routes are enabled only when `LAB_MODE=local` and the application is not running with `NODE_ENV=production`. Secure routes remain available for comparison and verification.
+Vulnerable API routes are disabled by default. They are enabled only when `LAB_MODE=local` is explicitly set and the application is not running with `NODE_ENV=production`. `npm run dev` and `npm run start` bind only to `127.0.0.1`. Secure routes remain available for comparison and verification.
 
 SSRF and third-party API response demos do not perform real outbound network access from either vulnerable or secure APIs; they return verification preview metadata or synthetic responses only.
 
+HTML and API responses apply baseline controls such as frame denial, Content Security Policy, MIME-sniffing prevention, referrer restrictions, and no-store API caching. JSON bodies require `application/json` and are limited to 16 KiB.
+
 ## Usage
 
-1. Install dependencies with `npm install`.
-2. Use `.env.example` as a reference for local environment variables. Use `LAB_MODE=local` when verifying vulnerable APIs locally.
+1. Install the exact locked dependencies with `npm ci`.
+2. Use `.env.example` to create an untracked `.env.local`. Set `LAB_MODE=local` explicitly only while verifying vulnerable APIs locally, then return it to `disabled`.
 3. Start the local development server with `npm run dev`.
 4. Open the learning UI in a browser and select a learning topic.
 5. In the comparison view, inspect the vulnerable and secure routes, requests, responses, and red/blue implementation-flow annotations.
@@ -79,8 +81,9 @@ Vulnerable APIs are for local verification only. Do not run them in shared or pu
 
 ## Development Commands
 
-- `npm install`: install dependencies from `package-lock.json`.
-- `npm run dev`: start the local development server.
+- `npm ci`: reproducibly install dependencies locked in `package-lock.json`.
+- `npm run dev`: start the local development server bound only to `127.0.0.1`.
+- `npm run security:audit`: audit dependencies for known vulnerabilities.
 - `npm run lint`: run ESLint.
 - `npm run format`: check formatting with Prettier.
 - `npm run typecheck`: run TypeScript type checking.
