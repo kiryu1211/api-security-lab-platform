@@ -14,7 +14,7 @@ export type LearningModuleId =
 
 export type LearningModule = {
   id: LearningModuleId;
-  riskCategory: string;
+  riskCategory: Record<Language, string>;
   difficulty: "Basic" | "Intermediate" | "Advanced";
   progress: "ready" | "planned";
   title: Record<Language, string>;
@@ -58,7 +58,10 @@ export type LearningContextNote = Record<Language, string>;
 const learningModuleDefinitions: LearningModule[] = [
   {
     id: "bola",
-    riskCategory: "OWASP API1:2023 BOLA",
+    riskCategory: {
+      ja: "OWASP API1:2023 オブジェクトレベルの認可不備（BOLA）",
+      en: "OWASP API1:2023 Broken Object Level Authorization (BOLA)",
+    },
     difficulty: "Basic",
     progress: "ready",
     title: {
@@ -86,7 +89,7 @@ const learningModuleDefinitions: LearningModule[] = [
       },
       note: {
         ja: "ローカル限定の脆弱な例として、安全ガードを通過した場合だけ動作します。",
-        en: "This route is treated as a local-only vulnerable example.",
+        en: "This local-only vulnerable example runs only after the shared safety guard passes.",
       },
     },
     secure: {
@@ -126,7 +129,10 @@ const learningModuleDefinitions: LearningModule[] = [
   },
   {
     id: "auth",
-    riskCategory: "OWASP API2:2023 Broken Authentication",
+    riskCategory: {
+      ja: "OWASP API2:2023 認証の不備",
+      en: "OWASP API2:2023 Broken Authentication",
+    },
     difficulty: "Intermediate",
     progress: "ready",
     title: {
@@ -134,7 +140,7 @@ const learningModuleDefinitions: LearningModule[] = [
       en: "Authentication and Token Validation",
     },
     summary: {
-      ja: "APIはブラウザ画面だけでなくモバイルアプリや他サービスからも呼ばれるため、アクセストークンやセッション情報の検証が入口になります。署名、期限、失効、権限を確認しないと、期限切れトークンや権限不足のトークンで他ユーザーや管理者になりすませます。",
+      ja: "APIはブラウザー画面だけでなくモバイルアプリや他サービスからも呼ばれるため、アクセストークンやセッション情報を適切に検証することが最初の関門になります。署名、期限、失効、権限を確認しないと、期限切れトークンや権限不足のトークンが受け入れられ、他の利用者へのなりすましや管理機能の不正利用につながります。",
       en: "APIs are called by browsers, mobile apps, and other services, so access tokens and session data are often the entry point. If signature, expiration, revocation, and permissions are not checked, expired or under-authorized tokens can be used for impersonation.",
     },
     vulnerableCondition: {
@@ -154,7 +160,7 @@ const learningModuleDefinitions: LearningModule[] = [
         en: "HTTP 200 means the synthetic expired, revoked, or invalidly signed token was accepted because the API trusted token existence only.",
       },
       note: {
-        ja: "実トークンや秘密情報はサンプルに含めません。",
+        ja: "実際のトークンや秘密情報はサンプルに含めません。",
         en: "Real tokens and secrets are not included in samples.",
       },
     },
@@ -168,7 +174,7 @@ const learningModuleDefinitions: LearningModule[] = [
       },
       note: {
         ja: "安全APIでは、署名状態、期限、失効状態、権限を明示的に確認します。",
-        en: "The secure API explicitly checks expiration, revocation, and permissions.",
+        en: "The secure API explicitly checks signature state, expiration, revocation, and permissions.",
       },
     },
     checklist: {
@@ -198,7 +204,10 @@ const learningModuleDefinitions: LearningModule[] = [
   },
   {
     id: "rate-limit",
-    riskCategory: "OWASP API4:2023 Unrestricted Resource Consumption",
+    riskCategory: {
+      ja: "OWASP API4:2023 無制限なリソース消費",
+      en: "OWASP API4:2023 Unrestricted Resource Consumption",
+    },
     difficulty: "Intermediate",
     progress: "ready",
     title: {
@@ -268,7 +277,10 @@ const learningModuleDefinitions: LearningModule[] = [
   },
   {
     id: "function-auth",
-    riskCategory: "OWASP API5:2023 Broken Function Level Authorization",
+    riskCategory: {
+      ja: "OWASP API5:2023 機能レベルの認可不備",
+      en: "OWASP API5:2023 Broken Function Level Authorization",
+    },
     difficulty: "Intermediate",
     progress: "ready",
     title: {
@@ -340,7 +352,10 @@ const learningModuleDefinitions: LearningModule[] = [
   },
   {
     id: "business-flow",
-    riskCategory: "OWASP API6:2023 Sensitive Business Flows",
+    riskCategory: {
+      ja: "OWASP API6:2023 重要な業務フローへの無制限なアクセス",
+      en: "OWASP API6:2023 Unrestricted Access to Sensitive Business Flows",
+    },
     difficulty: "Advanced",
     progress: "ready",
     title: {
@@ -412,7 +427,10 @@ const learningModuleDefinitions: LearningModule[] = [
   },
   {
     id: "mass-assignment",
-    riskCategory: "OWASP API3:2023 Broken Object Property Level Authorization",
+    riskCategory: {
+      ja: "OWASP API3:2023 オブジェクトプロパティレベルの認可不備",
+      en: "OWASP API3:2023 Broken Object Property Level Authorization",
+    },
     difficulty: "Intermediate",
     progress: "ready",
     title: {
@@ -484,7 +502,10 @@ const learningModuleDefinitions: LearningModule[] = [
   },
   {
     id: "ssrf",
-    riskCategory: "OWASP API7:2023 Server Side Request Forgery",
+    riskCategory: {
+      ja: "OWASP API7:2023 サーバーサイドリクエストフォージェリ（SSRF）",
+      en: "OWASP API7:2023 Server Side Request Forgery (SSRF)",
+    },
     difficulty: "Advanced",
     progress: "ready",
     title: {
@@ -556,7 +577,10 @@ const learningModuleDefinitions: LearningModule[] = [
   },
   {
     id: "security-config",
-    riskCategory: "OWASP API8:2023 Security Misconfiguration",
+    riskCategory: {
+      ja: "OWASP API8:2023 セキュリティ設定不備",
+      en: "OWASP API8:2023 Security Misconfiguration",
+    },
     difficulty: "Intermediate",
     progress: "ready",
     title: {
@@ -564,7 +588,7 @@ const learningModuleDefinitions: LearningModule[] = [
       en: "Security Misconfiguration and Diagnostic Exposure Controls",
     },
     summary: {
-      ja: "APIはアプリケーション本体だけでなく、CORS、HTTPヘッダー、エラー出力、診断エンドポイント、キャッシュ制御など周辺設定にも守られています。設定が緩いと、コード上の処理が正しくても、内部情報の露出、ブラウザ保護の低下、意図しないOriginからの呼び出しにつながります。",
+      ja: "APIはアプリケーション本体だけでなく、CORS、HTTPヘッダー、エラー出力、診断エンドポイント、キャッシュ制御などの周辺設定にも守られています。設定が緩いと、コード上の処理が正しくても、内部情報の露出、ブラウザー保護の低下、意図しないオリジンからの呼び出しにつながります。",
       en: "APIs are protected not only by application code but also by surrounding configuration such as CORS, HTTP headers, error output, diagnostics endpoints, and cache controls. Weak configuration can expose internals, weaken browser protections, or allow unintended origins even when business logic is correct.",
     },
     vulnerableCondition: {
@@ -584,7 +608,7 @@ const learningModuleDefinitions: LearningModule[] = [
         en: "HTTP 200 with diagnostics keeps the platform baseline browser headers, but exposes debug state, a synthetic stack trace, and synthetic metadata representing an overly broad CORS policy.",
       },
       note: {
-        ja: "返す値は合成メタデータだけで、実設定、秘密情報、実ログは含めません。",
+        ja: "返す値は合成メタデータだけで、実際の設定情報、秘密情報、ログは含めません。",
         en: "The response uses synthetic metadata only and contains no real configuration, secrets, or logs.",
       },
     },
@@ -593,7 +617,7 @@ const learningModuleDefinitions: LearningModule[] = [
       request:
         'POST /api/secure/config/diagnostics\n{\n  "requestedOrigin": "https://untrusted.example",\n  "includeDebugDetails": true\n}',
       response: {
-        ja: "HTTP 200は、実際のリクエストがsame-originであることを確認し、本文のrequestedOriginを認可に使わず、公開可能な診断情報だけを返したことを表します。実Originが異なる場合はHTTP 403で拒否します。",
+        ja: "HTTP 200は、実際のリクエストが同一オリジンであることを確認し、本文の`requestedOrigin`を認可に使わず、公開可能な診断情報だけを返したことを表します。実際の`Origin`ヘッダーが異なる場合はHTTP 403で拒否します。",
         en: "HTTP 200 means the actual request passed the same-origin check, the body requestedOrigin was not used for authorization, and only public diagnostics were returned. An actual cross-origin request is rejected with HTTP 403.",
       },
       note: {
@@ -607,7 +631,7 @@ const learningModuleDefinitions: LearningModule[] = [
         "エラー応答にスタックトレース、内部パス、環境変数名、ライブラリ詳細、秘密情報を含めていない。",
         "CORSは必要なOriginだけを許可し、認証付きAPIで安易にワイルドカードを使っていない。",
         "Cache-Control、Content-Type、X-Content-Type-Optionsなど、APIに必要なヘッダーを返している。",
-        "機密データを返すAPIでは、ブラウザや中間キャッシュに保存されないようno-storeなどを設定している。",
+        "機密データを返すAPIでは、ブラウザーや中間キャッシュに保存されないようno-storeなどを設定している。",
         "不要なHTTPメソッド、不要な管理ポート、不要な診断APIを公開していない。",
         "TLSを前提にし、平文通信や安全でない内部通信に依存していない。",
         "依存ライブラリ、ランタイム、コンテナ、クラウド設定を定期的に更新・確認している。",
@@ -628,7 +652,10 @@ const learningModuleDefinitions: LearningModule[] = [
   },
   {
     id: "unsafe-consumption",
-    riskCategory: "OWASP API10:2023 Unsafe Consumption of APIs",
+    riskCategory: {
+      ja: "OWASP API10:2023 APIの安全でない利用",
+      en: "OWASP API10:2023 Unsafe Consumption of APIs",
+    },
     difficulty: "Advanced",
     progress: "ready",
     title: {
@@ -652,7 +679,7 @@ const learningModuleDefinitions: LearningModule[] = [
       request:
         'POST /api/vulnerable/third-party/profile-import\n{\n  "providerResponseId": "partner-response-redirect-admin",\n  "expectedProvider": "trusted-profile-service"\n}',
       response: {
-        ja: "HTTP 200で取り込み結果が返る場合、合成外部応答に含まれる未許可リダイレクト先やadminロールを検証せず受け入れていることを表します。",
+        ja: "HTTP 200で取り込み結果が返る場合、合成外部応答に含まれる許可されていないリダイレクト先や管理者ロールを検証せず受け入れていることを表します。",
         en: "HTTP 200 means the synthetic third-party response was imported without validating the unallowed redirect target or admin role.",
       },
       note: {
@@ -700,7 +727,10 @@ const learningModuleDefinitions: LearningModule[] = [
   },
   {
     id: "api-inventory",
-    riskCategory: "OWASP API9:2023 Improper Inventory Management",
+    riskCategory: {
+      ja: "OWASP API9:2023 不適切なインベントリ管理",
+      en: "OWASP API9:2023 Improper Inventory Management",
+    },
     difficulty: "Advanced",
     progress: "ready",
     title: {
@@ -712,11 +742,11 @@ const learningModuleDefinitions: LearningModule[] = [
       en: "APIs often have more endpoints, versions, environments, and administrative routes than the visible UI. Without an inventory, retired APIs, test endpoints, or legacy versions with weaker protections can remain reachable.",
     },
     vulnerableCondition: {
-      ja: "旧APIや管理外エンドポイントが残り、退役状態、公開範囲、所有者、ドキュメント鮮度、現行APIとの保護策差分を確認しないまま利用できる。",
+      ja: "旧APIや管理外エンドポイントが残り、退役状態、公開範囲、所有者、文書の更新状況、現行APIとの保護策差分を確認しないまま利用できる。",
       en: "Legacy or unmanaged endpoints remain usable without checking lifecycle state, exposure, owner, documentation freshness, or protection parity with current APIs.",
     },
     defensiveDesign: {
-      ja: "APIインベントリで環境、バージョン、公開範囲、所有者、文書の鮮度、必要な保護策を管理します。退役済み、管理外、保護策不足の操作は処理前に拒否します。",
+      ja: "APIインベントリで環境、バージョン、公開範囲、所有者、文書の更新状況、必要な保護策を管理します。退役済み、管理外、保護策不足の操作は処理前に拒否します。",
       en: "Use an API inventory to track environment, version, exposure, owner, documentation freshness, and required protections. Retired, unmanaged, or under-protected operations are rejected before processing.",
     },
     vulnerable: {
@@ -728,7 +758,7 @@ const learningModuleDefinitions: LearningModule[] = [
         en: "HTTP 200 with an operation preview means a retired or under-protected API operation remains executable without inventory checks.",
       },
       note: {
-        ja: "実トークン発行や通知送信は行わず、合成した操作結果だけを返します。",
+        ja: "実際のトークン発行や通知送信は行わず、合成した操作結果だけを返します。",
         en: "The demo issues no real token and sends no notification; it returns synthetic operation results only.",
       },
     },
@@ -772,8 +802,8 @@ const learningModuleDefinitions: LearningModule[] = [
   },
 ];
 
-function owaspApiSortNumber(riskCategory: string) {
-  const match = riskCategory.match(/API(\d+):2023/);
+function owaspApiSortNumber(riskCategory: Record<Language, string>) {
+  const match = riskCategory.en.match(/API(\d+):2023/);
 
   return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
 }
@@ -811,16 +841,16 @@ export const implementationWalkthroughs: Record<
           code: "  const order = findOrderById(params.orderId);",
           highlight: "issue",
           comment: {
-            ja: "問題: 利用者が指定したIDだけで対象データを取得しています。",
-            en: "Issue: the user-supplied ID is enough to load the object.",
+            ja: "利用者が指定したIDだけで対象データを取得しています。",
+            en: "The user-supplied ID is enough to load the object.",
           },
         },
         {
           code: "  return json({ order });",
           highlight: "issue",
           comment: {
-            ja: "問題: 所有者確認なしで他ユーザーの注文を返します。",
-            en: "Issue: the order is returned without an ownership check.",
+            ja: "所有者確認なしで他ユーザーの注文を返します。",
+            en: "The order is returned without an ownership check.",
           },
         },
         { code: "}" },
@@ -839,8 +869,8 @@ export const implementationWalkthroughs: Record<
           code: "  if (order.ownerId !== userId) return forbidden();",
           highlight: "fix",
           comment: {
-            ja: "改善: 所有者でない利用者をAPI層で拒否します。",
-            en: "Fix: non-owners are rejected in the API layer.",
+            ja: "所有者でない利用者をAPI層で拒否します。",
+            en: "Non-owners are rejected in the API layer.",
           },
         },
         { code: "  return json({ order: safeOrderView(order) });" },
@@ -862,16 +892,16 @@ export const implementationWalkthroughs: Record<
           code: "  const token = findTokenById(body.tokenId);",
           highlight: "issue",
           comment: {
-            ja: "問題: トークンの存在だけを信頼しています。",
-            en: "Issue: token existence is treated as trust.",
+            ja: "トークンの存在だけを信頼しています。",
+            en: "Token existence is treated as trust.",
           },
         },
         {
           code: "  return json({ accepted: Boolean(token), user: token?.subject });",
           highlight: "issue",
           comment: {
-            ja: "問題: 期限切れや失効済みでもセッションを受け入れます。",
-            en: "Issue: expired or revoked tokens can still be accepted.",
+            ja: "期限切れや失効済みでもセッションを受け入れます。",
+            en: "Expired or revoked tokens can still be accepted.",
           },
         },
         { code: "}" },
@@ -890,16 +920,16 @@ export const implementationWalkthroughs: Record<
           code: "  validateSignatureExpirationAndRevocation(token);",
           highlight: "fix",
           comment: {
-            ja: "改善: 署名、期限、失効状態をまとめて検証します。",
-            en: "Fix: signature, expiration, and revocation are validated together.",
+            ja: "署名、期限、失効状態をまとめて検証します。",
+            en: "Signature, expiration, and revocation are validated together.",
           },
         },
         {
           code: "  requirePermission(token, body.requiredPermission);",
           highlight: "fix",
           comment: {
-            ja: "改善: 対象APIに必要な権限を確認します。",
-            en: "Fix: the permission required by the API is checked.",
+            ja: "対象APIに必要な権限を確認します。",
+            en: "The permission required by the API is checked.",
           },
         },
         { code: "  return json({ accepted: true, user: token.subject });" },
@@ -921,8 +951,8 @@ export const implementationWalkthroughs: Record<
           code: "  const updated = updateProfile({ ...body });",
           highlight: "issue",
           comment: {
-            ja: "問題: roleやownerIdなどの許可外プロパティも保存対象になります。",
-            en: "Issue: fields such as role or ownerId can be persisted.",
+            ja: "roleやownerIdなどの許可外プロパティも保存対象になります。",
+            en: "Fields such as role or ownerId can be persisted.",
           },
         },
         { code: "  return json({ profile: updated });" },
@@ -943,16 +973,16 @@ export const implementationWalkthroughs: Record<
           code: '  const allowed = pick(body, ["displayLabel"]);',
           highlight: "fix",
           comment: {
-            ja: "改善: 通常更新で受け入れる項目を明示します。",
-            en: "Fix: fields accepted by normal updates are explicit.",
+            ja: "通常更新で受け入れる項目を明示します。",
+            en: "Fields accepted by normal updates are explicit.",
           },
         },
         {
           code: "  rejectIfPrivilegedFieldsPresent(body);",
           highlight: "fix",
           comment: {
-            ja: "改善: roleやownerIdなどを通常更新から分離します。",
-            en: "Fix: fields such as role and ownerId are separated from normal updates.",
+            ja: "roleやownerIdなどを通常更新から分離します。",
+            en: "Fields such as role and ownerId are separated from normal updates.",
           },
         },
         { code: "  if (hasPrivilegedFields(body)) return forbidden();" },
@@ -975,8 +1005,8 @@ export const implementationWalkthroughs: Record<
           code: "  const results = runSearch(query);",
           highlight: "issue",
           comment: {
-            ja: "問題: 利用者や送信元ごとの上限確認がありません。",
-            en: "Issue: no per-user or per-source limit is checked.",
+            ja: "利用者や送信元ごとの上限確認がありません。",
+            en: "No per-user or per-source limit is checked.",
           },
         },
         { code: "  return json({ results });" },
@@ -995,8 +1025,8 @@ export const implementationWalkthroughs: Record<
           code: "  if (isRateLimited(key)) return tooManyRequests();",
           highlight: "fix",
           comment: {
-            ja: "改善: 上限超過時は処理前に429で拒否します。",
-            en: "Fix: excess requests are rejected with 429 before work starts.",
+            ja: "上限超過時は処理前に429で拒否します。",
+            en: "Excess requests are rejected with 429 before work starts.",
           },
         },
         { code: "  const results = runSearch(getSearchQuery(request));" },
@@ -1019,8 +1049,8 @@ export const implementationWalkthroughs: Record<
           code: "  const preview = createInvitationPreview(body);",
           highlight: "issue",
           comment: {
-            ja: "問題: 管理機能に必要な権限を確認していません。",
-            en: "Issue: the permission required for the admin function is not checked.",
+            ja: "管理機能に必要な権限を確認していません。",
+            en: "The permission required for the admin function is not checked.",
           },
         },
         { code: "  return json({ preview });" },
@@ -1039,8 +1069,8 @@ export const implementationWalkthroughs: Record<
           code: '  requireFunctionPermission(body.actorUserId, "admin:invite");',
           highlight: "fix",
           comment: {
-            ja: "改善: 管理操作ごとの必要権限をAPI層で確認します。",
-            en: "Fix: the API layer checks the permission required by the admin action.",
+            ja: "管理操作ごとの必要権限をAPI層で確認します。",
+            en: "The API layer checks the permission required by the admin action.",
           },
         },
         { code: "  return json({ preview: createInvitationPreview(body) });" },
@@ -1062,8 +1092,8 @@ export const implementationWalkthroughs: Record<
           code: "  const reservation = reserveProduct(body.productId, body.quantity);",
           highlight: "issue",
           comment: {
-            ja: "問題: フロー順序やユーザー単位上限を確認していません。",
-            en: "Issue: workflow order and per-user limits are not checked.",
+            ja: "フロー順序やユーザー単位上限を確認していません。",
+            en: "Workflow order and per-user limits are not checked.",
           },
         },
         { code: "  return json({ reservation });" },
@@ -1084,16 +1114,16 @@ export const implementationWalkthroughs: Record<
           code: "  requireExpectedFlowStep(body.userId, body.flowStep);",
           highlight: "fix",
           comment: {
-            ja: "改善: 画面任せにせずAPI層で状態遷移を確認します。",
-            en: "Fix: workflow state is validated in the API layer, not only in the UI.",
+            ja: "画面任せにせずAPI層で状態遷移を確認します。",
+            en: "Workflow state is validated in the API layer, not only in the UI.",
           },
         },
         {
           code: "  enforcePerUserLimitAndStock(body);",
           highlight: "fix",
           comment: {
-            ja: "改善: 数量上限と在庫制約を処理前に確認します。",
-            en: "Fix: quantity limits and stock constraints are checked before processing.",
+            ja: "数量上限と在庫制約を処理前に確認します。",
+            en: "Quantity limits and stock constraints are checked before processing.",
           },
         },
         { code: "  return json({ reservation: reserveProduct(body) });" },
@@ -1115,8 +1145,8 @@ export const implementationWalkthroughs: Record<
           code: "  const preview = buildFetchPreview(url);",
           highlight: "issue",
           comment: {
-            ja: "問題: スキーム、ホスト、IP範囲、リダイレクト先を検証していません。",
-            en: "Issue: scheme, host, IP range, and redirects are not validated.",
+            ja: "スキーム、ホスト、IP範囲、リダイレクト先を検証していません。",
+            en: "Scheme, host, IP range, and redirects are not validated.",
           },
         },
         { code: "  return json({ preview });" },
@@ -1137,16 +1167,16 @@ export const implementationWalkthroughs: Record<
           code: "  requireAllowedHostAndScheme(url);",
           highlight: "fix",
           comment: {
-            ja: "改善: 許可したスキームとホストだけを対象にします。",
-            en: "Fix: only approved schemes and hosts are allowed.",
+            ja: "許可したスキームとホストだけを対象にします。",
+            en: "Only approved schemes and hosts are allowed.",
           },
         },
         {
           code: "  rejectPrivateIpAndUnsafeRedirects(url);",
           highlight: "fix",
           comment: {
-            ja: "改善: 内部ネットワークや危険なリダイレクトを拒否します。",
-            en: "Fix: internal networks and unsafe redirects are rejected.",
+            ja: "内部ネットワークや危険なリダイレクトを拒否します。",
+            en: "Internal networks and unsafe redirects are rejected.",
           },
         },
         { code: "  return json({ preview: buildSafeFetchPreview(url) });" },
@@ -1168,8 +1198,8 @@ export const implementationWalkthroughs: Record<
           code: "  return json({ debug: true, stackTrace, syntheticCorsPolicy, internalPath });",
           highlight: "issue",
           comment: {
-            ja: "問題: 公開不要な診断情報と広すぎるCORS設定を返しています。",
-            en: "Issue: unnecessary diagnostics and overly broad CORS settings are exposed.",
+            ja: "公開不要な診断情報と広すぎるCORS設定を返しています。",
+            en: "Unnecessary diagnostics and overly broad CORS settings are exposed.",
           },
         },
         { code: "}" },
@@ -1189,16 +1219,16 @@ export const implementationWalkthroughs: Record<
           code: "  requireSameOrigin(request.headers.get('Origin'), request.url);",
           highlight: "fix",
           comment: {
-            ja: "改善: 本文値ではなく実際のOriginヘッダーをリクエスト先と比較します。",
-            en: "Fix: the actual Origin header is compared with the request target instead of trusting a body value.",
+            ja: "本文値ではなく実際のOriginヘッダーをリクエスト先と比較します。",
+            en: "The actual Origin header is compared with the request target instead of trusting a body value.",
           },
         },
         {
           code: "  return json(publicDiagnostics(), { headers: securityHeaders });",
           highlight: "fix",
           comment: {
-            ja: "改善: 公開可能な情報とセキュリティヘッダーだけを返します。",
-            en: "Fix: only public metadata and security headers are returned.",
+            ja: "公開可能な情報とセキュリティヘッダーだけを返します。",
+            en: "Only public metadata and security headers are returned.",
           },
         },
         { code: "}" },
@@ -1219,8 +1249,8 @@ export const implementationWalkthroughs: Record<
           code: "  const operation = findOperationById(body.endpointId);",
           highlight: "issue",
           comment: {
-            ja: "問題: 退役状態、公開範囲、保護策の差分を確認していません。",
-            en: "Issue: lifecycle state, exposure, and protection parity are not checked.",
+            ja: "退役状態、公開範囲、保護策の差分を確認していません。",
+            en: "Lifecycle state, exposure, and protection parity are not checked.",
           },
         },
         {
@@ -1244,16 +1274,16 @@ export const implementationWalkthroughs: Record<
           code: "  requireActiveManagedOperation(operation, body.requestedEnvironment);",
           highlight: "fix",
           comment: {
-            ja: "改善: 退役済みAPIや管理外APIを拒否します。",
-            en: "Fix: retired or unmanaged APIs are rejected.",
+            ja: "退役済みAPIや管理外APIを拒否します。",
+            en: "Retired or unmanaged APIs are rejected.",
           },
         },
         {
           code: "  requireProtectionParity(operation);",
           highlight: "fix",
           comment: {
-            ja: "改善: 現行APIと同等の保護策があるか確認します。",
-            en: "Fix: protection parity with current APIs is checked.",
+            ja: "現行APIと同等の保護策があるか確認します。",
+            en: "Protection parity with current APIs is checked.",
           },
         },
         {
@@ -1277,8 +1307,8 @@ export const implementationWalkthroughs: Record<
           code: "  const profile = importProfile(partner.responseBody);",
           highlight: "issue",
           comment: {
-            ja: "問題: 外部応答のスキーマ、提供元、権限フィールドを検証していません。",
-            en: "Issue: schema, provider identity, and privileged fields are not validated.",
+            ja: "外部応答のスキーマ、提供元、権限フィールドを検証していません。",
+            en: "Schema, provider identity, and privileged fields are not validated.",
           },
         },
         { code: "  return json({ profile });" },
@@ -1297,16 +1327,16 @@ export const implementationWalkthroughs: Record<
           code: "  requireExpectedProvider(partner);",
           highlight: "fix",
           comment: {
-            ja: "改善: 想定した提供元の応答か確認します。",
-            en: "Fix: the provider identity is validated.",
+            ja: "想定した提供元の応答か確認します。",
+            en: "The provider identity is validated.",
           },
         },
         {
           code: "  const profile = thirdPartyProfileSchema.parse(partner.responseBody);",
           highlight: "fix",
           comment: {
-            ja: "改善: スキーマと許可フィールドで取り込み対象を制限します。",
-            en: "Fix: schema and allowed fields constrain what is imported.",
+            ja: "スキーマと許可フィールドで取り込み対象を制限します。",
+            en: "Schema and allowed fields constrain what is imported.",
           },
         },
         { code: "  return json({ profile: safeProfile(profile) });" },

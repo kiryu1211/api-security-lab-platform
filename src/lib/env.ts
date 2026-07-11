@@ -16,7 +16,9 @@ type LabEnvironment = {
 };
 
 export function getLabMode(value?: string): LabMode {
-  return labModeSchema.parse(value || undefined);
+  const result = labModeSchema.safeParse(value || undefined);
+
+  return result.success ? result.data : "disabled";
 }
 
 export function getLabRuntimeSafety(

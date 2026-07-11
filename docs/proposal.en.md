@@ -38,9 +38,9 @@ However, because vulnerable API examples are included, local-only execution, non
 flowchart TD
     A[Review API and OWASP API Security Top 10 basics] --> B[Select learning topic]
     B --> C[Review risk overview and real-world context]
-    C --> D[Run vulnerable API locally]
-    D --> E[Review what the result means]
-    E --> F[Compare with secure implementation]
+    C --> D[Run vulnerable and secure APIs locally in parallel]
+    D --> E[Compare both results and their meaning]
+    E --> F[Review design differences]
     F --> G[Review red and blue implementation-flow annotations]
     G --> H[Review mitigations and implementation checklist]
 ```

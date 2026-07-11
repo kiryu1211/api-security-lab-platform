@@ -4,14 +4,14 @@
 
 現在の実装では、API仕様の明確化、リクエスト検証、認証・認可、レート制限、脆弱デモの隔離を重視します。使用している技術は以下のとおりです。
 
-- Frontend: TypeScript + React + Next.js App Router
-- Backend: Next.js Route Handlers
-- Package manager: npm と `package-lock.json`
-- Validation: Zod
-- Testing: Vitest
-- Linting and formatting: ESLint と Prettier
-- API Documentation: `docs/api/openapi.json` のOpenAPI仕様
-- Database and ORM: 未導入。現在のデモはインメモリの状態と合成データで動作する
+- フロントエンド: TypeScript + React + Next.js App Router
+- バックエンド: Next.js Route Handlers
+- パッケージ管理: npm と `package-lock.json`
+- 入力検証: Zod
+- テスト: Vitest
+- Lint・フォーマット: ESLint と Prettier
+- API仕様: `docs/api/openapi.json` のOpenAPI仕様
+- データベース・ORM: 未導入。現在のデモはインメモリの状態と合成データで動作する
 
 TypeScriptを使用する理由は、APIリクエスト、レスポンス、認可対象リソース、学習モジュールを型で管理し、脆弱な例と安全な例の違いを明確にしやすいためです。OpenAPIは、実装済みAPIの仕様と検証観点を文書化するために使用します。
 
@@ -19,14 +19,13 @@ TypeScriptを使用する理由は、APIリクエスト、レスポンス、認�
 
 ```mermaid
 flowchart LR
-    U[User Browser] --> UI[Learning UI]
-    UI --> API[API Layer]
-    API --> Safe[Secure API Modules]
-    API --> Vuln[Vulnerable API Modules]
-    API --> Guard[Safety Guard]
-    Safe --> Data[In-memory Demo Data]
+    U[利用者のブラウザー] --> UI[学習UI]
+    UI --> API[APIルーティング層]
+    API --> Safe[安全APIモジュール]
+    API --> Guard[脆弱API安全ガード]
+    Guard --> Vuln[脆弱APIモジュール]
+    Safe --> Data[インメモリの合成データ]
     Vuln --> Data
-    Guard --> API
 ```
 
 現在のデモデータは、`src/data/` 配下の合成データとして管理します。永続化は現在の実装範囲に含めません。
@@ -37,10 +36,14 @@ flowchart LR
 classDiagram
     class LearningModule {
         +id
-        +title
-        +riskCategory
-        +overview
-        +warning
+        +riskCategory[ja,en]
+        +difficulty
+        +progress
+        +title[ja,en]
+        +summary[ja,en]
+        +vulnerableCondition[ja,en]
+        +defensiveDesign[ja,en]
+        +checklist[ja,en][]
     }
     class VulnerableScenario {
         +route
@@ -52,14 +55,19 @@ classDiagram
         +requestExample
         +mitigation
     }
-    class ReviewChecklist {
-        +items
-        +completionState
+    class ImplementationWalkthrough {
+        +vulnerable
+        +secure
+    }
+    class LearningContextNote {
+        +ja
+        +en
     }
 
     LearningModule "1" --> "1" VulnerableScenario
     LearningModule "1" --> "1" SecureScenario
-    LearningModule "1" --> "1" ReviewChecklist
+    LearningModule "1" --> "1" ImplementationWalkthrough
+    LearningModule "1" --> "1" LearningContextNote
 ```
 
 ## BOLA検証シーケンス
@@ -83,7 +91,7 @@ sequenceDiagram
     SafeAPI-->>UI: 権限がなければ拒否
 ```
 
-## 将来のデータモデル
+## 将来構想：永続化を導入する場合の概念データモデル（未実装）
 
 以下は、永続化を追加する場合の概念モデルです。現在の実装では、実DBではなく合成したローカル用デモデータを使用します。
 
@@ -128,16 +136,16 @@ erDiagram
 ## セキュリティ設計
 
 - 脆弱APIは `/api/vulnerable/*`、安全APIは `/api/secure/*` として明確に分離する。
-- 脆弱APIは既定で無効とし、`LAB_MODE=local` を明示した非production環境だけで有効化する。開発・起動コマンドは`127.0.0.1`だけで待ち受ける。
+- 脆弱APIは既定で無効とし、`LAB_MODE=local`、`NODE_ENV`が`development`または`test`、リクエストURLのhostnameがloopback、かつ存在する`Host`ヘッダーもloopbackを示す場合だけ有効化する。不正な`LAB_MODE`は`disabled`として扱う。開発・起動コマンドは`127.0.0.1`だけで待ち受ける。hostname検査は接続元の証明ではないため、公開転送を安全にする境界として扱わない。
 - 脆弱APIを操作する画面には、ローカル限定であり外部公開してはいけないことを常に表示する。
 - 安全APIでは、ユーザーID、ロール、対象リソース所有者をAPI層で検証する。
 - Broken Function Level Authorization対策では、管理機能に必要な機能権限をAPI層で確認し、権限不足をdeny-by-defaultで拒否する。
 - Sensitive Business Flows対策では、重要な予約・購入フローについて、フロー順序、ユーザー単位上限、在庫制約、自動化の兆候をAPI層で検証する。
 - SSRF対策では、実ネットワークアクセスを行わず、許可リスト、プライベートホスト拒否、リダイレクト方針、タイムアウト方針をプレビューとして返す。
-- Security Misconfiguration対策では、デバッグ情報を抑制し、実際の`Origin`ヘッダーとリクエスト先のsame-originを確認し、診断APIのキャッシュ無効化とセキュリティレスポンスヘッダーを適用する。本文の`requestedOrigin`は合成した監査シナリオ入力であり、認可判断には使用しない。
+- Security Misconfiguration対策では、デバッグ情報を抑制し、実際の`Origin`ヘッダーがリクエスト先と同一オリジンであることを確認し、診断APIのキャッシュ無効化とセキュリティレスポンスヘッダーを適用する。本文の`requestedOrigin`は合成した監査シナリオ入力であり、認可判断には使用しない。
 - Unsafe Consumption of APIs対策では、外部API応答を`unknown`として扱い、strictなZodスキーマ、提供元、HTTPSの完全なorigin、実ペイロードサイズ、権限フィールドを検証する。
-- Improper Inventory Management対策では、APIの環境、バージョン、公開範囲、所有者、文書の鮮度、退役状態、保護策の適用状況を処理前に検証する。
-- レート制限は、有限の既知デモユーザーとAPIルート単位で適用し、期限切れバケットを削除してインメモリストアを最大100件に制限する。複数プロセス間の共有や送信元単位の制限は現在の実装範囲に含めない。
+- Improper Inventory Management対策では、APIの環境、バージョン、公開範囲、所有者、文書の更新状況、退役状態、保護策の適用状況を処理前に検証する。
+- レート制限は、有限の既知デモユーザーとAPIルート単位で60秒間に3回まで適用し、4回目を429で拒否する。期限切れbucketを削除し、インメモリストアは最大100件に制限する。複数プロセス間の共有や送信元単位の制限は現在の実装範囲に含めない。
 - HTMLレスポンスにはCSP、フレーム埋め込み拒否、MIME sniffing拒否、Referrer制御、Permissions Policyを適用し、APIレスポンスには`Cache-Control: no-store`を追加する。
 - CIでは`LAB_MODE=disabled`を強制し、`npm ci`、依存監査、整形、lint、テスト、型検査、ビルドを順に実行する。
 
@@ -154,9 +162,11 @@ flowchart TD
 
     Route -- "/api/vulnerable/*" --> LocalMode{"LAB_MODE = local"}
     LocalMode -- "いいえ" --> Disabled["403 VULNERABLE_API_DISABLED"]
-    LocalMode -- "はい" --> Production{"NODE_ENV = production"}
-    Production -- "はい" --> Disabled
-    Production -- "いいえ" --> VulnerableDemo["ローカル限定の脆弱デモ処理"]
+    LocalMode -- "はい" --> Runtime{"NODE_ENV = development または test"}
+    Runtime -- "いいえ" --> Disabled
+    Runtime -- "はい" --> Loopback{"URL hostnameと存在するHostがloopback"}
+    Loopback -- "いいえ" --> Disabled
+    Loopback -- "はい" --> VulnerableDemo["ローカル限定の脆弱デモ処理"]
     VulnerableDemo --> SyntheticData
 ```
 
@@ -165,7 +175,7 @@ flowchart TD
 ## API基盤
 
 - 共通APIレスポンスは `src/lib/api-response.ts` で定義し、成功時は `{ ok, data, meta }`、エラー時は `{ ok, error, meta }` を返す。
-- 共通リクエスト検証は `src/lib/request-validation.ts` で定義し、JSON本文に`application/json`を要求し、宣言サイズと実読込サイズを16 KiB以下に制限してから、`src/lib/api-schemas.ts` のZodスキーマを使用する。不正JSON、過大本文、非対応Content-Typeは統一した400、413、415エラーへ変換する。
+- 共通リクエスト検証は `src/lib/request-validation.ts` で定義し、JSON本文に`application/json`と任意の`charset=utf-8`だけを許可する。正しいUTF-8とJSONを要求し、宣言サイズと実読込サイズを16 KiB以下に制限してからZodスキーマを使用する。不正UTF-8・JSON、過大本文、非対応Content-Typeは統一した400、413、415エラーへ変換する。単一値クエリの重複は配列化してスキーマ検証で拒否する。
 - ローカル用のサンプルユーザーとサンプルリソースは `src/data/lab-samples.ts` で定義する。合成したデモ用IDだけを使用し、実在する個人情報、ログ、認証情報、トークンは含めない。
 - `src/lib/lab-sample-service.ts` は、永続化を導入する前の段階でデータベース依存を増やさず、APIモジュールへフィルタ済みサンプルデータを提供する。
 - `docs/api/openapi.json` では、実装済みルート、安全/脆弱タグの分離、共通の成功/エラーレスポンス形式、脆弱ルートのローカル限定動作を記述する。
@@ -173,6 +183,16 @@ flowchart TD
 ### デモ用信頼境界
 
 このラボの`userId`、`actorUserId`、デモトークンIDは、各認可・認証パターンを比較するための有限な合成シナリオ入力です。実在する利用者を認証するセッションやBearer tokenではなく、安全APIの各例もそのモジュールが扱う防御観点に限定されています。実サービスへ適用する場合は、サーバー側で検証したセッションまたは署名済みトークンから主体を確定し、クライアント指定のIDを認証主体として使用してはいけません。
+
+```mermaid
+flowchart LR
+    Client["ブラウザーからの合成シナリオ入力"] --> Routes["安全API / 脆弱API"]
+    Routes --> Services["モジュール別サービス"]
+    Services --> Synthetic["合成データ・インメモリ状態"]
+    External["合成した外部API応答"] --> Services
+    Services -. "実外部通信なし" .-> Blocked["外部ネットワーク"]
+    Client -. "実認証主体として信頼しない" .-> Routes
+```
 
 インメモリのレート制限、予約数、在庫、試行回数は単一プロセスのローカルデモ向けです。複数インスタンスや永続的な運用では、原子的な共有ストア、信頼できる送信元識別、監査ログ、鍵管理、TLS終端を別途実装する必要があります。
 
@@ -192,7 +212,7 @@ flowchart TD
 
 ## レート制限・Mass Assignment・SSRFモジュール設計
 
-- 脆弱なレート制限ルート `/api/vulnerable/rate-limit/search` は、繰り返しリクエストに制限を適用しない。安全なルート `/api/secure/rate-limit/search` は、ルートとデモユーザーをキーにしたインメモリの制限を適用し、デモ用の上限を超えた場合は `429 RATE_LIMITED` を返す。
+- 脆弱なレート制限ルート `/api/vulnerable/rate-limit/search` は、繰り返しリクエストに制限を適用しない。安全なルート `/api/secure/rate-limit/search` は、ルートとデモユーザーをキーに、60秒のbucket内で3回まで許可し、4回目は `429 RATE_LIMITED` を返す。
 - 脆弱なMass Assignmentルート `/api/vulnerable/profile` は、`ownerId` や `role` など権限が必要な項目も含め、受け入れたプロパティをそのまま適用する。安全なルート `/api/secure/profile` は、通常更新で許可するプロフィール項目を許可リストで制限し、権限項目や所有者項目が含まれる場合は403で拒否する。
 - 脆弱なSSRFルート `/api/vulnerable/fetch-url` は、任意URLを受け入れる例として動作する。ただし、実際の外部ネットワークアクセスは行わない。安全なルート `/api/secure/fetch-url` はHTTPSを必須とし、プライベートホストを拒否し、`api.example.test` のみを許可するプレビューを返す。
 - SSRFデモでは実際の外部ネットワークアクセスを行わず、脆弱APIと安全APIのどちらもプレビュー用メタデータだけを返す。
@@ -207,22 +227,22 @@ flowchart TD
 ## Sensitive Business Flowsモジュール設計
 
 - 脆弱な業務フロールート `/api/vulnerable/business-flow/reservations` は、ローカル限定の安全ガードを通過した後、限定商品の予約リクエストをフロー順序やユーザー単位上限を確認せずに受け入れる。
-- 安全な業務フロールート `/api/secure/business-flow/reservations` は、予約前にフロー順序、ユーザー単位の数量上限、在庫制約、自動化悪用の観点を検証する。
+- 安全な業務フロールート `/api/secure/business-flow/reservations` は、各試行でユーザー・商品単位の自動化カウンターを増加させ、予約前にフロー順序、累積数量上限、在庫制約を検証する。成功時だけ残在庫と累積予約数を更新し、脆弱側のプレビューはこの状態を更新しない。
 - 比較UIでは、`direct-checkout` で `product-demo-001` を4件予約しようとするリクエストを実行する。脆弱ルートでは受け入れられ、安全ルートでは `403 FORBIDDEN` が返ることを確認できる。
 - 業務フローデモでは合成した限定商品データだけを使用し、実在する商品、注文、決済、個人情報、外部サービス連携は使用しない。
 
 ## Security Misconfigurationモジュール設計
 
 - 脆弱な設定診断ルート `/api/vulnerable/config/diagnostics` は、ローカル限定の安全ガードを通過した後、合成したデバッグ設定、合成スタックトレース、過度に広いCORSレスポンスメタデータを返す。
-- 安全な設定診断ルート `/api/secure/config/diagnostics` は、リクエストされたOriginを検証し、デバッグ詳細を抑制し、キャッシュを無効化し、`X-Content-Type-Options`、`Content-Security-Policy`、`Referrer-Policy` などのセキュリティレスポンスヘッダーを適用する。
-- 比較UIでは、本文の`requestedOrigin`に`https://untrusted.example`を指定する。これは合成した監査シナリオ入力であり、脆弱ルートはデバッグ情報と過度に広いCORS方針の合成メタデータを返す。安全ルートは実際の`Origin`ヘッダーをリクエスト先と比較し、same-originなら公開可能な診断情報だけを返し、実Originが異なる場合は`403 FORBIDDEN`で拒否する。
+- 安全な設定診断ルート `/api/secure/config/diagnostics` は、実際の`Origin`ヘッダーが存在する場合にリクエストURLのoriginとの完全一致を要求し、cross-originアクセスは許可しない。`Origin`がない非ブラウザークライアント等は受け付ける。`Access-Control-Allow-Origin`は返さず、デバッグ詳細を抑制し、キャッシュを無効化してセキュリティレスポンスヘッダーを適用する。
+- 比較UIでは、本文の`requestedOrigin`に`https://untrusted.example`を指定する。これは合成した監査シナリオ入力であり、脆弱ルートはデバッグ情報と過度に広いCORS方針の合成メタデータを返す。安全ルートは実際の`Origin`ヘッダーをリクエスト先と比較し、同一オリジンなら公開可能な診断情報だけを返し、異なる場合は`403 FORBIDDEN`で拒否する。
 - Security Misconfigurationデモでは合成した診断メタデータだけを使用し、実設定、秘密情報、個人情報、内部ログ、実スタックトレースは公開しない。
 
 ## Unsafe Consumption of APIsモジュール設計
 
 - 脆弱な外部プロフィール連携ルート `/api/vulnerable/third-party/profile-import` は、ローカル限定の安全ガードを通過した後、合成した外部API応答のリダイレクト先や権限フィールドを検証せずに取り込む。
 - 安全な外部プロフィール連携ルート `/api/secure/third-party/profile-import` は、提供元、TLS前提、リダイレクト許可先、応答サイズ、応答スキーマ、権限フィールドを検証し、信頼できない応答を拒否する。
-- 比較UIでは、`partner-response-redirect-admin` を取り込もうとするリクエストを実行する。脆弱ルートではadminロールと許可されていないリダイレクト先が受け入れられ、安全ルートでは `403 FORBIDDEN` が返ることを確認できる。
+- 比較UIでは、`partner-response-redirect-admin` を取り込もうとするリクエストを実行する。脆弱ルートでは管理者ロールと許可されていないリダイレクト先が受け入れられ、安全ルートでは `403 FORBIDDEN` が返ることを確認できる。
 - 外部API応答デモでは実際の外部API通信を行わず、合成した外部応答だけを使用する。実在する提携先、個人情報、認証情報、外部サービス連携は使用しない。
 
 ## Improper Inventory Managementモジュール設計

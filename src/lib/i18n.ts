@@ -11,7 +11,7 @@ export const uiText = {
     languageSwitcherLabel: "言語を切り替え",
     languageNames: {
       ja: "日本語",
-      en: "English",
+      en: "英語",
     },
     brand: "APIセキュリティ学習・検証プラットフォーム",
     subtitle: "ローカルで安全に学ぶAPIセキュリティ",
@@ -36,7 +36,7 @@ export const uiText = {
       lead: "脆弱なAPI例と安全なAPI例を並べ、リクエスト、レスポンス、設計の違い、確認項目を一連の流れで確認できます。",
     },
     opening: {
-      badge: "Local API Security Lab",
+      badge: "ローカルAPIセキュリティラボ",
       title: "APIを守る設計を、見える形に。",
       lead: "OWASP API Security Top 10のAPI1からAPI10までを、脆弱な例と安全な例の比較で学べます。リクエスト、レスポンス、実装の違いから、攻撃を止める設計をローカル環境で確認できます。",
       clientA: "クライアントA",
@@ -45,8 +45,9 @@ export const uiText = {
       attacker: "攻撃者",
       vulnerable: "脆弱な例",
       secure: "安全な例",
-      request: "Request",
-      response: "Response",
+      request: "リクエスト",
+      response: "レスポンス",
+      attack: "攻撃",
       blocked: "遮断",
       skip: "スキップ",
     },
@@ -67,12 +68,12 @@ export const uiText = {
       points: [
         "APIはID、トークン、JSONプロパティ、URL、外部API応答など、画面より細かい単位で入力を受け取るため、リスクも細かい粒度で現れます。",
         "同じログイン済みユーザーでも、リソース所有者、ロール、業務状態、リクエスト頻度、APIバージョンによって許可すべき操作は変わります。",
-        "このラボではAPI1からAPI10までを、ローカル限定の脆弱APIと安全APIの比較で確認し、実データ、実秘密情報、実外部通信を使わずに学習できます。",
+        "このラボではAPI1からAPI10までを、ローカル限定の脆弱APIと安全APIの比較で確認し、実際のデータ、秘密情報、外部通信を使わずに学習できます。",
       ],
     },
     warning: {
       label: "ローカル限定に関する注意",
-      text: "脆弱APIは、攻撃が成立する条件を観察するために意図的に防御を弱くしています。外部公開すると、所有者確認不足、弱い認証、過度な情報公開、SSRFのような挙動を第三者が直接試せる状態になり、合成データであっても攻撃手順の公開、環境情報の露出、運用環境への誤接続につながります。必ずローカルの学習・検証環境だけで実行し、共有環境や本番環境へ配置しないでください。",
+      text: "脆弱APIは、攻撃が成立する条件を観察するために意図的に防御を弱くしています。外部公開すると、所有者確認不足、弱い認証、過度な情報公開、SSRFのような挙動を第三者が直接試せる状態になり、合成データだけを扱っていても、攻撃可能な挙動の露出、環境情報の漏えい、運用環境への誤接続につながります。必ずローカルの学習・検証環境だけで実行し、共有環境や本番環境へ配置しないでください。",
     },
     status: {
       heading: "この環境で確認できること",
@@ -173,6 +174,7 @@ export const uiText = {
       secure: "Secure",
       request: "Request",
       response: "Response",
+      attack: "Attack",
       blocked: "Blocked",
       skip: "Skip",
     },

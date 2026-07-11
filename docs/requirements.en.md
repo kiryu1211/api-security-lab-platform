@@ -30,23 +30,23 @@
 
 ## Security Requirements
 
-| ID    | Requirement                  | Description                                                                                                                                   |
-| ----- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| SR-01 | Local-only execution         | README and UI screens must state that vulnerable APIs must not be deployed publicly.                                                          |
-| SR-02 | Route separation             | Vulnerable APIs and secure APIs are clearly separated to prevent accidental misuse.                                                           |
-| SR-03 | Authorization checks         | Secure APIs always validate the relationship between user and target resource.                                                                |
-| SR-04 | Input validation             | Request bodies, queries, and URLs are validated with schemas.                                                                                 |
-| SR-05 | Rate limiting                | Secure APIs limit excessive requests.                                                                                                         |
-| SR-06 | Function-level authorization | Secure APIs validate required permissions for administrative functions with deny-by-default behavior.                                         |
-| SR-07 | Business flow control        | Secure APIs validate sensitive workflow order, per-user limits, and stock constraints.                                                        |
-| SR-08 | SSRF protection              | URL validation previews use allowlists, private host rejection, and redirect policy metadata without real network access.                     |
-| SR-09 | Security configuration       | Secure APIs suppress debug details, constrain CORS with allowlists, apply security headers, and disable caching for diagnostics.              |
-| SR-10 | API inventory management     | Secure APIs validate API environment, version, exposure, owner, lifecycle state, and protection parity before processing.                     |
-| SR-11 | External response validation | Third-party API responses are treated as untrusted input and validated for provider identity, redirect target, schema, and privileged fields. |
-| SR-12 | Secret management            | `.env`, keys, and tokens are excluded from Git tracking.                                                                                      |
-| SR-13 | Request boundary             | JSON bodies require `application/json`, valid syntax, and a maximum size of 16 KiB.                                                           |
-| SR-14 | Browser defenses             | Shared responses apply CSP, frame denial, MIME-sniffing prevention, referrer restrictions, and feature restrictions.                          |
-| SR-15 | Secure development process   | Vulnerable APIs default to disabled with loopback binding, while CI runs dependency audit, formatting, lint, tests, type-checking, and build. |
+| ID    | Requirement                  | Description                                                                                                                                                                                         |
+| ----- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SR-01 | Local-only execution         | README and UI screens must state that vulnerable APIs must not be deployed publicly.                                                                                                                |
+| SR-02 | Route separation             | Vulnerable APIs and secure APIs are clearly separated to prevent accidental misuse.                                                                                                                 |
+| SR-03 | Authorization checks         | Secure APIs validate the relationship between finite synthetic scenario principals and target resources. Real services must derive principals from validated sessions or tokens.                    |
+| SR-04 | Input validation             | Request bodies, queries, and URLs are schema-validated; duplicate scalar parameters and unknown fields in strict schemas are rejected.                                                              |
+| SR-05 | Rate limiting                | Secure APIs limit excessive requests as a single-process demonstration control.                                                                                                                     |
+| SR-06 | Function-level authorization | Secure APIs validate required permissions for administrative functions with deny-by-default behavior.                                                                                               |
+| SR-07 | Business flow control        | Secure APIs validate sensitive workflow order, per-user limits, and stock constraints.                                                                                                              |
+| SR-08 | SSRF protection              | URL validation previews use allowlists, private host rejection, and redirect policy metadata without real network access.                                                                           |
+| SR-09 | Security configuration       | Secure APIs suppress debug details, compare the actual `Origin` with the request target without enabling cross-origin access, apply security headers, and disable diagnostic caching.               |
+| SR-10 | API inventory management     | Secure APIs validate API environment, version, exposure, owner, lifecycle state, and protection parity before processing.                                                                           |
+| SR-11 | External response validation | Third-party API responses are treated as untrusted input and validated for provider identity, redirect target, schema, and privileged fields.                                                       |
+| SR-12 | Secret management            | `.env`, keys, and tokens are excluded from Git tracking.                                                                                                                                            |
+| SR-13 | Request boundary             | JSON bodies require `application/json` with optional `charset=utf-8`, valid UTF-8 and JSON, and declared and actual sizes no greater than 16 KiB.                                                   |
+| SR-14 | Browser defenses             | Shared responses apply CSP, frame denial, MIME-sniffing prevention, referrer restrictions, and feature restrictions.                                                                                |
+| SR-15 | Secure development process   | Vulnerable APIs default to disabled and require development/test mode, loopback URL/Host checks, and loopback binding; CI runs dependency audit, formatting, lint, tests, type-checking, and build. |
 
 ## Verification Requirements
 
@@ -59,8 +59,8 @@
 - Third-party API response demos must not perform real external API calls from either vulnerable or secure APIs.
 - OpenAPI must document implemented API routes, inputs, error responses, and safety notes.
 - Japanese and English UI modes must keep visible text consistent within the selected language.
-- Tests verify that an unset `LAB_MODE` keeps vulnerable APIs disabled and that only explicit local mode enables them.
-- Malformed JSON, non-JSON content types, and bodies larger than 16 KiB are rejected with consistent 400, 415, and 413 responses.
+- Tests verify that an unset or invalid `LAB_MODE` keeps vulnerable APIs disabled and that only explicit local mode with loopback request conditions enables them.
+- Invalid UTF-8, malformed JSON, unsupported content types, and bodies larger than 16 KiB are rejected with consistent 400, 415, and 413 responses.
 - HTML and API responses apply baseline security headers, and API responses use `no-store`.
 
 ### Requirements-to-Verification Traceability
@@ -151,16 +151,17 @@ requirementDiagram
     shared_security_pipeline - satisfies -> platform_hardening
 ```
 
-## Learning Module State Transition
+## Learning Module Interaction Flow
+
+The current UI does not persist completion state. Running a demo invokes the vulnerable and secure APIs in parallel.
 
 ```mermaid
-stateDiagram-v2
-    [*] --> NotStarted
-    NotStarted --> Reading: Open overview
-    Reading --> RunningVulnerableDemo: Run vulnerable API
-    RunningVulnerableDemo --> Comparing: Compare with secure API
-    Comparing --> Reviewed: Review mitigations
-    Reviewed --> Completed: Review checklist items
+flowchart TD
+    A[Select a topic] --> B[Review overview and defensive design]
+    B --> C[Run API demo]
+    C --> D[Invoke vulnerable and secure APIs in parallel]
+    D --> E[Compare both results]
+    E --> F[Review implementation flow and checklist]
 ```
 
 ## UI/UX Requirements

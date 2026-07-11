@@ -19,7 +19,7 @@ describe("learning modules", () => {
       "API9:2023",
       "API10:2023",
     ];
-    const riskCategories = learningModules.map((item) => item.riskCategory);
+    const riskCategories = learningModules.map((item) => item.riskCategory.en);
 
     for (const expectedCategory of expectedCategories) {
       expect(
@@ -35,7 +35,7 @@ describe("learning modules", () => {
   });
 
   it("orders topics by OWASP API number", () => {
-    expect(learningModules.map((item) => item.riskCategory)).toEqual([
+    expect(learningModules.map((item) => item.riskCategory.en)).toEqual([
       expect.stringContaining("API1:2023"),
       expect.stringContaining("API2:2023"),
       expect.stringContaining("API3:2023"),
@@ -53,6 +53,8 @@ describe("learning modules", () => {
     for (const learningModule of learningModules) {
       expect(learningModule.title.ja).toBeTruthy();
       expect(learningModule.title.en).toBeTruthy();
+      expect(learningModule.riskCategory.ja).toBeTruthy();
+      expect(learningModule.riskCategory.en).toBeTruthy();
       expect(learningModule.summary.ja).toBeTruthy();
       expect(learningModule.summary.en).toBeTruthy();
       expect(learningModule.checklist.ja.length).toBe(

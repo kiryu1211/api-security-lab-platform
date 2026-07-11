@@ -19,6 +19,18 @@ describe("lab runtime safety", () => {
     ).toMatchObject({ ok: false, status: 403 });
   });
 
+  it.each(["LOCAL", " local ", "invalid"])(
+    "fails closed when LAB_MODE is invalid: %s",
+    (labMode) => {
+      expect(
+        assertVulnerableApisEnabled(localhostRequest, {
+          LAB_MODE: labMode,
+          NODE_ENV: "development",
+        }),
+      ).toMatchObject({ ok: false, status: 403 });
+    },
+  );
+
   it("enables vulnerable APIs only in local development or test mode", () => {
     expect(
       getLabRuntimeSafety({ LAB_MODE: "local", NODE_ENV: "development" }),

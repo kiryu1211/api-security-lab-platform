@@ -684,7 +684,7 @@ export function HomePage() {
                     aria-pressed={isSelected}
                   >
                     <span className="topic-card-topline">
-                      <span>{module.riskCategory}</span>
+                      <span>{module.riskCategory[language]}</span>
                     </span>
                     <strong>{module.title[language]}</strong>
                     <span className="topic-summary">
@@ -710,7 +710,9 @@ export function HomePage() {
               data-reveal
               key={selectedModule.id}
             >
-              <span className="eyebrow">{selectedModule.riskCategory}</span>
+              <span className="eyebrow">
+                {selectedModule.riskCategory[language]}
+              </span>
               <h2 id="detail-heading">{t.detail.heading}</h2>
               <h3>{selectedModule.title[language]}</h3>
               <p>{selectedModule.summary[language]}</p>
@@ -746,7 +748,7 @@ export function HomePage() {
               <article className="selected-topic-summary" data-reveal>
                 <span className="mini-label">{t.comparison.selectedTopic}</span>
                 <h3>{selectedModule.title[language]}</h3>
-                <p>{selectedModule.riskCategory}</p>
+                <p>{selectedModule.riskCategory[language]}</p>
                 <div className="selected-topic-meta">
                   <span>
                     {t.topics.difficultyLabel}:{" "}
@@ -943,7 +945,7 @@ function OpeningAnimation({
           <div className="api-line rejected-line" />
           <div className="api-packet request-packet">{text.request}</div>
           <div className="api-packet response-packet">{text.response}</div>
-          <div className="api-packet attack-packet">Attack</div>
+          <div className="api-packet attack-packet">{text.attack}</div>
           <div className="defense-shield">
             <span>{text.blocked}</span>
           </div>

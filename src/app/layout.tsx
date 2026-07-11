@@ -14,8 +14,9 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "API Security Lab Platform",
-  description: "Local-first API security learning and verification platform.",
+  title: "APIセキュリティ学習・検証プラットフォーム",
+  description:
+    "脆弱なAPI例と安全なAPI例をローカル環境で比較する学習・検証プラットフォームです。",
 };
 
 export default function RootLayout({

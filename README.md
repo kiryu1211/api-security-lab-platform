@@ -31,7 +31,7 @@ The purpose of this system is to provide an isolated environment for examining h
 - The learning UI includes a topic list, topic overview, vulnerable/secure comparison view, visual implementation-flow annotations, and implementation checklist.
 - UI text and learning module content are managed through Japanese and English resources instead of being embedded directly in the screen component.
 - Route separation is implemented across health checks, lab samples, BOLA orders, authentication sessions, rate-limit search, admin invitations, business-flow reservations, profile updates, URL fetch previews, configuration diagnostics, API inventory operations, and third-party profile imports under `/api/vulnerable/*` and `/api/secure/*`.
-- Shared API response helpers, Zod request validation, and safe local sample users/resources are available.
+- Shared API response helpers, Zod request validation, and synthetic local demo users and resources are available. Demo identity fields select finite scenarios; they are not authenticated principals.
 - OpenAPI specification is available at [`docs/api/openapi.json`](docs/api/openapi.json).
 - The BOLA module includes runnable vulnerable and secure order APIs for comparing missing ownership checks with verified ownership checks.
 - The authentication module includes runnable vulnerable and secure session APIs for comparing insufficient token validation with signature, expiration, revocation, and permission validation.
@@ -62,11 +62,13 @@ Official reference: <https://owasp.org/API-Security/editions/2023/en/0x11-t10/>
 
 The vulnerable examples are for controlled local verification only. They must not be deployed to a public environment. The system should clearly separate vulnerable routes from secure routes and display warnings whenever a vulnerable scenario is used.
 
-Vulnerable API routes are disabled by default. They are enabled only when `LAB_MODE=local` is explicitly set and the application is not running with `NODE_ENV=production`. `npm run dev` and `npm run start` bind only to `127.0.0.1`. Secure routes remain available for comparison and verification.
+Vulnerable API routes are disabled by default. They are enabled only when `LAB_MODE=local`, `NODE_ENV` is exactly `development` or `test`, and the request URL hostname is `localhost`, `127.0.0.1`, or `::1`. When present, the `Host` header must also identify one of those loopback hosts. Invalid `LAB_MODE` values fail closed. `npm run dev` and `npm run start` bind only to `127.0.0.1`; hostname checks are defense in depth and do not make a publicly forwarded development server safe. Secure routes remain available for comparison and verification.
 
 SSRF and third-party API response demos do not perform real outbound network access from either vulnerable or secure APIs; they return verification preview metadata or synthetic responses only.
 
-HTML and API responses apply baseline controls such as frame denial, Content Security Policy, MIME-sniffing prevention, referrer restrictions, and no-store API caching. JSON bodies require `application/json` and are limited to 16 KiB.
+HTML and API responses apply baseline controls such as frame denial, Content Security Policy, MIME-sniffing prevention, referrer restrictions, and no-store API caching. JSON bodies require `application/json`, optionally with `charset=utf-8`, must contain valid UTF-8 and JSON, and are limited to 16 KiB by declared and actual byte size. Repeated scalar query parameters and unknown parameters on strict query schemas are rejected rather than resolved with last-value-wins behavior.
+
+Demo `userId`, `actorUserId`, and token IDs are finite synthetic scenario selectors, not sessions or Bearer credentials. Rate-limit buckets, reservation totals, inventory, and attempt counters are single-process in-memory demo state; they reset on restart and are not production or distributed controls.
 
 ## Usage
 

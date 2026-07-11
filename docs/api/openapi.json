@@ -3,7 +3,7 @@
   "info": {
     "title": "API Security Lab Platform API",
     "version": "0.1.0",
-    "description": "Local-first API specification for comparing vulnerable and secure API examples. Vulnerable routes are local-only, disabled by default, require explicit LAB_MODE=local in a non-production loopback environment, and must not be publicly deployed. JSON request bodies require application/json and are limited to 16 KiB."
+    "description": "Local-first API specification for comparing vulnerable and secure API examples. Vulnerable routes are local-only, disabled by default, and require LAB_MODE=local, NODE_ENV=development or test, a loopback request URL hostname, and a loopback Host header when present. They must not be publicly deployed. JSON bodies allow application/json with optional charset=utf-8, require valid UTF-8 and JSON, and enforce declared and actual sizes up to 16 KiB. Demo identity fields select finite synthetic scenarios and are not authenticated principals. In-memory counters are single-process demo controls. Shared API responses include Cache-Control: no-store, Referrer-Policy: no-referrer, and X-Content-Type-Options: nosniff; Next.js applies baseline security headers to all paths."
   },
   "servers": [
     {
@@ -702,7 +702,7 @@
       "post": {
         "tags": ["secure"],
         "summary": "Protected security configuration diagnostics",
-        "description": "Applies origin allowlisting, suppressed debug details, no-store caching, and security response headers before returning minimal synthetic public configuration.",
+        "description": "Requires the actual Origin header, when present, to exactly match the request URL origin; it does not enable cross-origin access or return Access-Control-Allow-Origin. It suppresses debug details, disables caching, and applies security response headers before returning minimal synthetic public configuration. The body requestedOrigin is synthetic scenario data and is not used for authorization.",
         "requestBody": {
           "$ref": "#/components/requestBodies/SecurityConfigAuditRequest"
         },
@@ -1221,6 +1221,7 @@
       "UserId": {
         "name": "userId",
         "in": "query",
+        "description": "Finite synthetic scenario selector, not an authenticated principal. Must appear at most once.",
         "required": false,
         "schema": {
           "type": "string",
@@ -1235,6 +1236,7 @@
       "UserIdRequired": {
         "name": "userId",
         "in": "query",
+        "description": "Required finite synthetic scenario selector, not an authenticated principal. Must appear exactly once.",
         "required": true,
         "schema": {
           "type": "string",
@@ -1258,6 +1260,7 @@
       "ResourceType": {
         "name": "resourceType",
         "in": "query",
+        "description": "Optional scalar filter. Must appear at most once.",
         "required": false,
         "schema": {
           "type": "string",
@@ -1267,6 +1270,7 @@
       "SearchQuery": {
         "name": "q",
         "in": "query",
+        "description": "Optional scalar search term. Must appear at most once.",
         "required": false,
         "schema": {
           "type": "string",
@@ -1319,7 +1323,7 @@
         }
       },
       "UnsupportedMediaType": {
-        "description": "Content-Type is not application/json with an optional charset.",
+        "description": "Content-Type is not application/json with no parameter or the single parameter charset=utf-8.",
         "content": {
           "application/json": {
             "schema": { "$ref": "#/components/schemas/ApiError" }

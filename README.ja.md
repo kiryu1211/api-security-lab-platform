@@ -4,7 +4,7 @@
 
 ## 目的
 
-現代のアプリケーションでは、APIがデータアクセスや業務処理の主要な入口となることが多くあります。認可不備、認証不備、過剰なデータ公開、レート制限不足、業務フローの悪用、セキュリティ設定不備、旧API管理の不備、安全でない外部リクエスト処理、外部API応答の過信は、重大なセキュリティ事故につながる可能性があります。
+現代のアプリケーションでは、APIがデータアクセスや業務処理の主要な入口となっています。認可不備、認証不備、過剰なデータ公開、レート制限不足、業務フローの悪用、セキュリティ設定不備、旧API管理の不備、安全でない外部リクエスト処理、外部API応答の過信は、重大なセキュリティ事故につながる可能性があります。
 
 このシステムの目的は、API脆弱性がどのように発生し、どのような設計で防止できるのかを、隔離された環境で確認できるようにすることです。
 
@@ -31,11 +31,11 @@
 - 学習UIとして、学習テーマ一覧、テーマ概要、脆弱APIと安全APIの比較、実装フローの視覚的な注釈、実装チェックリストを用意しています。
 - UI文言と学習モジュールの内容は、画面コンポーネントへ直接埋め込まず、日本語・英語のリソースとして管理しています。
 - ヘルスチェック、サンプルデータ、BOLA注文、認証セッション、レート制限検索、管理者招待、業務フロー予約、プロフィール更新、URL取得プレビュー、設定診断、APIインベントリ操作、外部プロフィール連携を `/api/vulnerable/*` と `/api/secure/*` に分けて実装しています。
-- 共通APIレスポンス、Zodによるリクエスト検証、安全なローカル用サンプルユーザー/リソースを用意しています。
+- 共通APIレスポンス、Zodによるリクエスト検証、ローカルデモ用の合成ユーザーと合成リソースを用意しています。デモの主体情報は有限のシナリオを選ぶための値であり、認証済み主体ではありません。
 - OpenAPI仕様は [`docs/api/openapi.json`](docs/api/openapi.json) に配置しています。
 - BOLAモジュールでは、所有者確認がない脆弱な注文APIと、所有者確認を行う安全な注文APIを実行して比較できます。
 - 認証モジュールでは、不十分なトークン検証を行う脆弱なセッションAPIと、署名状態、期限、失効、権限を検証する安全なセッションAPIを実行して比較できます。
-- レート制限、Broken Function Level Authorization、Sensitive Business Flows、Mass Assignment、SSRF、Security Misconfiguration、Improper Inventory Management、Unsafe Consumption of APIsモジュールでは、脆弱APIと安全APIを実行して比較できます。Broken Function Level Authorizationデモは合成した招待プレビューだけを返し、実メール送信や実アカウント作成は行いません。Security Misconfigurationデモは合成した診断メタデータだけを使い、実設定、秘密情報、実ログを公開しません。Sensitive Business Flowsデモは合成した限定商品データだけを使い、実際の購入や外部決済は行いません。Improper Inventory Managementデモは実トークン発行や通知送信を行いません。SSRFデモとUnsafe Consumption of APIsデモは安全なプレビューまたは合成応答だけを返し、実際の外部ネットワークアクセスは行いません。
+- レート制限、Broken Function Level Authorization、Sensitive Business Flows、Mass Assignment、SSRF、Security Misconfiguration、Improper Inventory Management、Unsafe Consumption of APIsモジュールでは、脆弱APIと安全APIを実行して比較できます。Broken Function Level Authorizationデモは合成した招待プレビューだけを返し、実際のメール送信やアカウント作成は行いません。Security Misconfigurationデモは合成した診断メタデータだけを使い、実際の設定情報、秘密情報、ログを公開しません。Sensitive Business Flowsデモは合成した限定商品データだけを使い、実際の購入や外部決済は行いません。Improper Inventory Managementデモは実際のトークン発行や通知送信を行いません。SSRFデモとUnsafe Consumption of APIsデモは安全なプレビューまたは合成応答だけを返し、実際の外部ネットワークアクセスは行いません。
 - 比較画面では、API1からAPI10までの各テーマについて、`/api/vulnerable/*` と `/api/secure/*` のAPIプログラム全体の流れを表示し、問題箇所を赤、改善箇所を青で確認できます。
 - セキュリティ検証テストでは、公開環境に相当する設定ですべての脆弱APIが無効化されること、安全APIで各脆弱性が再現しないこと、OpenAPIの脆弱ルート説明がローカル限定であること、UI文言リソースが日英で揃っていることを確認します。
 
@@ -62,11 +62,13 @@ OWASP API Security Top 10は、API固有の代表的で影響の大きいセキ�
 
 脆弱なAPI例は、制御されたローカル環境での検証専用です。公開環境へデプロイしてはいけません。脆弱なルートと安全なルートは明確に分離し、脆弱シナリオを利用する画面では警告を表示します。
 
-脆弱APIルートは既定で無効です。明示的に `LAB_MODE=local` を設定し、かつ `NODE_ENV=production` ではない場合にのみ有効化します。`npm run dev` と `npm run start` は `127.0.0.1` だけで待ち受けます。安全APIルートは、比較と検証のために利用できます。
+脆弱APIルートは既定で無効です。`LAB_MODE=local`、`NODE_ENV` が厳密に `development` または `test`、かつリクエストURLのhostnameが `localhost`、`127.0.0.1`、`::1` のいずれかである場合にのみ有効化します。`Host` ヘッダーが存在する場合は、ポート指定を含めて同じループバックホストを示す必要があります。不正な `LAB_MODE` 値は安全側へ倒して無効化します。`npm run dev` と `npm run start` は `127.0.0.1` だけで待ち受けます。hostname検査は多層防御であり、開発サーバーを公開転送して安全にするものではありません。安全APIルートは比較と検証のために利用できます。
 
 SSRFデモと外部API応答デモは、脆弱APIと安全APIのどちらも実際の外部ネットワークアクセスを行わず、検証用のプレビュー情報または合成応答のみを返します。
 
-HTMLとAPIレスポンスには、フレーム埋め込み拒否、Content Security Policy、MIME sniffing拒否、Referrer制御、APIキャッシュ禁止などの共通ヘッダーを適用します。JSON本文は `application/json` のみを受け付け、16 KiBを上限とします。
+HTMLとAPIレスポンスには、フレーム埋め込み拒否、Content Security Policy、MIMEスニッフィング防止、リファラー情報の制限、APIキャッシュ禁止などの共通ヘッダーを適用します。JSON本文は `application/json` と任意の `charset=utf-8` だけを受け付け、正しいUTF-8とJSONを要求し、宣言サイズと実際のバイト数を16 KiB以下に制限します。単一値のクエリパラメーターを重複指定した場合や、strictなクエリスキーマへ未知のパラメーターを指定した場合は、last-value-winsで処理せず拒否します。
+
+デモの `userId`、`actorUserId`、トークンIDは、有限の合成シナリオを選択するための値であり、セッションやBearer認証情報ではありません。レート制限bucket、累積予約数、在庫、試行回数は単一プロセス内のデモ用インメモリ状態であり、再起動で失われ、本番環境や分散環境の制御としては使用できません。
 
 ## 使い方
 

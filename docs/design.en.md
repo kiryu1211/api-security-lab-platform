@@ -22,11 +22,10 @@ flowchart LR
     U[User Browser] --> UI[Learning UI]
     UI --> API[API Layer]
     API --> Safe[Secure API Modules]
-    API --> Vuln[Vulnerable API Modules]
-    API --> Guard[Safety Guard]
+    API --> Guard[Vulnerable API Safety Guard]
+    Guard --> Vuln[Vulnerable API Modules]
     Safe --> Data[In-memory Demo Data]
     Vuln --> Data
-    Guard --> API
 ```
 
 Current demo data is managed as synthetic data under `src/data/`. Persistence is outside the current implementation scope.
@@ -37,10 +36,14 @@ Current demo data is managed as synthetic data under `src/data/`. Persistence is
 classDiagram
     class LearningModule {
         +id
-        +title
-        +riskCategory
-        +overview
-        +warning
+        +riskCategory[ja,en]
+        +difficulty
+        +progress
+        +title[ja,en]
+        +summary[ja,en]
+        +vulnerableCondition[ja,en]
+        +defensiveDesign[ja,en]
+        +checklist[ja,en][]
     }
     class VulnerableScenario {
         +route
@@ -52,14 +55,19 @@ classDiagram
         +requestExample
         +mitigation
     }
-    class ReviewChecklist {
-        +items
-        +completionState
+    class ImplementationWalkthrough {
+        +vulnerable
+        +secure
+    }
+    class LearningContextNote {
+        +ja
+        +en
     }
 
     LearningModule "1" --> "1" VulnerableScenario
     LearningModule "1" --> "1" SecureScenario
-    LearningModule "1" --> "1" ReviewChecklist
+    LearningModule "1" --> "1" ImplementationWalkthrough
+    LearningModule "1" --> "1" LearningContextNote
 ```
 
 ## BOLA Verification Sequence
@@ -83,7 +91,7 @@ sequenceDiagram
     SafeAPI-->>UI: Reject if unauthorized
 ```
 
-## Future Data Model
+## Future Concept: Persistence Data Model (Not Implemented)
 
 The following is a conceptual model for a future persistence layer. The current implementation uses synthetic local demo data instead of a real database.
 
@@ -128,7 +136,7 @@ erDiagram
 ## Security Design
 
 - Vulnerable APIs are clearly separated under `/api/vulnerable/*`, while secure APIs use `/api/secure/*`.
-- Vulnerable APIs default to disabled and require explicit `LAB_MODE=local` in a non-production environment. Development and start commands bind only to `127.0.0.1`.
+- Vulnerable APIs default to disabled and require `LAB_MODE=local`, `NODE_ENV` exactly `development` or `test`, a loopback request URL hostname, and a loopback `Host` header when present. Invalid `LAB_MODE` values are treated as disabled. Development and start commands bind only to `127.0.0.1`. Hostname checks do not prove the connection source and must not be treated as making a publicly forwarded server safe.
 - Screens that operate vulnerable APIs always display warnings that they are local-only and must not be publicly exposed.
 - Secure APIs validate user ID, role, and target resource ownership in the API layer.
 - Broken Function Level Authorization protection validates required feature permissions for administrative functions with deny-by-default behavior.
@@ -137,7 +145,7 @@ erDiagram
 - Security Misconfiguration protection suppresses debug details, compares the actual `Origin` header with the request target for same-origin access, disables diagnostic caching, and sets security response headers. The body `requestedOrigin` remains a synthetic audit-scenario input and is never used for authorization.
 - Unsafe Consumption of APIs protection treats third-party API responses as `unknown` and validates a strict Zod schema, provider identity, the complete HTTPS origin, actual payload size, and privileged fields.
 - Improper Inventory Management protection validates API environment, version, exposure, owner, documentation freshness, lifecycle state, and protection parity before processing.
-- Rate limiting applies to a finite set of known demo users and API routes, removes expired buckets, and caps the in-memory store at 100 entries. Cross-process sharing and per-source limits are outside the current implementation scope.
+- Rate limiting allows three requests per 60-second bucket for a finite set of known demo users and API routes, then rejects the fourth with 429. It removes expired buckets and caps the in-memory store at 100 entries. Cross-process sharing and per-source limits are outside the current implementation scope.
 - HTML responses apply CSP, frame denial, MIME-sniffing prevention, referrer restrictions, and Permissions Policy. API responses add `Cache-Control: no-store`.
 - CI forces `LAB_MODE=disabled` and sequentially runs `npm ci`, dependency audit, formatting, lint, tests, type-checking, and build.
 
@@ -154,9 +162,11 @@ flowchart TD
 
     Route -- "/api/vulnerable/*" --> LocalMode{"LAB_MODE = local"}
     LocalMode -- "No" --> Disabled["403 VULNERABLE_API_DISABLED"]
-    LocalMode -- "Yes" --> Production{"NODE_ENV = production"}
-    Production -- "Yes" --> Disabled
-    Production -- "No" --> VulnerableDemo["Local-only vulnerable demo processing"]
+    LocalMode -- "Yes" --> Runtime{"NODE_ENV = development or test"}
+    Runtime -- "No" --> Disabled
+    Runtime -- "Yes" --> Loopback{"Loopback URL hostname and any Host header"}
+    Loopback -- "No" --> Disabled
+    Loopback -- "Yes" --> VulnerableDemo["Local-only vulnerable demo processing"]
     VulnerableDemo --> SyntheticData
 ```
 
@@ -165,7 +175,7 @@ Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route
 ## API Foundation
 
 - Shared API response helpers are defined in `src/lib/api-response.ts` and return `{ ok, data, meta }` for success or `{ ok, error, meta }` for errors.
-- Shared request validation is defined in `src/lib/request-validation.ts`. JSON bodies require `application/json`; declared and actual body sizes are capped at 16 KiB before Zod schemas from `src/lib/api-schemas.ts` run. Malformed JSON, oversized bodies, and unsupported content types map to consistent 400, 413, and 415 errors.
+- Shared request validation is defined in `src/lib/request-validation.ts`. JSON bodies allow only `application/json` with optional `charset=utf-8`, must contain valid UTF-8 and JSON, and have both declared and actual sizes capped at 16 KiB before Zod schemas run. Invalid UTF-8 or JSON, oversized bodies, and unsupported content types map to consistent 400, 413, and 415 errors. Repeated scalar query values become arrays and fail validation instead of using last-value-wins behavior.
 - Local sample users and resources are defined in `src/data/lab-samples.ts`. They use synthetic demo identifiers and do not include real personal data, logs, credentials, or tokens.
 - `src/lib/lab-sample-service.ts` provides filtered sample data for API modules without introducing database dependencies before persistence is added.
 - `docs/api/openapi.json` documents implemented routes, separated secure/vulnerable tags, shared success/error response shapes, and local-only vulnerable route behavior.
@@ -173,6 +183,16 @@ Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route
 ### Demo Trust Boundary
 
 The `userId`, `actorUserId`, and demo token IDs in this lab are finite synthetic scenario inputs used to compare authentication and authorization patterns. They are not sessions or Bearer tokens that authenticate real users, and each secure API example is scoped to the defensive concern of that module. A real service must derive its principal from a server-validated session or signed token and must never use a client-supplied ID as the authenticated principal.
+
+```mermaid
+flowchart LR
+    Client["Synthetic scenario input from browser"] --> Routes["Secure APIs / vulnerable APIs"]
+    Routes --> Services["Module services"]
+    Services --> Synthetic["Synthetic data and in-memory state"]
+    External["Synthetic third-party API response"] --> Services
+    Services -. "No real outbound calls" .-> Blocked["External network"]
+    Client -. "Not trusted as a real principal" .-> Routes
+```
 
 The in-memory rate limits, reservation totals, stock, and attempt counters are single-process local-demo controls. Multi-instance or persistent operation additionally requires an atomic shared store, trustworthy source identification, audit logging, key management, and TLS termination.
 
@@ -192,7 +212,7 @@ The in-memory rate limits, reservation totals, stock, and attempt counters are s
 
 ## Rate Limiting, Mass Assignment, And SSRF Module Design
 
-- The vulnerable rate-limit route `/api/vulnerable/rate-limit/search` accepts repeated requests without applying limits. The secure route `/api/secure/rate-limit/search` applies a route and demo-user keyed in-memory limit and returns `429 RATE_LIMITED` after the demo threshold.
+- The vulnerable rate-limit route `/api/vulnerable/rate-limit/search` accepts repeated requests without applying limits. The secure route `/api/secure/rate-limit/search` allows three requests in a 60-second bucket keyed by route and demo user, then returns `429 RATE_LIMITED` for the fourth.
 - The vulnerable Mass Assignment route `/api/vulnerable/profile` applies all accepted properties, including privileged fields such as `ownerId` and `role`. The secure route `/api/secure/profile` restricts normal updates to allowlisted profile fields and returns 403 when privileged or ownership fields are present.
 - The vulnerable SSRF route `/api/vulnerable/fetch-url` accepts arbitrary URLs for demonstration without real outbound network access. The secure route `/api/secure/fetch-url` returns a preview that requires HTTPS, rejects private hosts, and allows only `api.example.test`.
 - SSRF demos never perform real outbound network access; both vulnerable and secure routes return preview metadata only.
@@ -207,14 +227,14 @@ The in-memory rate limits, reservation totals, stock, and attempt counters are s
 ## Sensitive Business Flows Module Design
 
 - The vulnerable business-flow route `/api/vulnerable/business-flow/reservations` accepts limited-product reservation requests without workflow order or per-user limit checks after the local-only safety guard passes.
-- The secure business-flow route `/api/secure/business-flow/reservations` validates workflow order, per-user quantity limits, stock constraints, and automation-abuse concerns before reservation.
+- The secure business-flow route `/api/secure/business-flow/reservations` increments a per-user/product automation-attempt counter for every attempt, validates workflow order, cumulative quantity limits, and stock, then updates remaining stock and cumulative reservations only on success. The vulnerable preview does not update this secure state.
 - The comparison UI attempts to reserve four units of `product-demo-001` through `direct-checkout`. The vulnerable route accepts the request, while the secure route returns `403 FORBIDDEN`.
 - The business-flow demo uses synthetic limited-product data only; it does not use real products, orders, payments, personal data, or external service integrations.
 
 ## Security Misconfiguration Module Design
 
 - The vulnerable configuration diagnostics route `/api/vulnerable/config/diagnostics` returns synthetic debug settings, a synthetic stack trace, and permissive CORS response metadata after the local-only safety guard passes.
-- The secure configuration diagnostics route `/api/secure/config/diagnostics` validates the requested origin, suppresses debug details, disables caching, and applies security response headers such as `X-Content-Type-Options`, `Content-Security-Policy`, and `Referrer-Policy`.
+- When an actual `Origin` header is present, the secure configuration diagnostics route `/api/secure/config/diagnostics` requires an exact match with the request URL origin and does not enable cross-origin access. Requests without `Origin`, such as non-browser clients, are accepted. It sends no `Access-Control-Allow-Origin`, suppresses debug details, disables caching, and applies security response headers.
 - The comparison UI places `https://untrusted.example` in the body `requestedOrigin` as a synthetic audit-scenario input. The vulnerable route returns debug details and synthetic metadata for an overly broad CORS policy. The secure route compares the actual `Origin` header with the request target, returns only public diagnostics for same-origin requests, and returns `403 FORBIDDEN` when the actual origin differs.
 - The security misconfiguration demo uses synthetic diagnostic metadata only; it does not expose real configuration, secrets, personal data, internal logs, or real stack traces.
 
