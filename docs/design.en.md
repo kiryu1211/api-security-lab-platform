@@ -279,6 +279,5 @@ flowchart TD
 - Comparison view: displays side-by-side route, request, response, design notes, and implementation flow for vulnerable and secure APIs. The implementation flow shows the full API program flow and highlights problem areas in `/api/vulnerable/*` in red and improvements in `/api/secure/*` in blue.
 - Checklist: displays defensive review points for the selected module. Progress is not currently saved.
 - Vulnerable comparison areas always display local-only and non-public deployment warnings.
-- The local-only warning is repeated immediately before the API demo button and connected to the action with `aria-describedby`.
 - Web Storage persistence for language and opening state is optional; blocked storage falls back to the default language and usable application screen.
 - Network or JSON failures during API demos always clear the running state and announce a localized error.

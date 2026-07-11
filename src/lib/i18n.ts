@@ -72,8 +72,6 @@ export const uiText = {
     },
     warning: {
       label: "ローカル限定に関する注意",
-      shortText:
-        "脆弱APIを含む比較デモです。ローカル環境だけで実行し、外部へ公開しないでください。",
       text: "脆弱APIは、攻撃が成立する条件を観察するために意図的に防御を弱くしています。外部公開すると、所有者確認不足、弱い認証、過度な情報公開、SSRFのような挙動を第三者が直接試せる状態になり、合成データであっても攻撃手順の公開、環境情報の露出、運用環境への誤接続につながります。必ずローカルの学習・検証環境だけで実行し、共有環境や本番環境へ配置しないでください。",
     },
     status: {
@@ -200,8 +198,6 @@ export const uiText = {
     },
     warning: {
       label: "Local-only warning",
-      shortText:
-        "This comparison runs vulnerable APIs. Use it only in a local environment and never expose it publicly.",
       text: "Vulnerable APIs intentionally weaken defenses so you can observe how attacks become possible. If exposed outside a local lab, third parties could directly exercise missing ownership checks, weak authentication, excessive information disclosure, or SSRF-like behavior. Even with synthetic data, this can publish attack steps, expose environment details, or create accidental paths toward operational systems. Run these routes only in a local learning environment and never deploy them to shared or production environments.",
     },
     status: {

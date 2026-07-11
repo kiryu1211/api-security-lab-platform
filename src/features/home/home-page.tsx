@@ -824,14 +824,9 @@ export function HomePage() {
           >
             {selectedDemoModuleId ? (
               <>
-                <p className="demo-safety-reminder" id="demo-local-warning">
-                  <strong>{t.warning.label}: </strong>
-                  {t.warning.shortText}
-                </p>
                 <button
                   className="run-demo-button"
                   type="button"
-                  aria-describedby="demo-local-warning"
                   onClick={() => handleRunDemo(selectedDemoModuleId)}
                   disabled={demoState[selectedDemoModuleId].loading}
                 >

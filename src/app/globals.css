@@ -359,6 +359,8 @@ a {
 }
 
 .api-opening-diagram {
+  --attack-impact-y: 1.3rem;
+  --packet-end: 78%;
   position: relative;
   min-height: 28rem;
   border: 1px solid rgba(148, 163, 184, 0.2);
@@ -514,16 +516,16 @@ a {
 }
 
 .rejected-line {
-  top: calc(34% + 2.2rem);
-  left: calc(50% - 0.4rem);
-  width: 5.8rem;
+  top: calc(34% + 0.2rem);
+  left: 50%;
+  width: 5.4rem;
   rotate: -138deg;
   background: linear-gradient(
     90deg,
     rgba(254, 202, 202, 0.62),
     rgba(254, 202, 202, 0)
   );
-  animation: reflected-line-in 850ms var(--motion-ease) 2650ms both;
+  animation: reflected-line-in 720ms var(--motion-ease) 3400ms both;
 }
 
 .api-packet {
@@ -541,23 +543,25 @@ a {
 }
 
 .request-packet {
+  --packet-start: 10%;
   top: 65%;
-  left: 10%;
-  animation: request-travel 1.65s var(--motion-ease) 900ms both;
+  left: var(--packet-start);
+  animation: request-travel 1.45s var(--motion-ease) 1600ms both;
 }
 
 .response-packet {
+  --packet-start: 44%;
   top: 65%;
-  left: 44%;
+  left: var(--packet-start);
   background: var(--secure);
-  animation: response-travel 1.35s var(--motion-ease) 2550ms both;
+  animation: response-travel 1.35s var(--motion-ease) 3400ms both;
 }
 
 .attack-packet {
   top: 23%;
   left: calc(50% - 2.2rem);
   background: var(--vulnerable);
-  animation: attack-blocked 1.55s var(--motion-ease) 1700ms both;
+  animation: attack-blocked 1.4s var(--motion-ease) 2550ms both;
 }
 
 .defense-shield {
@@ -576,7 +580,7 @@ a {
   background: rgba(15, 118, 110, 0.2);
   box-shadow: 0 0 44px rgba(45, 212, 191, 0.22);
   opacity: 0;
-  animation: shield-block 1.7s var(--motion-ease) 2200ms both;
+  animation: shield-block 1.7s var(--motion-ease) 2750ms both;
 }
 
 .defense-shield::before {
@@ -586,7 +590,7 @@ a {
   border-radius: inherit;
   content: "";
   opacity: 0;
-  animation: shield-impact 760ms var(--motion-ease) 2550ms both;
+  animation: shield-impact 560ms var(--motion-ease) 3250ms both;
 }
 
 .defense-shield span {
@@ -1310,17 +1314,6 @@ a {
   color: var(--muted);
 }
 
-.demo-action-row .demo-safety-reminder {
-  max-width: 48rem;
-  border: 1px solid rgba(180, 35, 24, 0.24);
-  border-radius: 1rem;
-  padding: 0.75rem 0.9rem;
-  color: #7f1d1d;
-  background: rgba(254, 226, 226, 0.72);
-  line-height: 1.6;
-  text-align: center;
-}
-
 .demo-action-row .demo-error {
   color: var(--vulnerable);
   font-weight: 700;
@@ -1598,8 +1591,9 @@ a {
 
 @keyframes request-travel {
   0% {
+    left: var(--packet-start);
     opacity: 0;
-    transform: translateX(0) scale(0.9);
+    transform: scale(0.9);
   }
 
   20%,
@@ -1608,15 +1602,17 @@ a {
   }
 
   100% {
+    left: var(--packet-end);
     opacity: 0;
-    transform: translateX(20rem) scale(1);
+    transform: scale(1);
   }
 }
 
 @keyframes response-travel {
   from {
+    left: var(--packet-start);
     opacity: 0;
-    transform: translate(0, 0) scale(0.9);
+    transform: scale(0.9);
   }
 
   22%,
@@ -1625,8 +1621,9 @@ a {
   }
 
   to {
+    left: var(--packet-end);
     opacity: 0;
-    transform: translate(14rem, 0) scale(1);
+    transform: scale(1);
   }
 }
 
@@ -1643,12 +1640,12 @@ a {
 
   62% {
     opacity: 1;
-    transform: translate(0.15rem, 3.9rem) scale(1.04);
+    transform: translate(0.15rem, var(--attack-impact-y)) scale(1.04);
   }
 
   78% {
     opacity: 1;
-    transform: translate(-1.85rem, 1.45rem) rotate(-10deg) scale(0.9);
+    transform: translate(-1.85rem, 0.65rem) rotate(-10deg) scale(0.9);
   }
 
   100% {
@@ -1823,8 +1820,8 @@ a {
   }
 
   .rejected-line {
-    top: calc(36% + 2rem);
-    left: calc(50% - 0.3rem);
+    top: calc(36% + 0.2rem);
+    left: 50%;
     width: 5rem;
   }
 
@@ -1839,6 +1836,10 @@ a {
 
   .defense-shield {
     top: 36%;
+  }
+
+  .api-opening-diagram {
+    --attack-impact-y: 2rem;
   }
 }
 
@@ -1891,11 +1892,11 @@ a {
   }
 
   .request-packet {
-    left: 4%;
+    --packet-start: 4%;
   }
 
   .response-packet {
-    left: 42%;
+    --packet-start: 42%;
   }
 }
 
