@@ -13,6 +13,11 @@ export const uiText = {
       ja: "日本語",
       en: "英語",
     },
+    theme: {
+      label: "表示テーマ",
+      light: "ライトテーマ",
+      dark: "ダークテーマ",
+    },
     brand: "APIセキュリティ学習・検証プラットフォーム",
     subtitle: "ローカルで安全に学ぶAPIセキュリティ",
     nav: {
@@ -139,6 +144,11 @@ export const uiText = {
     languageNames: {
       ja: "Japanese",
       en: "English",
+    },
+    theme: {
+      label: "Display theme",
+      light: "Light theme",
+      dark: "Dark theme",
     },
     brand: "API Security Lab Platform",
     subtitle: "Local-first API security learning",

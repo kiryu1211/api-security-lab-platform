@@ -349,7 +349,15 @@ describe("phase 7 security verification", () => {
     expect(Object.keys(uiText.ja.comparison).sort()).toEqual(
       Object.keys(uiText.en.comparison).sort(),
     );
+    expect(Object.keys(uiText.ja.theme).sort()).toEqual(
+      Object.keys(uiText.en.theme).sort(),
+    );
     expect(uiText.ja.nav.label).toBe("メインナビゲーション");
     expect(uiText.en.nav.label).toBe("Main navigation");
+    expect(uiText.ja.theme).toEqual({
+      label: "表示テーマ",
+      light: "ライトテーマ",
+      dark: "ダークテーマ",
+    });
   });
 });

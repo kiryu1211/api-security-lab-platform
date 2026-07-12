@@ -19,6 +19,7 @@
 | FR-13 | API inventory scenario          | Demonstrate risks and mitigations for executable legacy or unmanaged APIs.                                                                                             |
 | FR-14 | Third-party response scenario   | Demonstrate overtrusted third-party API response risks and trust-boundary validation.                                                                                  |
 | FR-15 | Language switching              | All screens support switching between Japanese and English. The default UI language is Japanese.                                                                       |
+| FR-16 | Theme switching                 | The shared header provides sun and moon controls for switching between persistent light and dark themes.                                                               |
 
 ## Non-Functional Requirements
 
@@ -170,6 +171,7 @@ flowchart TD
 - Vulnerable and secure examples are separated by color, labels, and explanations.
 - Request and response examples use a layout that makes comparison easy.
 - A shared language switcher must be available on every screen.
+- A shared theme switcher must expose labeled sun and moon controls, indicate the selected theme, and remain keyboard accessible.
 - Japanese mode must keep visible UI text in Japanese.
 - English mode must keep visible UI text in English.
 - Common technical terms such as API, BOLA, SSRF, CVSS, CWE, and OWASP may remain in English in Japanese mode.

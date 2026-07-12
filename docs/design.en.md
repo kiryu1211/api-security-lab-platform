@@ -284,6 +284,7 @@ flowchart TD
 - Japanese mode uses Japanese UI text, and English mode uses English UI text.
 - Common technical terms such as API, BOLA, SSRF, Mass Assignment, and OWASP may remain in English in Japanese mode.
 - UI text is managed in `src/lib/i18n.ts`, and learning module content is managed in `src/data/learning-modules.ts`.
+- The shared header groups the language switcher with labeled sun and moon theme controls. The selected `light` or `dark` value is applied to the root `data-theme` attribute and stored in optional local storage; an early initialization script prevents a light-theme flash before hydration. If storage is blocked, the in-memory selection remains usable.
 
 ## Security Verification Design
 
@@ -299,5 +300,5 @@ flowchart TD
 - Comparison view: displays side-by-side route, request, response, design notes, and implementation flow for vulnerable and secure APIs. The implementation flow shows the full API program flow and highlights problem areas in `/api/vulnerable/*` in red and improvements in `/api/secure/*` in blue.
 - Checklist: displays defensive review points for the selected module. Progress is not currently saved.
 - Vulnerable comparison areas always display local-only and non-public deployment warnings.
-- Web Storage persistence for language and opening state is optional; blocked storage falls back to the default language and usable application screen.
+- Web Storage persistence for language, theme, and opening state is optional; blocked storage falls back to the defaults and a usable application screen.
 - Network or JSON failures during API demos always clear the running state and announce a localized error.

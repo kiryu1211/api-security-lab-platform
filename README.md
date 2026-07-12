@@ -24,6 +24,7 @@ The purpose of this system is to provide an isolated environment for examining h
 - API inventory and legacy version management scenario
 - Unsafe Consumption of APIs and third-party response validation scenario
 - Japanese-first interface with a shared English language switcher on every screen
+- Persistent light and dark themes with sun and moon controls in the shared header
 
 ## Implemented Capabilities
 

@@ -12,7 +12,14 @@ import {
 import { defaultLanguage, isLanguage, uiText, type Language } from "@/lib/i18n";
 
 const languageStorageKey = "lab-ui-language";
+const themeStorageKey = "lab-ui-theme";
 const openingStorageKey = "api-security-lab-opening-seen";
+
+type Theme = "light" | "dark";
+
+function isTheme(value: string | null): value is Theme {
+  return value === "light" || value === "dark";
+}
 
 const difficultyLabels = {
   ja: {
@@ -44,6 +51,7 @@ type DemoEnabledModuleId = LearningModuleId;
 export function HomePage() {
   const openingAutoCloseTimerRef = useRef<number | null>(null);
   const [language, setLanguage] = useState<Language>(defaultLanguage);
+  const [theme, setTheme] = useState<Theme>("light");
   const [openingChecked, setOpeningChecked] = useState(false);
   const [openingVisible, setOpeningVisible] = useState(false);
   const [openingLeaving, setOpeningLeaving] = useState(false);
@@ -78,10 +86,12 @@ export function HomePage() {
   useEffect(() => {
     let cancelled = false;
     let savedLanguage: string | null = null;
+    let savedTheme: string | null = null;
     let openingSeen = false;
 
     try {
       savedLanguage = window.localStorage.getItem(languageStorageKey);
+      savedTheme = window.localStorage.getItem(themeStorageKey);
       openingSeen = window.sessionStorage.getItem(openingStorageKey) === "seen";
     } catch {
       // Storage is optional; privacy settings must not block the application.
@@ -94,6 +104,12 @@ export function HomePage() {
     if (isLanguage(savedLanguage)) {
       setLanguage(savedLanguage);
       document.documentElement.lang = savedLanguage;
+    }
+
+    if (isTheme(savedTheme)) {
+      setTheme(savedTheme);
+      document.documentElement.dataset.theme = savedTheme;
+      document.documentElement.style.colorScheme = savedTheme;
     }
 
     if (reduceMotion || openingSeen) {
@@ -218,6 +234,18 @@ export function HomePage() {
 
     try {
       window.localStorage.setItem(languageStorageKey, nextLanguage);
+    } catch {
+      // Keep the in-memory selection when persistence is unavailable.
+    }
+  }
+
+  function handleThemeChange(nextTheme: Theme) {
+    setTheme(nextTheme);
+    document.documentElement.dataset.theme = nextTheme;
+    document.documentElement.style.colorScheme = nextTheme;
+
+    try {
+      window.localStorage.setItem(themeStorageKey, nextTheme);
     } catch {
       // Keep the in-memory selection when persistence is unavailable.
     }
@@ -532,21 +560,55 @@ export function HomePage() {
           <a href="#comparison">{t.nav.comparison}</a>
           <a href="#checklist">{t.nav.checklist}</a>
         </nav>
-        <div className="language-switcher" aria-label={t.languageSwitcherLabel}>
-          <button
-            type="button"
-            aria-pressed={language === "ja"}
-            onClick={() => handleLanguageChange("ja")}
+        <div className="header-controls">
+          <div
+            className="theme-switcher"
+            aria-label={t.theme.label}
+            role="group"
           >
-            {t.languageNames.ja}
-          </button>
-          <button
-            type="button"
-            aria-pressed={language === "en"}
-            onClick={() => handleLanguageChange("en")}
+            <button
+              type="button"
+              aria-label={t.theme.light}
+              aria-pressed={theme === "light"}
+              title={t.theme.light}
+              onClick={() => handleThemeChange("light")}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="3.5" />
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              aria-label={t.theme.dark}
+              aria-pressed={theme === "dark"}
+              title={t.theme.dark}
+              onClick={() => handleThemeChange("dark")}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20.1 15.4A8.5 8.5 0 0 1 8.6 3.9 8.5 8.5 0 1 0 20.1 15.4Z" />
+              </svg>
+            </button>
+          </div>
+          <div
+            className="language-switcher"
+            aria-label={t.languageSwitcherLabel}
           >
-            {t.languageNames.en}
-          </button>
+            <button
+              type="button"
+              aria-pressed={language === "ja"}
+              onClick={() => handleLanguageChange("ja")}
+            >
+              {t.languageNames.ja}
+            </button>
+            <button
+              type="button"
+              aria-pressed={language === "en"}
+              onClick={() => handleLanguageChange("en")}
+            >
+              {t.languageNames.en}
+            </button>
+          </div>
         </div>
       </header>
 
