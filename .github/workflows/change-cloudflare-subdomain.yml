@@ -22,9 +22,44 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
+          set -euo pipefail
+
+          endpoint="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/subdomain"
+          target_subdomain="api-security-lab-platform"
+          current_response=$(curl --silent --show-error --fail-with-body \
+            --request GET \
+            "$endpoint" \
+            --header "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}")
+          current_subdomain=$(printf '%s' "$current_response" | jq --exit-status --raw-output '.result.subdomain')
+
+          if [ "$current_subdomain" = "$target_subdomain" ]; then
+            echo "workers.dev subdomain is already set to the requested value."
+            exit 0
+          fi
+
           curl --silent --show-error --fail-with-body \
+            --request DELETE \
+            "$endpoint" \
+            --header "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            > /dev/null
+
+          if curl --silent --show-error --fail-with-body \
             --request PUT \
-            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/subdomain" \
+            "$endpoint" \
             --header "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
             --header "Content-Type: application/json" \
-            --data '{"subdomain":"api-security-lab-platform"}'
+            --data "$(jq --null-input --compact-output --arg subdomain "$target_subdomain" '{subdomain: $subdomain}')" \
+            > /dev/null; then
+            echo "workers.dev subdomain changed successfully."
+            exit 0
+          fi
+
+          echo "New subdomain creation failed; restoring the previous subdomain." >&2
+          curl --silent --show-error --fail-with-body \
+            --request PUT \
+            "$endpoint" \
+            --header "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            --header "Content-Type: application/json" \
+            --data "$(jq --null-input --compact-output --arg subdomain "$current_subdomain" '{subdomain: $subdomain}')" \
+            > /dev/null
+          exit 1
