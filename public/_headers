@@ -7,5 +7,11 @@
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
 
-/_next/static/*
+/_next/static/chunks/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/_next/static/css/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/_next/static/media/*
   Cache-Control: public, max-age=31536000, immutable

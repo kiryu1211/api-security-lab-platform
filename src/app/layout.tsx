@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { JetBrains_Mono, Noto_Sans_JP } from "next/font/google";
 import { headers } from "next/headers";
 import Script from "next/script";
-import "./globals.css";
 
 const notoSansJp = Noto_Sans_JP({
   variable: "--font-sans-jp",

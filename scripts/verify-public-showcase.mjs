@@ -42,6 +42,13 @@ const styleDirective =
     .find((directive) => directive.trim().startsWith("style-src ")) ?? "";
 const scriptTags = [...firstHome.matchAll(/<script\b([^>]*)>/g)];
 const styleTags = [...firstHome.matchAll(/<style\b([^>]*)>/g)];
+const stylesheetPaths = [
+  ...new Set(
+    [...firstHome.matchAll(/<link\b[^>]*href="([^"]+\.css)"[^>]*>/g)].map(
+      (match) => match[1],
+    ),
+  ),
+];
 
 requireCondition(
   firstHomeResponse.status === 200,
@@ -101,6 +108,20 @@ requireCondition(
       firstHome.indexOf('class="comparison-grid"'),
   "The public showcase controls are missing or misplaced.",
 );
+requireCondition(stylesheetPaths.length > 0, "No stylesheets were rendered.");
+
+for (const path of stylesheetPaths) {
+  const response = await request(path);
+  const cacheControl = response.headers.get("cache-control") ?? "";
+
+  requireCondition(response.status === 200, `${path} did not return 200.`);
+  requireCondition(
+    cacheControl.includes("max-age=0") &&
+      cacheControl.includes("must-revalidate") &&
+      !cacheControl.includes("immutable"),
+    `${path} can retain stale CSS without revalidation.`,
+  );
+}
 
 const apiCases = [
   ["/api/secure/health", undefined],
@@ -137,5 +158,5 @@ for (const [path, init] of apiCases) {
 }
 
 console.log(
-  `Verified public showcase: ${scriptTags.length} scripts, ${styleTags.length} styles, strict nonces, and blocked APIs.`,
+  `Verified public showcase: ${scriptTags.length} scripts, ${styleTags.length} styles, ${stylesheetPaths.length} revalidated stylesheets, strict nonces, and blocked APIs.`,
 );
