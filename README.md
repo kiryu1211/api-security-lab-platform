@@ -25,6 +25,7 @@ The purpose of this system is to provide an isolated environment for examining h
 - Unsafe Consumption of APIs and third-party response validation scenario
 - Japanese-first interface with a shared English language switcher on every screen
 - Persistent light and dark themes with sun and moon controls in the shared header
+- Read-only public showcase mode that keeps learning content visible while disabling every live API endpoint
 
 ## Implemented Capabilities
 
@@ -39,6 +40,7 @@ The purpose of this system is to provide an isolated environment for examining h
 - Rate limiting, Broken Function Level Authorization, Sensitive Business Flows, Mass Assignment, SSRF, Security Misconfiguration, Improper Inventory Management, and Unsafe Consumption of APIs modules include runnable vulnerable and secure APIs. Broken Function Level Authorization demos use synthetic invitation previews only and send no real email or account creation. Security Misconfiguration demos use synthetic diagnostic metadata only and expose no real configuration, secrets, or logs. Sensitive Business Flows demos use synthetic limited-product data only and perform no real purchase or external payment. Improper Inventory Management demos issue no real tokens and send no notifications. SSRF and Unsafe Consumption of APIs demos return safe previews or synthetic responses only and do not perform real outbound network access.
 - The comparison view shows the full API program flow for every API1 through API10 topic, highlighting problem areas in `/api/vulnerable/*` in red and improvements in `/api/secure/*` in blue.
 - Security verification tests confirm that every vulnerable API is disabled in production-like settings, secure APIs do not reproduce the covered vulnerabilities, OpenAPI vulnerable-route descriptions remain local-only, and Japanese/English UI text resources stay aligned.
+- The application can be built for Cloudflare Workers with OpenNext. Public showcase mode displays the learning UI but rejects both `/api/vulnerable/*` and `/api/secure/*` before route handling.
 
 ## OWASP API Security Top 10 Reference
 
@@ -63,7 +65,9 @@ Official reference: <https://owasp.org/API-Security/editions/2023/en/0x11-t10/>
 
 The vulnerable examples are for controlled local verification only. They must not be deployed to a public environment. The system should clearly separate vulnerable routes from secure routes and display warnings whenever a vulnerable scenario is used.
 
-Vulnerable API routes are disabled by default. They are enabled only when `LAB_MODE=local`, `NODE_ENV` is exactly `development` or `test`, and the request URL hostname is `localhost`, `127.0.0.1`, or `::1`. When present, the `Host` header must also identify one of those loopback hosts. Invalid `LAB_MODE` values fail closed. `npm run dev` and `npm run start` bind only to `127.0.0.1`; hostname checks are defense in depth and do not make a publicly forwarded development server safe. Secure routes remain available for comparison and verification.
+Vulnerable API routes are disabled by default. They are enabled only when `LAB_MODE=local`, `NODE_ENV` is exactly `development` or `test`, and the request URL hostname is `localhost`, `127.0.0.1`, or `::1`. When present, the `Host` header must also identify one of those loopback hosts. Invalid `LAB_MODE` values fail closed. `npm run dev` and `npm run start` bind only to `127.0.0.1`; hostname checks are defense in depth and do not make a publicly forwarded development server safe. Secure routes remain available only outside public showcase mode for comparison and verification.
+
+Public deployments must set `PUBLIC_SHOWCASE=true` and `LAB_MODE=disabled`. Public showcase mode replaces the API execution control with a bilingual read-only notice and rejects every `/api/*` request, including secure routes, with `403 PUBLIC_SHOWCASE_API_DISABLED` and `Cache-Control: no-store`. Any non-empty `PUBLIC_SHOWCASE` value other than the explicit value `false` fails closed into public showcase mode.
 
 SSRF and third-party API response demos do not perform real outbound network access from either vulnerable or secure APIs; they return verification preview metadata or synthetic responses only.
 
@@ -82,6 +86,8 @@ Demo `userId`, `actorUserId`, and token IDs are finite synthetic scenario select
 
 Vulnerable APIs are for local verification only. Do not run them in shared or public environments.
 
+The Cloudflare Workers configuration is a read-only public showcase. It exposes learning content, request examples, synthetic response examples, design differences, and implementation flows, but it does not provide live API demos.
+
 ## Development Commands
 
 - `npm ci`: reproducibly install dependencies locked in `package-lock.json`.
@@ -92,6 +98,10 @@ Vulnerable APIs are for local verification only. Do not run them in shared or pu
 - `npm run typecheck`: run TypeScript type checking.
 - `npm run test`: run the Vitest suite.
 - `npm run build`: create a production build.
+- `npm run build:cloudflare`: create the OpenNext Cloudflare Worker bundle.
+- `npm run preview:cloudflare`: build and preview the Worker locally with workerd.
+- `npm run dry-run:cloudflare`: validate the Worker upload and report its bundle size without deploying.
+- `npm run deploy:cloudflare`: deploy the already built Worker with Wrangler credentials supplied by the deployment environment.
 
 Run verification commands sequentially. `npm run build` and `npm run typecheck` both read Next.js generated type files under `.next/`, so they should not be run in parallel.
 
@@ -109,4 +119,4 @@ The default UI language is Japanese. Every screen should provide a shared langua
 
 ## Publication Safety Check
 
-Before publication, verify that no secrets, credentials, private logs, local databases, or developer-only roadmaps are tracked by Git. Public documentation must clearly state that vulnerable demos are local-only and must not be run in public environments.
+Before publication, verify that no secrets, credentials, private logs, local databases, or developer-only roadmaps are tracked by Git. Public documentation must clearly state that vulnerable demos are local-only and must not be run in public environments. Cloudflare account IDs and API tokens are deployment secrets and must not be stored in repository files.

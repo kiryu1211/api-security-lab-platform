@@ -128,6 +128,9 @@ export const uiText = {
       demoLoading: "APIを実行しています...",
       demoError:
         "APIデモを完了できませんでした。ローカルサーバーの状態を確認して、もう一度実行してください。",
+      publicShowcaseLabel: "公開ショーケース",
+      publicShowcaseText:
+        "この公開サイトでは安全のためライブAPI実行を停止しています。リクエスト例、合成レスポンス例、設計差分、実装フローは閲覧できます。APIデモはローカル環境で実行してください。",
       vulnerableResult: "脆弱APIの結果",
       secureResult: "安全APIの結果",
       resultMeaning: "この結果が表すこと",
@@ -260,6 +263,9 @@ export const uiText = {
       demoLoading: "Running APIs...",
       demoError:
         "The API demo could not be completed. Check the local server and try again.",
+      publicShowcaseLabel: "Public showcase",
+      publicShowcaseText:
+        "Live API execution is disabled on this public site for safety. Request examples, synthetic response examples, design differences, and implementation flows remain available. Run API demos only in a local environment.",
       vulnerableResult: "Vulnerable API result",
       secureResult: "Secure API result",
       resultMeaning: "What this result means",

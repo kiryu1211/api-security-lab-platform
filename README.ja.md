@@ -25,6 +25,7 @@
 - 外部API応答の過信と検証のシナリオ
 - 日本語を初期表示とし、全画面共通の言語切替で英語表示に対応
 - 共通ヘッダーの太陽・月ボタンによるライト／ダークテーマの切り替えと、選択したテーマの保持
+- 学習コンテンツを表示しながら、すべてのライブAPIを停止する読み取り専用の公開ショーケースモード
 
 ## 実装済みの内容
 
@@ -39,6 +40,7 @@
 - レート制限、Broken Function Level Authorization、Sensitive Business Flows、Mass Assignment、SSRF、Security Misconfiguration、Improper Inventory Management、Unsafe Consumption of APIsモジュールでは、脆弱APIと安全APIを実行して比較できます。Broken Function Level Authorizationデモは合成した招待プレビューだけを返し、実際のメール送信やアカウント作成は行いません。Security Misconfigurationデモは合成した診断メタデータだけを使い、実際の設定情報、秘密情報、ログを公開しません。Sensitive Business Flowsデモは合成した限定商品データだけを使い、実際の購入や外部決済は行いません。Improper Inventory Managementデモは実際のトークン発行や通知送信を行いません。SSRFデモとUnsafe Consumption of APIsデモは安全なプレビューまたは合成応答だけを返し、実際の外部ネットワークアクセスは行いません。
 - 比較画面では、API1からAPI10までの各テーマについて、`/api/vulnerable/*` と `/api/secure/*` のAPIプログラム全体の流れを表示し、問題箇所を赤、改善箇所を青で確認できます。
 - セキュリティ検証テストでは、公開環境に相当する設定ですべての脆弱APIが無効化されること、安全APIで各脆弱性が再現しないこと、OpenAPIの脆弱ルート説明がローカル限定であること、UI文言リソースが日英で揃っていることを確認します。
+- OpenNextを使用してCloudflare Workers向けにビルドできます。公開ショーケースモードでは学習UIを表示しますが、`/api/vulnerable/*` と `/api/secure/*` の両方をRoute Handlerへ到達する前に拒否します。
 
 ## OWASP API Security Top 10参照
 
@@ -63,7 +65,9 @@ OWASP API Security Top 10は、API固有の代表的で影響の大きいセキ�
 
 脆弱なAPI例は、制御されたローカル環境での検証専用です。公開環境へデプロイしてはいけません。脆弱なルートと安全なルートは明確に分離し、脆弱シナリオを利用する画面では警告を表示します。
 
-脆弱APIルートは既定で無効です。`LAB_MODE=local`、`NODE_ENV` が厳密に `development` または `test`、かつリクエストURLのhostnameが `localhost`、`127.0.0.1`、`::1` のいずれかである場合にのみ有効化します。`Host` ヘッダーが存在する場合は、ポート指定を含めて同じループバックホストを示す必要があります。不正な `LAB_MODE` 値は安全側へ倒して無効化します。`npm run dev` と `npm run start` は `127.0.0.1` だけで待ち受けます。hostname検査は多層防御であり、開発サーバーを公開転送して安全にするものではありません。安全APIルートは比較と検証のために利用できます。
+脆弱APIルートは既定で無効です。`LAB_MODE=local`、`NODE_ENV` が厳密に `development` または `test`、かつリクエストURLのhostnameが `localhost`、`127.0.0.1`、`::1` のいずれかである場合にのみ有効化します。`Host` ヘッダーが存在する場合は、ポート指定を含めて同じループバックホストを示す必要があります。不正な `LAB_MODE` 値は安全側へ倒して無効化します。`npm run dev` と `npm run start` は `127.0.0.1` だけで待ち受けます。hostname検査は多層防御であり、開発サーバーを公開転送して安全にするものではありません。安全APIルートは、公開ショーケースモード以外での比較と検証に限って利用できます。
+
+公開環境では `PUBLIC_SHOWCASE=true` と `LAB_MODE=disabled` を設定します。公開ショーケースモードでは、API実行ボタンを日英の読み取り専用案内へ置き換え、安全APIを含むすべての `/api/*` リクエストを `403 PUBLIC_SHOWCASE_API_DISABLED` と `Cache-Control: no-store` で拒否します。`PUBLIC_SHOWCASE` に空でない不正値を指定した場合も、明示的な `false` 以外は安全側へ倒して公開ショーケースモードとして扱います。
 
 SSRFデモと外部API応答デモは、脆弱APIと安全APIのどちらも実際の外部ネットワークアクセスを行わず、検証用のプレビュー情報または合成応答のみを返します。
 
@@ -82,6 +86,8 @@ HTMLとAPIレスポンスには、フレーム埋め込み拒否、Content Secur
 
 脆弱APIはローカル検証専用です。共有環境や公開環境で実行しないでください。
 
+Cloudflare Workers向け設定は、読み取り専用の公開ショーケースです。学習コンテンツ、リクエスト例、合成レスポンス例、設計差分、実装フローを表示しますが、ライブAPIデモは提供しません。
+
 ## 開発コマンド
 
 - `npm ci`: `package-lock.json` に固定された依存関係を再現可能な形でインストールする。
@@ -92,6 +98,10 @@ HTMLとAPIレスポンスには、フレーム埋め込み拒否、Content Secur
 - `npm run typecheck`: TypeScriptの型チェックを実行する。
 - `npm run test`: Vitestのテストを実行する。
 - `npm run build`: 本番ビルドを作成する。
+- `npm run build:cloudflare`: OpenNextでCloudflare Worker bundleを作成する。
+- `npm run preview:cloudflare`: Workerをビルドし、workerdでローカルプレビューする。
+- `npm run dry-run:cloudflare`: デプロイせずにWorkerのアップロード内容とbundleサイズを検証する。
+- `npm run deploy:cloudflare`: デプロイ環境からWrangler認証情報を渡し、ビルド済みWorkerをデプロイする。
 
 検証コマンドは順番に実行します。`npm run build` と `npm run typecheck` はどちらも `.next/` 配下にNext.jsが生成する型を参照するため、並列実行しないでください。
 
@@ -109,4 +119,4 @@ UIの初期表示言語は日本語とします。すべての画面に共通の
 
 ## 公開時の安全確認
 
-公開前には、秘密情報、認証情報、非公開ログ、ローカルDB、開発者専用ロードマップがGitの追跡対象に含まれていないことを確認します。公開資料では、脆弱なデモがローカル限定であり、公開環境では実行してはいけないことを明記します。
+公開前には、秘密情報、認証情報、非公開ログ、ローカルDB、開発者専用ロードマップがGitの追跡対象に含まれていないことを確認します。公開資料では、脆弱なデモがローカル限定であり、公開環境では実行してはいけないことを明記します。CloudflareのAccount IDとAPI Tokenはデプロイ用の秘密情報として扱い、リポジトリ内のファイルには保存しません。

@@ -48,7 +48,11 @@ type ModuleDemoState = {
 
 type DemoEnabledModuleId = LearningModuleId;
 
-export function HomePage() {
+export function HomePage({
+  publicShowcase = false,
+}: {
+  publicShowcase?: boolean;
+}) {
   const openingAutoCloseTimerRef = useRef<number | null>(null);
   const [language, setLanguage] = useState<Language>(defaultLanguage);
   const [theme, setTheme] = useState<Theme>("light");
@@ -458,6 +462,10 @@ export function HomePage() {
   }
 
   async function handleRunDemo(moduleId: DemoEnabledModuleId) {
+    if (publicShowcase) {
+      return;
+    }
+
     setDemoState((current) => ({ ...current, [moduleId]: { loading: true } }));
 
     try {
@@ -886,7 +894,12 @@ export function HomePage() {
             }
             aria-live="polite"
           >
-            {selectedDemoModuleId ? (
+            {publicShowcase ? (
+              <div className="public-showcase-notice" role="status">
+                <strong>{t.comparison.publicShowcaseLabel}</strong>
+                <span>{t.comparison.publicShowcaseText}</span>
+              </div>
+            ) : selectedDemoModuleId ? (
               <>
                 <button
                   className="run-demo-button"

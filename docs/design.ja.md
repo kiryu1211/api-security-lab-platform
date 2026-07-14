@@ -11,6 +11,7 @@
 - テスト: Vitest
 - Lint・フォーマット: ESLint と Prettier
 - API仕様: `docs/api/openapi.json` のOpenAPI仕様
+- 公開実行環境: OpenNextを使用したCloudflare Workers上の読み取り専用公開ショーケース
 - データベース・ORM: 未導入。現在のデモはインメモリの状態と合成データで動作する
 
 TypeScriptを使用する理由は、APIリクエスト、レスポンス、認可対象リソース、学習モジュールを型で管理し、脆弱な例と安全な例の違いを明確にしやすいためです。OpenAPIは、実装済みAPIの仕様と検証観点を文書化するために使用します。
@@ -147,7 +148,8 @@ erDiagram
 - Improper Inventory Management対策では、APIの環境、バージョン、公開範囲、所有者、文書の更新状況、退役状態、保護策の適用状況を処理前に検証する。
 - レート制限は、有限の既知デモユーザーとAPIルート単位で60秒間に3回まで適用し、4回目を429で拒否する。期限切れbucketを削除し、インメモリストアは最大100件に制限する。複数プロセス間の共有や送信元単位の制限は現在の実装範囲に含めない。
 - HTMLレスポンスにはCSP、フレーム埋め込み拒否、MIME sniffing拒否、Referrer制御、Permissions Policyを適用し、APIレスポンスには`Cache-Control: no-store`を追加する。
-- CIでは`LAB_MODE=disabled`を強制し、`npm ci`、依存監査、整形、lint、テスト、型検査、ビルドを順に実行する。
+- 公開ショーケースモードは`PUBLIC_SHOWCASE=true`で有効化する。Middlewareは安全APIを含むすべての`/api/*`リクエストをRoute Handlerへ到達する前に拒否し、UIでは実行操作を日英の読み取り専用案内へ置き換える。空でない値のうち明示的な`false`以外は、安全側へ倒して公開境界を有効にする。
+- CIでは`LAB_MODE=disabled`と`PUBLIC_SHOWCASE=true`を強制し、依存関係とアプリケーションの検証、OpenNext Workerのビルド、Wrangler dry runを順に実行する。デプロイは検証成功後、かつリポジトリ設定で明示的に有効化した場合だけ実行する。
 
 ### ルート分離と脆弱API安全ガード
 
@@ -155,7 +157,9 @@ erDiagram
 
 ```mermaid
 flowchart TD
-    Request["APIリクエスト"] --> Route{"ルート種別"}
+    Request["APIリクエスト"] --> PublicShowcase{"PUBLIC_SHOWCASE = true"}
+    PublicShowcase -- "はい" --> PublicDisabled["403 PUBLIC_SHOWCASE_API_DISABLED"]
+    PublicShowcase -- "いいえ" --> Route{"ルート種別"}
     Route -- "/api/secure/*" --> SecureChecks["入力検証とモジュール別の防御"]
     SecureChecks --> SyntheticData["合成データまたはインメモリ状態"]
     SyntheticData --> Response["共通形式のAPIレスポンス"]
@@ -171,6 +175,13 @@ flowchart TD
 ```
 
 ヘルスチェック、サンプルデータ、BOLA注文、認証セッション、レート制限検索、管理者招待、業務フロー予約、プロフィール更新、URL取得プレビュー、設定診断、APIインベントリ操作、外部プロフィール連携の各Route Handlerを `/api/vulnerable/*` と `/api/secure/*` に分けます。脆弱APIルートは、レスポンスを返す前に共通の安全ガードを通します。
+
+### Cloudflare公開ショーケース
+
+- `@opennextjs/cloudflare`でNext.jsアプリケーションを`.open-next/worker.js`へ変換し、Wranglerが`.open-next/assets`の生成済み静的assetを配信する。
+- `wrangler.jsonc`で公開実行環境を`LAB_MODE=disabled`、`NODE_ENV=production`、`PUBLIC_SHOWCASE=true`に固定する。
+- GitHub ActionsではCloudflare認証情報をリポジトリのSecretsで管理し、Account IDやAPI Tokenを追跡対象ファイルへ記録しない。
+- 公開サイトでは学習コンテンツ、リクエスト例、合成レスポンス例、設計差分、実装フローだけを表示し、安全APIと脆弱APIのライブ実行は提供しない。
 
 ## API基盤
 
@@ -292,6 +303,7 @@ flowchart TD
 - 同テストでは、安全APIがBOLA、認証不備、レート制限不足、機能単位認可不備、業務フロー悪用、Mass Assignment、SSRF、セキュリティ設定不備、旧API管理不備、外部API応答の過信を再現しないことを確認する。
 - `src/lib/openapi.test.ts` は、すべての脆弱API操作にローカル限定の説明と公開環境相当での無効化レスポンスが記述されていることを確認する。
 - UI文言リソースは、日英のキー構造が揃っていることをテストし、共通画面ラベルの言語混在を避ける。
+- `src/lib/public-showcase.test.ts`で両API種別のRoute Handler到達前停止を確認する。OpenNext build、Wrangler dry run、workerdへのHTTP確認でデプロイ成果物と実行時境界を検証する。
 
 ## 画面設計
 

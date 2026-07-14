@@ -1363,6 +1363,23 @@ a {
   font-weight: 700;
 }
 
+.public-showcase-notice {
+  display: grid;
+  gap: 0.35rem;
+  max-width: 48rem;
+  border: 1px solid rgba(29, 78, 216, 0.28);
+  border-radius: 1rem;
+  padding: 0.9rem 1rem;
+  color: var(--foreground);
+  background: rgba(219, 234, 254, 0.56);
+  text-align: center;
+}
+
+.public-showcase-notice span {
+  color: var(--muted);
+  line-height: 1.65;
+}
+
 .run-demo-button {
   display: inline-flex;
   align-items: center;
@@ -1918,6 +1935,11 @@ html[data-theme="dark"] .code-walkthrough {
 html[data-theme="dark"] .run-demo-button {
   color: #ffffff;
   background: linear-gradient(135deg, #1e293b, #2563eb);
+}
+
+html[data-theme="dark"] .public-showcase-notice {
+  border-color: rgba(96, 165, 250, 0.4);
+  background: rgba(30, 58, 138, 0.38);
 }
 
 html[data-theme="dark"] .checklist-item {

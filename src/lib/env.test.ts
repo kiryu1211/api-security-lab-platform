@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { assertVulnerableApisEnabled, getLabRuntimeSafety } from "./env";
+import {
+  assertVulnerableApisEnabled,
+  getLabRuntimeSafety,
+  isPublicShowcase,
+} from "./env";
 
 describe("lab runtime safety", () => {
   const localTestEnv = { LAB_MODE: "local", NODE_ENV: "test" };
@@ -15,6 +19,30 @@ describe("lab runtime safety", () => {
     expect(
       assertVulnerableApisEnabled(localhostRequest, {
         NODE_ENV: "development",
+      }),
+    ).toMatchObject({ ok: false, status: 403 });
+  });
+
+  it("enables public showcase mode only for an explicit valid value", () => {
+    expect(isPublicShowcase(undefined)).toBe(false);
+    expect(isPublicShowcase("")).toBe(false);
+    expect(isPublicShowcase("false")).toBe(false);
+    expect(isPublicShowcase("true")).toBe(true);
+  });
+
+  it.each(["TRUE", " true ", "invalid"])(
+    "fails closed into public showcase mode for an invalid value: %s",
+    (value) => {
+      expect(isPublicShowcase(value)).toBe(true);
+    },
+  );
+
+  it("keeps vulnerable APIs disabled when public showcase mode is active", () => {
+    expect(
+      assertVulnerableApisEnabled(localhostRequest, {
+        LAB_MODE: "local",
+        NODE_ENV: "test",
+        PUBLIC_SHOWCASE: "true",
       }),
     ).toMatchObject({ ok: false, status: 403 });
   });

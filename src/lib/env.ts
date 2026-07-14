@@ -7,12 +7,14 @@ export type LabMode = z.infer<typeof labModeSchema>;
 export type LabRuntimeSafety = {
   labMode: LabMode;
   nodeEnv: string;
+  publicShowcase: boolean;
   vulnerableApisEnabled: boolean;
 };
 
-type LabEnvironment = {
+export type LabEnvironment = {
   LAB_MODE?: string;
   NODE_ENV?: string;
+  PUBLIC_SHOWCASE?: string;
 };
 
 export function getLabMode(value?: string): LabMode {
@@ -21,17 +23,29 @@ export function getLabMode(value?: string): LabMode {
   return result.success ? result.data : "disabled";
 }
 
+export function isPublicShowcase(value = process.env.PUBLIC_SHOWCASE): boolean {
+  if (!value || value === "false") {
+    return false;
+  }
+
+  return true;
+}
+
 export function getLabRuntimeSafety(
   env: LabEnvironment = process.env,
 ): LabRuntimeSafety {
   const labMode = getLabMode(env.LAB_MODE);
   const nodeEnv = env.NODE_ENV || "";
+  const publicShowcase = isPublicShowcase(env.PUBLIC_SHOWCASE);
 
   return {
     labMode,
     nodeEnv,
+    publicShowcase,
     vulnerableApisEnabled:
-      labMode === "local" && (nodeEnv === "development" || nodeEnv === "test"),
+      !publicShowcase &&
+      labMode === "local" &&
+      (nodeEnv === "development" || nodeEnv === "test"),
   };
 }
 

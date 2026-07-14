@@ -40,5 +40,9 @@ node_modules/
 dist/
 build/
 .next/
+.open-next/
+.wrangler/
+cloudflare-env.d.ts
+.dev.vars*
 coverage/
 tsconfig.tsbuildinfo

@@ -20,12 +20,13 @@
 | FR-14 | Third-party response scenario   | Demonstrate overtrusted third-party API response risks and trust-boundary validation.                                                                                  |
 | FR-15 | Language switching              | All screens support switching between Japanese and English. The default UI language is Japanese.                                                                       |
 | FR-16 | Theme switching                 | The shared header provides sun and moon controls for switching between persistent light and dark themes.                                                               |
+| FR-17 | Public showcase                 | Public deployment displays the bilingual learning UI in read-only mode and does not provide live API execution.                                                        |
 
 ## Non-Functional Requirements
 
 - Vulnerable APIs are local-only.
 - Vulnerable APIs and secure APIs are clearly separated by routes, labels, and explanations.
-- Public deployment is not assumed.
+- Public deployment is limited to the read-only public showcase; API demos remain local-only.
 - Learning screens support desktop and mobile viewing.
 - Warnings, errors, and success states are displayed clearly.
 
@@ -48,6 +49,7 @@
 | SR-13 | Request boundary             | JSON bodies require `application/json` with optional `charset=utf-8`, valid UTF-8 and JSON, and declared and actual sizes no greater than 16 KiB.                                                   |
 | SR-14 | Browser defenses             | Shared responses apply CSP, frame denial, MIME-sniffing prevention, referrer restrictions, and feature restrictions.                                                                                |
 | SR-15 | Secure development process   | Vulnerable APIs default to disabled and require development/test mode, loopback URL/Host checks, and loopback binding; CI runs dependency audit, formatting, lint, tests, type-checking, and build. |
+| SR-16 | Public API shutdown          | With `PUBLIC_SHOWCASE=true`, every `/api/*` request is rejected before route handling, including secure routes, and API responses remain non-cacheable.                                             |
 
 ## Verification Requirements
 
@@ -63,6 +65,7 @@
 - Tests verify that an unset or invalid `LAB_MODE` keeps vulnerable APIs disabled and that only explicit local mode with loopback request conditions enables them.
 - Invalid UTF-8, malformed JSON, unsupported content types, and bodies larger than 16 KiB are rejected with consistent 400, 415, and 413 responses.
 - HTML and API responses apply baseline security headers, and API responses use `no-store`.
+- Public showcase tests and a workerd preview verify that secure and vulnerable API routes both return `403 PUBLIC_SHOWCASE_API_DISABLED` before route handling.
 
 ### Requirements-to-Verification Traceability
 
@@ -154,7 +157,7 @@ requirementDiagram
 
 ## Learning Module Interaction Flow
 
-The current UI does not persist completion state. Running a demo invokes the vulnerable and secure APIs in parallel.
+The current UI does not persist completion state. In the local lab, running a demo invokes the vulnerable and secure APIs in parallel. In public showcase mode, the execution control is replaced with a read-only notice and no API request is sent.
 
 ```mermaid
 flowchart TD
@@ -175,3 +178,4 @@ flowchart TD
 - Japanese mode must keep visible UI text in Japanese.
 - English mode must keep visible UI text in English.
 - Common technical terms such as API, BOLA, SSRF, CVSS, CWE, and OWASP may remain in English in Japanese mode.
+- Public showcase mode must explain in the selected language that live API execution is disabled and that API demos are local-only.

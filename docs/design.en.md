@@ -11,6 +11,7 @@ The current implementation prioritizes clear API specifications, request validat
 - Testing: Vitest
 - Linting and formatting: ESLint and Prettier
 - API Documentation: OpenAPI in `docs/api/openapi.json`
+- Public runtime: Cloudflare Workers through OpenNext, in read-only public showcase mode
 - Database and ORM: not introduced; current demos use in-memory state and synthetic data
 
 TypeScript is suitable because API requests, responses, authorization targets, and learning modules can be managed with types. OpenAPI documents implemented API specifications and verification perspectives.
@@ -147,7 +148,8 @@ erDiagram
 - Improper Inventory Management protection validates API environment, version, exposure, owner, documentation freshness, lifecycle state, and protection parity before processing.
 - Rate limiting allows three requests per 60-second bucket for a finite set of known demo users and API routes, then rejects the fourth with 429. It removes expired buckets and caps the in-memory store at 100 entries. Cross-process sharing and per-source limits are outside the current implementation scope.
 - HTML responses apply CSP, frame denial, MIME-sniffing prevention, referrer restrictions, and Permissions Policy. API responses add `Cache-Control: no-store`.
-- CI forces `LAB_MODE=disabled` and sequentially runs `npm ci`, dependency audit, formatting, lint, tests, type-checking, and build.
+- Public showcase mode is enabled with `PUBLIC_SHOWCASE=true`. Middleware rejects every `/api/*` request before route handling, including secure routes, and the UI replaces execution controls with a bilingual read-only notice. Any non-empty value other than explicit `false` enables the fail-closed public boundary.
+- CI forces `LAB_MODE=disabled` and `PUBLIC_SHOWCASE=true`, sequentially runs dependency and application checks, builds the OpenNext Worker, and performs a Wrangler dry run. Deployment runs only after verification and only when explicitly enabled at the repository level.
 
 ### Route Separation And Vulnerable API Safety Guard
 
@@ -155,7 +157,9 @@ Secure APIs process synthetic data only after module-specific validation succeed
 
 ```mermaid
 flowchart TD
-    Request["API request"] --> Route{"Route family"}
+    Request["API request"] --> PublicShowcase{"PUBLIC_SHOWCASE = true"}
+    PublicShowcase -- "Yes" --> PublicDisabled["403 PUBLIC_SHOWCASE_API_DISABLED"]
+    PublicShowcase -- "No" --> Route{"Route family"}
     Route -- "/api/secure/*" --> SecureChecks["Input validation and module-specific controls"]
     SecureChecks --> SyntheticData["Synthetic data or in-memory state"]
     SyntheticData --> Response["Shared API response shape"]
@@ -171,6 +175,13 @@ flowchart TD
 ```
 
 Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route handlers for health checks, lab samples, BOLA orders, authentication sessions, rate-limit search, admin invitations, business-flow reservations, profile updates, URL fetch previews, configuration diagnostics, API inventory operations, and third-party profile imports. Vulnerable routes use the shared safety guard before returning a response.
+
+### Cloudflare Public Showcase
+
+- `@opennextjs/cloudflare` converts the Next.js application into `.open-next/worker.js`; Wrangler serves generated static assets from `.open-next/assets`.
+- `wrangler.jsonc` fixes the public runtime to `LAB_MODE=disabled`, `NODE_ENV=production`, and `PUBLIC_SHOWCASE=true`.
+- GitHub Actions keeps Cloudflare credentials in repository secrets and does not place account identifiers or API tokens in tracked files.
+- The public site exposes only learning content, request examples, synthetic response examples, design differences, and implementation flows. Live secure and vulnerable API execution remains unavailable.
 
 ## API Foundation
 
@@ -292,6 +303,7 @@ flowchart TD
 - The same test verifies that secure APIs do not reproduce BOLA, weak authentication, missing rate limiting, broken function-level authorization, business-flow abuse, Mass Assignment, SSRF, security misconfiguration, legacy API inventory gaps, or overtrusted third-party response behavior.
 - `src/lib/openapi.test.ts` verifies that every vulnerable API operation documents local-only behavior and the disabled response for production-like settings.
 - UI text resources are tested for matching Japanese and English key structures to avoid mixed-language shared screen labels.
+- `src/lib/public-showcase.test.ts` verifies the pre-route shutdown for both API families. OpenNext build, Wrangler dry run, and workerd HTTP checks verify the deployment artifact and runtime boundary.
 
 ## Screen Design
 
