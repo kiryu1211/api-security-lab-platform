@@ -8,6 +8,12 @@ Modern applications often depend on APIs as their main interface for data access
 
 The purpose of this system is to provide an isolated environment for examining how API vulnerabilities occur and how secure design prevents them.
 
+## Public Showcase
+
+Read-only learning UI: <https://api-security-lab-platform.kiryuu20031211.workers.dev>
+
+Live API execution is disabled on the public site. Request examples, synthetic response examples, design differences, and implementation flows remain available; runnable API comparisons are local-only.
+
 ## Core Features
 
 - API security learning modules based on OWASP API Security Top 10 concepts
