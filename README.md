@@ -10,7 +10,7 @@ The purpose of this system is to provide an isolated environment for examining h
 
 ## Public Showcase
 
-Read-only learning UI: <https://api-security-lab-platform.kiryuu20031211.workers.dev>
+Read-only learning UI: <https://api-security-lab-platform.api-security-lab-platform.workers.dev>
 
 Live API execution is disabled on the public site. The `Show synthetic results` control renders representative post-run vulnerable and secure results entirely in the browser without sending an API request. Live API comparisons remain local-only.
 

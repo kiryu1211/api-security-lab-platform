@@ -10,7 +10,7 @@
 
 ## 公開ショーケース
 
-読み取り専用の学習UI: <https://api-security-lab-platform.kiryuu20031211.workers.dev>
+読み取り専用の学習UI: <https://api-security-lab-platform.api-security-lab-platform.workers.dev>
 
 公開サイトではライブAPI実行を停止しています。「合成結果を表示」から、APIリクエストを送信せずに、脆弱側と安全側の代表的な実行後結果をブラウザー内で表示できます。ライブAPIの比較実行はローカル限定です。
 
