@@ -63,6 +63,52 @@ jobs:
       - name: Verify Cloudflare free-tier bundle
         run: npm run dry-run:cloudflare
 
+      - name: Verify public showcase boundary in workerd
+        shell: bash
+        run: |
+          npm run preview:cloudflare:built > "$RUNNER_TEMP/cloudflare-preview.log" 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid" 2>/dev/null || true' EXIT
+
+          ready=false
+          for attempt in {1..60}; do
+            if curl --silent --output /dev/null http://127.0.0.1:8787/; then
+              ready=true
+              break
+            fi
+            if ! kill -0 "$preview_pid" 2>/dev/null; then
+              cat "$RUNNER_TEMP/cloudflare-preview.log"
+              exit 1
+            fi
+            sleep 1
+          done
+
+          if [ "$ready" != "true" ]; then
+            cat "$RUNNER_TEMP/cloudflare-preview.log"
+            exit 1
+          fi
+
+          home_status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8787/)
+          secure_status=$(curl --silent --show-error --dump-header "$RUNNER_TEMP/secure-headers.txt" --output "$RUNNER_TEMP/secure-body.json" --write-out '%{http_code}' http://127.0.0.1:8787/api/secure/health)
+          vulnerable_status=$(curl --silent --show-error --dump-header "$RUNNER_TEMP/vulnerable-headers.txt" --output "$RUNNER_TEMP/vulnerable-body.json" --write-out '%{http_code}' http://127.0.0.1:8787/api/vulnerable/health)
+
+          test "$home_status" = "200"
+          test "$secure_status" = "403"
+          test "$vulnerable_status" = "403"
+          grep --fixed-strings 'PUBLIC_SHOWCASE_API_DISABLED' "$RUNNER_TEMP/secure-body.json"
+          grep --fixed-strings 'PUBLIC_SHOWCASE_API_DISABLED' "$RUNNER_TEMP/vulnerable-body.json"
+          grep --ignore-case --fixed-strings 'cache-control: no-store' "$RUNNER_TEMP/secure-headers.txt"
+          grep --ignore-case --fixed-strings 'cache-control: no-store' "$RUNNER_TEMP/vulnerable-headers.txt"
+
+      - name: Store verified Cloudflare Worker
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: verified-cloudflare-worker
+          path: .open-next
+          include-hidden-files: true
+          compression-level: 0
+          retention-days: 1
+
   deploy:
     if: >-
       github.event_name == 'push' &&
@@ -72,8 +118,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       LAB_MODE: disabled
       PUBLIC_SHOWCASE: "true"
     steps:
@@ -91,8 +135,14 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
-      - name: Build Cloudflare Worker
-        run: npm run build:cloudflare
+      - name: Download verified Cloudflare Worker
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: verified-cloudflare-worker
+          path: .open-next
 
       - name: Deploy public showcase
         run: npm run deploy:cloudflare
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

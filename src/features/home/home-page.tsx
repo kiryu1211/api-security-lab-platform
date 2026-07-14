@@ -9,6 +9,10 @@ import {
   type ImplementationLine,
   type LearningModuleId,
 } from "@/data/learning-modules";
+import {
+  showcaseResults,
+  type ShowcaseDemoResult,
+} from "@/data/showcase-results";
 import { defaultLanguage, isLanguage, uiText, type Language } from "@/lib/i18n";
 
 const languageStorageKey = "lab-ui-language";
@@ -34,16 +38,11 @@ const difficultyLabels = {
   },
 } as const;
 
-type DemoResult = {
-  status: number;
-  body: unknown;
-};
-
 type ModuleDemoState = {
   loading: boolean;
   failed?: boolean;
-  vulnerable?: DemoResult;
-  secure?: DemoResult;
+  vulnerable?: ShowcaseDemoResult;
+  secure?: ShowcaseDemoResult;
 };
 
 type DemoEnabledModuleId = LearningModuleId;
@@ -463,6 +462,13 @@ export function HomePage({
 
   async function handleRunDemo(moduleId: DemoEnabledModuleId) {
     if (publicShowcase) {
+      setDemoState((current) => ({
+        ...current,
+        [moduleId]: {
+          loading: false,
+          ...showcaseResults[moduleId],
+        },
+      }));
       return;
     }
 
@@ -837,7 +843,57 @@ export function HomePage({
             </aside>
           </div>
 
-          <div className="comparison-grid">
+          <div
+            className="demo-action-row"
+            data-reveal
+            aria-busy={
+              selectedDemoModuleId
+                ? demoState[selectedDemoModuleId].loading
+                : undefined
+            }
+          >
+            {publicShowcase ? (
+              <>
+                <div className="public-showcase-notice" role="status">
+                  <strong>{t.comparison.publicShowcaseLabel}</strong>
+                  <span>{t.comparison.publicShowcaseText}</span>
+                </div>
+                {selectedDemoModuleId ? (
+                  <button
+                    aria-controls="demo-results"
+                    className="run-demo-button"
+                    type="button"
+                    onClick={() => handleRunDemo(selectedDemoModuleId)}
+                  >
+                    {t.comparison.showSyntheticResults}
+                  </button>
+                ) : null}
+              </>
+            ) : selectedDemoModuleId ? (
+              <>
+                <button
+                  aria-controls="demo-results"
+                  className="run-demo-button"
+                  type="button"
+                  onClick={() => handleRunDemo(selectedDemoModuleId)}
+                  disabled={demoState[selectedDemoModuleId].loading}
+                >
+                  {demoState[selectedDemoModuleId].loading
+                    ? t.comparison.demoLoading
+                    : t.comparison.runDemo}
+                </button>
+                {demoState[selectedDemoModuleId].failed ? (
+                  <p className="demo-error" role="alert">
+                    {t.comparison.demoError}
+                  </p>
+                ) : null}
+              </>
+            ) : (
+              <p>{t.comparison.demoUnavailable}</p>
+            )}
+          </div>
+
+          <div className="comparison-grid" id="demo-results">
             <ComparisonPanel
               badge={t.comparison.vulnerableBadge}
               kind="vulnerable"
@@ -856,7 +912,11 @@ export function HomePage({
                   ? demoState[selectedDemoModuleId].vulnerable
                   : undefined
               }
-              resultTitle={t.comparison.vulnerableResult}
+              resultTitle={
+                publicShowcase
+                  ? t.comparison.vulnerableSyntheticResult
+                  : t.comparison.vulnerableResult
+              }
               noResultLabel={t.comparison.noResult}
               key={`vulnerable-${selectedModule.id}`}
             />
@@ -878,48 +938,14 @@ export function HomePage({
                   ? demoState[selectedDemoModuleId].secure
                   : undefined
               }
-              resultTitle={t.comparison.secureResult}
+              resultTitle={
+                publicShowcase
+                  ? t.comparison.secureSyntheticResult
+                  : t.comparison.secureResult
+              }
               noResultLabel={t.comparison.noResult}
               key={`secure-${selectedModule.id}`}
             />
-          </div>
-
-          <div
-            className="demo-action-row"
-            data-reveal
-            aria-busy={
-              selectedDemoModuleId
-                ? demoState[selectedDemoModuleId].loading
-                : undefined
-            }
-            aria-live="polite"
-          >
-            {publicShowcase ? (
-              <div className="public-showcase-notice" role="status">
-                <strong>{t.comparison.publicShowcaseLabel}</strong>
-                <span>{t.comparison.publicShowcaseText}</span>
-              </div>
-            ) : selectedDemoModuleId ? (
-              <>
-                <button
-                  className="run-demo-button"
-                  type="button"
-                  onClick={() => handleRunDemo(selectedDemoModuleId)}
-                  disabled={demoState[selectedDemoModuleId].loading}
-                >
-                  {demoState[selectedDemoModuleId].loading
-                    ? t.comparison.demoLoading
-                    : t.comparison.runDemo}
-                </button>
-                {demoState[selectedDemoModuleId].failed ? (
-                  <p className="demo-error" role="alert">
-                    {t.comparison.demoError}
-                  </p>
-                ) : null}
-              </>
-            ) : (
-              <p>{t.comparison.demoUnavailable}</p>
-            )}
           </div>
         </section>
 
@@ -1071,7 +1097,7 @@ function ComparisonPanel({
   noResultLabel: string;
   request: string;
   response: string;
-  result?: DemoResult;
+  result?: ShowcaseDemoResult;
   resultTitle: string;
   route: string;
   routeDescription: string;
@@ -1112,6 +1138,7 @@ function ComparisonPanel({
         language={language}
       />
       <div
+        aria-live="polite"
         className="api-result-box"
         data-has-result={result ? "true" : "false"}
       >

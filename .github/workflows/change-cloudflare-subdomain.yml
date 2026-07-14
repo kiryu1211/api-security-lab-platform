@@ -1,0 +1,30 @@
+name: Change Cloudflare workers.dev subdomain
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type CHANGE-WORKERS-SUBDOMAIN to confirm the account-wide change
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  change-subdomain:
+    if: inputs.confirmation == 'CHANGE-WORKERS-SUBDOMAIN'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Change workers.dev account subdomain
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          curl --silent --show-error --fail-with-body \
+            --request PUT \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/subdomain" \
+            --header "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            --header "Content-Type: application/json" \
+            --data '{"subdomain":"api-security-lab-platform"}'

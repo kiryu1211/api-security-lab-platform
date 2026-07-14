@@ -2,25 +2,25 @@
 
 ## Functional Requirements
 
-| ID    | Requirement                     | Description                                                                                                                                                            |
-| ----- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| FR-01 | Learning topic list             | Display API security learning topics.                                                                                                                                  |
-| FR-02 | Vulnerable API demo             | Run vulnerable API examples in a local-only environment.                                                                                                               |
-| FR-03 | Secure API demo                 | Run secure implementations for the same topics.                                                                                                                        |
-| FR-04 | Comparison view                 | Compare requests, responses, design differences, the full API program flow, and implementation-flow problem/improvement points between vulnerable and secure examples. |
-| FR-05 | BOLA scenario                   | Demonstrate object-level authorization flaws and mitigations.                                                                                                          |
-| FR-06 | Authentication scenario         | Demonstrate authentication and token handling issues and mitigations.                                                                                                  |
-| FR-07 | Rate limiting scenario          | Demonstrate designs for limiting excessive requests.                                                                                                                   |
-| FR-08 | Function authorization scenario | Demonstrate risks and mitigations for administrative functions exposed without feature-level authorization.                                                            |
-| FR-09 | Business flow scenario          | Demonstrate excessive use and skipped-step risks in sensitive reservation or purchase flows.                                                                           |
-| FR-10 | Mass assignment scenario        | Demonstrate unauthorized property update risks and mitigations.                                                                                                        |
-| FR-11 | SSRF scenario                   | Demonstrate risks and defenses for outbound URL fetching.                                                                                                              |
-| FR-12 | Security configuration scenario | Demonstrate diagnostic exposure, permissive CORS, and missing security header risks and mitigations.                                                                   |
-| FR-13 | API inventory scenario          | Demonstrate risks and mitigations for executable legacy or unmanaged APIs.                                                                                             |
-| FR-14 | Third-party response scenario   | Demonstrate overtrusted third-party API response risks and trust-boundary validation.                                                                                  |
-| FR-15 | Language switching              | All screens support switching between Japanese and English. The default UI language is Japanese.                                                                       |
-| FR-16 | Theme switching                 | The shared header provides sun and moon controls for switching between persistent light and dark themes.                                                               |
-| FR-17 | Public showcase                 | Public deployment displays the bilingual learning UI in read-only mode and does not provide live API execution.                                                        |
+| ID    | Requirement                     | Description                                                                                                                                                                |
+| ----- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FR-01 | Learning topic list             | Display API security learning topics.                                                                                                                                      |
+| FR-02 | Vulnerable API demo             | Run vulnerable API examples in a local-only environment.                                                                                                                   |
+| FR-03 | Secure API demo                 | Run secure implementations for the same topics.                                                                                                                            |
+| FR-04 | Comparison view                 | Compare requests, responses, design differences, the full API program flow, and implementation-flow problem/improvement points between vulnerable and secure examples.     |
+| FR-05 | BOLA scenario                   | Demonstrate object-level authorization flaws and mitigations.                                                                                                              |
+| FR-06 | Authentication scenario         | Demonstrate authentication and token handling issues and mitigations.                                                                                                      |
+| FR-07 | Rate limiting scenario          | Demonstrate designs for limiting excessive requests.                                                                                                                       |
+| FR-08 | Function authorization scenario | Demonstrate risks and mitigations for administrative functions exposed without feature-level authorization.                                                                |
+| FR-09 | Business flow scenario          | Demonstrate excessive use and skipped-step risks in sensitive reservation or purchase flows.                                                                               |
+| FR-10 | Mass assignment scenario        | Demonstrate unauthorized property update risks and mitigations.                                                                                                            |
+| FR-11 | SSRF scenario                   | Demonstrate risks and defenses for outbound URL fetching.                                                                                                                  |
+| FR-12 | Security configuration scenario | Demonstrate diagnostic exposure, permissive CORS, and missing security header risks and mitigations.                                                                       |
+| FR-13 | API inventory scenario          | Demonstrate risks and mitigations for executable legacy or unmanaged APIs.                                                                                                 |
+| FR-14 | Third-party response scenario   | Demonstrate overtrusted third-party API response risks and trust-boundary validation.                                                                                      |
+| FR-15 | Language switching              | All screens support switching between Japanese and English. The default UI language is Japanese.                                                                           |
+| FR-16 | Theme switching                 | The shared header provides sun and moon controls for switching between persistent light and dark themes.                                                                   |
+| FR-17 | Public showcase                 | Public deployment disables live API execution but lets users render representative synthetic post-run results in the existing comparison panels without a network request. |
 
 ## Non-Functional Requirements
 
@@ -66,6 +66,7 @@
 - Invalid UTF-8, malformed JSON, unsupported content types, and bodies larger than 16 KiB are rejected with consistent 400, 415, and 413 responses.
 - HTML and API responses apply baseline security headers, and API responses use `no-store`.
 - Public showcase tests and a workerd preview verify that secure and vulnerable API routes both return `403 PUBLIC_SHOWCASE_API_DISABLED` before route handling.
+- Component tests verify that the public synthetic result control renders both comparison results without calling `fetch`, and static-data tests cover every learning module.
 
 ### Requirements-to-Verification Traceability
 
@@ -157,7 +158,7 @@ requirementDiagram
 
 ## Learning Module Interaction Flow
 
-The current UI does not persist completion state. In the local lab, running a demo invokes the vulnerable and secure APIs in parallel. In public showcase mode, the execution control is replaced with a read-only notice and no API request is sent.
+The current UI does not persist completion state. In the local lab, running a demo invokes the vulnerable and secure APIs in parallel. In public showcase mode, the control loads representative results from static client data into the same result panels and sends no API request.
 
 ```mermaid
 flowchart TD
@@ -179,3 +180,4 @@ flowchart TD
 - English mode must keep visible UI text in English.
 - Common technical terms such as API, BOLA, SSRF, CVSS, CWE, and OWASP may remain in English in Japanese mode.
 - Public showcase mode must explain in the selected language that live API execution is disabled and that API demos are local-only.
+- The public synthetic result control must be clearly distinguished from live execution and must render both vulnerable and secure results without network access.

@@ -15,6 +15,7 @@
     "test:watch": "vitest",
     "build:cloudflare": "opennextjs-cloudflare build",
     "preview:cloudflare": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "preview:cloudflare:built": "opennextjs-cloudflare preview",
     "deploy:cloudflare": "wrangler deploy",
     "dry-run:cloudflare": "wrangler deploy --dry-run"
   },

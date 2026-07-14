@@ -148,8 +148,8 @@ erDiagram
 - Improper Inventory Management protection validates API environment, version, exposure, owner, documentation freshness, lifecycle state, and protection parity before processing.
 - Rate limiting allows three requests per 60-second bucket for a finite set of known demo users and API routes, then rejects the fourth with 429. It removes expired buckets and caps the in-memory store at 100 entries. Cross-process sharing and per-source limits are outside the current implementation scope.
 - HTML responses apply CSP, frame denial, MIME-sniffing prevention, referrer restrictions, and Permissions Policy. API responses add `Cache-Control: no-store`.
-- Public showcase mode is enabled with `PUBLIC_SHOWCASE=true`. Middleware rejects every `/api/*` request before route handling, including secure routes, and the UI replaces execution controls with a bilingual read-only notice. Any non-empty value other than explicit `false` enables the fail-closed public boundary.
-- CI forces `LAB_MODE=disabled` and `PUBLIC_SHOWCASE=true`, sequentially runs dependency and application checks, builds the OpenNext Worker, and performs a Wrangler dry run. Deployment runs only after verification and only when explicitly enabled at the repository level.
+- Public showcase mode is enabled with `PUBLIC_SHOWCASE=true`. Middleware rejects every `/api/*` request before route handling, including secure routes. The UI keeps a bilingual read-only notice and lets users load static synthetic results into the existing result panels without calling `fetch`. Any non-empty value other than explicit `false` enables the fail-closed public boundary.
+- CI forces `LAB_MODE=disabled` and `PUBLIC_SHOWCASE=true`, sequentially runs dependency and application checks, builds the OpenNext Worker once, performs a Wrangler dry run, and verifies the public API boundary over HTTP in workerd. The verified `.open-next` artifact is passed unchanged to the deploy job. Cloudflare credentials are exposed only to the final deploy step, which runs only after verification and only when explicitly enabled at the repository level.
 
 ### Route Separation And Vulnerable API Safety Guard
 
@@ -182,6 +182,7 @@ Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route
 - `wrangler.jsonc` fixes the public runtime to `LAB_MODE=disabled`, `NODE_ENV=production`, and `PUBLIC_SHOWCASE=true`.
 - GitHub Actions keeps Cloudflare credentials in repository secrets and does not place account identifiers or API tokens in tracked files.
 - The public site exposes only learning content, request examples, synthetic response examples, design differences, and implementation flows. Live secure and vulnerable API execution remains unavailable.
+- `src/data/showcase-results.ts` contains stable synthetic response envelopes for every learning module. The public action copies these values into client state and reuses the local demo result panels; it does not invoke route handlers or service functions.
 
 ## API Foundation
 
@@ -303,7 +304,7 @@ flowchart TD
 - The same test verifies that secure APIs do not reproduce BOLA, weak authentication, missing rate limiting, broken function-level authorization, business-flow abuse, Mass Assignment, SSRF, security misconfiguration, legacy API inventory gaps, or overtrusted third-party response behavior.
 - `src/lib/openapi.test.ts` verifies that every vulnerable API operation documents local-only behavior and the disabled response for production-like settings.
 - UI text resources are tested for matching Japanese and English key structures to avoid mixed-language shared screen labels.
-- `src/lib/public-showcase.test.ts` verifies the pre-route shutdown for both API families. OpenNext build, Wrangler dry run, and workerd HTTP checks verify the deployment artifact and runtime boundary.
+- `src/lib/public-showcase.test.ts` verifies the pre-route shutdown for both API families. Component tests verify no-network synthetic result rendering, and static-data tests cover every module. OpenNext build, Wrangler dry run, and CI workerd HTTP checks verify the exact artifact passed to deployment.
 
 ## Screen Design
 

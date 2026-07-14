@@ -148,8 +148,8 @@ erDiagram
 - Improper Inventory Management対策では、APIの環境、バージョン、公開範囲、所有者、文書の更新状況、退役状態、保護策の適用状況を処理前に検証する。
 - レート制限は、有限の既知デモユーザーとAPIルート単位で60秒間に3回まで適用し、4回目を429で拒否する。期限切れbucketを削除し、インメモリストアは最大100件に制限する。複数プロセス間の共有や送信元単位の制限は現在の実装範囲に含めない。
 - HTMLレスポンスにはCSP、フレーム埋め込み拒否、MIME sniffing拒否、Referrer制御、Permissions Policyを適用し、APIレスポンスには`Cache-Control: no-store`を追加する。
-- 公開ショーケースモードは`PUBLIC_SHOWCASE=true`で有効化する。Middlewareは安全APIを含むすべての`/api/*`リクエストをRoute Handlerへ到達する前に拒否し、UIでは実行操作を日英の読み取り専用案内へ置き換える。空でない値のうち明示的な`false`以外は、安全側へ倒して公開境界を有効にする。
-- CIでは`LAB_MODE=disabled`と`PUBLIC_SHOWCASE=true`を強制し、依存関係とアプリケーションの検証、OpenNext Workerのビルド、Wrangler dry runを順に実行する。デプロイは検証成功後、かつリポジトリ設定で明示的に有効化した場合だけ実行する。
+- 公開ショーケースモードは`PUBLIC_SHOWCASE=true`で有効化する。Middlewareは安全APIを含むすべての`/api/*`リクエストをRoute Handlerへ到達する前に拒否する。UIでは日英の読み取り専用案内を維持し、`fetch`を呼び出さずに静的な合成結果を既存の結果パネルへ読み込めるようにする。空でない値のうち明示的な`false`以外は、安全側へ倒して公開境界を有効にする。
+- CIでは`LAB_MODE=disabled`と`PUBLIC_SHOWCASE=true`を強制し、依存関係とアプリケーションの検証、OpenNext Workerの1回だけのビルド、Wrangler dry run、workerdへのHTTP境界検証を順に実行する。検証済みの`.open-next`成果物を変更せずdeploy jobへ渡し、Cloudflare認証情報は検証成功後の最終deployステップだけへ公開する。デプロイはリポジトリ設定で明示的に有効化した場合だけ実行する。
 
 ### ルート分離と脆弱API安全ガード
 
@@ -182,6 +182,7 @@ flowchart TD
 - `wrangler.jsonc`で公開実行環境を`LAB_MODE=disabled`、`NODE_ENV=production`、`PUBLIC_SHOWCASE=true`に固定する。
 - GitHub ActionsではCloudflare認証情報をリポジトリのSecretsで管理し、Account IDやAPI Tokenを追跡対象ファイルへ記録しない。
 - 公開サイトでは学習コンテンツ、リクエスト例、合成レスポンス例、設計差分、実装フローだけを表示し、安全APIと脆弱APIのライブ実行は提供しない。
+- `src/data/showcase-results.ts`で全学習テーマの安定した合成レスポンス形式を管理する。公開用操作はこの値をクライアント状態へコピーしてローカルデモと同じ結果パネルを再利用し、Route Handlerやサービス関数を呼び出さない。
 
 ## API基盤
 
@@ -303,7 +304,7 @@ flowchart TD
 - 同テストでは、安全APIがBOLA、認証不備、レート制限不足、機能単位認可不備、業務フロー悪用、Mass Assignment、SSRF、セキュリティ設定不備、旧API管理不備、外部API応答の過信を再現しないことを確認する。
 - `src/lib/openapi.test.ts` は、すべての脆弱API操作にローカル限定の説明と公開環境相当での無効化レスポンスが記述されていることを確認する。
 - UI文言リソースは、日英のキー構造が揃っていることをテストし、共通画面ラベルの言語混在を避ける。
-- `src/lib/public-showcase.test.ts`で両API種別のRoute Handler到達前停止を確認する。OpenNext build、Wrangler dry run、workerdへのHTTP確認でデプロイ成果物と実行時境界を検証する。
+- `src/lib/public-showcase.test.ts`で両API種別のRoute Handler到達前停止を確認する。コンポーネントテストで通信なしの合成結果表示を確認し、静的データテストで全テーマを検証する。OpenNext build、Wrangler dry run、CIのworkerd HTTP確認で、デプロイへ渡す同一成果物と実行時境界を検証する。
 
 ## 画面設計
 
