@@ -67,6 +67,7 @@
 - Tests verify that the HTML nonce changes on every request, every script and style element receives the matching nonce, production `script-src` and `style-src` contain no `'unsafe-inline'`, and `script-src` contains no `'unsafe-eval'`. Tests also verify that HTML has no style attributes, `style-src-attr 'none'` and `script-src-attr 'none'` are enforced, and both HTML and API responses use `no-store`.
 - Public showcase tests and a workerd preview verify that secure and vulnerable API routes both return `403 PUBLIC_SHOWCASE_API_DISABLED` before route handling.
 - Component tests verify that the public request-result control appears after the API examples and renders both comparison results without calling `fetch`; static-data tests cover every learning module.
+- Playwright desktop and mobile Chromium tests verify that no CSP violation occurs, the public control makes no `/api` request, vulnerable and secure request results render, theme selection persists, and Japanese/English switching works.
 
 ### Requirements-to-Verification Traceability
 

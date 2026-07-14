@@ -67,6 +67,7 @@
 - HTMLのnonceがリクエストごとに更新され、すべてのscriptとstyle要素へ同じnonceが付与され、本番の`script-src`と`style-src`に`'unsafe-inline'`が含まれず、`script-src`に`'unsafe-eval'`も含まれないことを確認する。HTMLにstyle属性がなく、`style-src-attr 'none'`と`script-src-attr 'none'`が適用されること、HTMLとAPIの両方が`no-store`となることも確認する。
 - 公開ショーケースのテストとworkerdプレビューで、安全APIと脆弱APIの両方がRoute Handlerへ到達する前に`403 PUBLIC_SHOWCASE_API_DISABLED`を返すことを確認する。
 - コンポーネントテストで、公開用のリクエスト結果操作がAPI例の後に配置され、`fetch`を呼び出さずに両方の比較結果を表示することを確認し、静的データテストで全学習テーマを検証する。
+- Playwrightのデスクトップ・モバイルChromiumテストで、CSP違反が発生しないこと、公開用操作が`/api`へ通信しないこと、脆弱側・安全側のリクエスト結果表示、テーマ選択の保持、日英切替が動作することを確認する。
 
 ### 要件と検証のトレーサビリティ
 

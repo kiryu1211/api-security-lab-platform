@@ -103,6 +103,7 @@ The Cloudflare Workers configuration is a read-only public showcase. It exposes 
 - `npm run format`: check formatting with Prettier.
 - `npm run typecheck`: run TypeScript type checking.
 - `npm run test`: run the Vitest suite.
+- `npm run test:e2e`: run desktop and mobile Chromium E2E tests against the public-showcase-equivalent environment selected by `PLAYWRIGHT_BASE_URL`. Install the browser once with `npx playwright install chromium`.
 - `npm run build`: create a production build.
 - `npm run build:cloudflare`: create the OpenNext Cloudflare Worker bundle.
 - `npm run preview:cloudflare`: build and preview the Worker locally with workerd.
