@@ -42,6 +42,7 @@ test("keeps the interactive showcase functional without CSP violations or API ca
   page,
 }) => {
   const apiRequests: string[] = [];
+  const consoleErrors: string[] = [];
   const cspConsoleErrors: string[] = [];
   const pageErrors: string[] = [];
 
@@ -53,6 +54,10 @@ test("keeps the interactive showcase functional without CSP violations or API ca
     }
   });
   page.on("console", (message) => {
+    if (message.type() === "error") {
+      consoleErrors.push(message.text());
+    }
+
     if (
       message.type() === "error" &&
       /content security policy|refused to/i.test(message.text())
@@ -151,6 +156,7 @@ test("keeps the interactive showcase functional without CSP violations or API ca
   await expectNoAccessibilityViolations(page);
   await expect(page.locator(".app-shell [style]")).toHaveCount(0);
   expect(apiRequests).toEqual([]);
+  expect(consoleErrors).toEqual([]);
   expect(cspConsoleErrors).toEqual([]);
   expect(pageErrors).toEqual([]);
   expect(

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Noto_Sans_JP } from "next/font/google";
 import { headers } from "next/headers";
-import Script from "next/script";
 
 const notoSansJp = Noto_Sans_JP({
   variable: "--font-sans-jp",
@@ -30,10 +29,10 @@ export default async function RootLayout({
   return (
     <html lang="ja" data-theme="light" suppressHydrationWarning>
       <head>
-        <Script
+        <script
           id="theme-initialization"
           nonce={nonce}
-          strategy="beforeInteractive"
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: themeInitializationScript }}
         />
       </head>
