@@ -141,8 +141,10 @@ jobs:
           name: verified-cloudflare-worker
           path: .open-next
 
-      - name: Deploy public showcase
-        run: npm run deploy:cloudflare
+      - name: Deploy public showcase and retire replaced Worker
+        run: |
+          npm run deploy:cloudflare
+          npx wrangler delete api-security-lab-platform --force
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

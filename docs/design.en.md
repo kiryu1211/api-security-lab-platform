@@ -182,7 +182,7 @@ Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route
 - `wrangler.jsonc` fixes the public runtime to `LAB_MODE=disabled`, `NODE_ENV=production`, and `PUBLIC_SHOWCASE=true`.
 - GitHub Actions keeps Cloudflare credentials in repository secrets and does not place account identifiers or API tokens in tracked files.
 - The public site exposes only learning content, request examples, synthetic response examples, design differences, and implementation flows. Live secure and vulnerable API execution remains unavailable.
-- `src/data/showcase-results.ts` contains stable synthetic response envelopes for every learning module. The public action copies these values into client state and reuses the local demo result panels; it does not invoke route handlers or service functions.
+- `src/data/showcase-results.ts` contains stable synthetic response envelopes for every learning module. The public showcase notice and `Show request results` control appear after the vulnerable and secure API examples. The action copies synthetic data into client state and reuses the local demo result panels; it does not invoke route handlers or service functions.
 
 ## API Foundation
 

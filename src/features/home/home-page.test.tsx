@@ -17,12 +17,24 @@ describe("HomePage public showcase", () => {
     vi.restoreAllMocks();
   });
 
-  it("renders synthetic post-run results without making an API request", () => {
+  it("places the public request-results control after the API examples", () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     const { container } = render(<HomePage publicShowcase />);
 
     expect(screen.getByText("公開ショーケース")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "合成結果を表示" }));
+    const comparisonGrid = container.querySelector(".comparison-grid");
+    const actionRow = container.querySelector(".demo-action-row");
+
+    expect(comparisonGrid).toBeTruthy();
+    expect(actionRow).toBeTruthy();
+    expect(
+      comparisonGrid!.compareDocumentPosition(actionRow!) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "リクエスト結果を表示" }),
+    );
 
     const resultBoxes = container.querySelectorAll(
       '.api-result-box[data-has-result="true"]',
@@ -30,11 +42,11 @@ describe("HomePage public showcase", () => {
 
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(resultBoxes).toHaveLength(2);
-    expect(resultBoxes[0].textContent).toContain("脆弱APIの合成結果");
+    expect(resultBoxes[0].textContent).toContain("脆弱APIのリクエスト結果");
     expect(resultBoxes[0].textContent).toContain("HTTP 200");
     expect(resultBoxes[0].textContent).toContain("order-demo-002");
     expect(resultBoxes[0].textContent).toContain('"synthetic": true');
-    expect(resultBoxes[1].textContent).toContain("安全APIの合成結果");
+    expect(resultBoxes[1].textContent).toContain("安全APIのリクエスト結果");
     expect(resultBoxes[1].textContent).toContain("HTTP 403");
     expect(resultBoxes[1].textContent).toContain("FORBIDDEN");
   });
@@ -45,11 +57,11 @@ describe("HomePage public showcase", () => {
     fireEvent.click(screen.getByRole("button", { name: "英語" }));
 
     expect(
-      screen.getByRole("button", { name: "Show synthetic results" }),
+      screen.getByRole("button", { name: "Show request results" }),
     ).toBeTruthy();
     expect(
       screen.getByText(
-        /displays synthetic results without making a network request/,
+        /displays representative request results without sending an API request/,
       ),
     ).toBeTruthy();
   });

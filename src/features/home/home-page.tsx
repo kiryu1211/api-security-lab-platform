@@ -843,56 +843,6 @@ export function HomePage({
             </aside>
           </div>
 
-          <div
-            className="demo-action-row"
-            data-reveal
-            aria-busy={
-              selectedDemoModuleId
-                ? demoState[selectedDemoModuleId].loading
-                : undefined
-            }
-          >
-            {publicShowcase ? (
-              <>
-                <div className="public-showcase-notice" role="status">
-                  <strong>{t.comparison.publicShowcaseLabel}</strong>
-                  <span>{t.comparison.publicShowcaseText}</span>
-                </div>
-                {selectedDemoModuleId ? (
-                  <button
-                    aria-controls="demo-results"
-                    className="run-demo-button"
-                    type="button"
-                    onClick={() => handleRunDemo(selectedDemoModuleId)}
-                  >
-                    {t.comparison.showSyntheticResults}
-                  </button>
-                ) : null}
-              </>
-            ) : selectedDemoModuleId ? (
-              <>
-                <button
-                  aria-controls="demo-results"
-                  className="run-demo-button"
-                  type="button"
-                  onClick={() => handleRunDemo(selectedDemoModuleId)}
-                  disabled={demoState[selectedDemoModuleId].loading}
-                >
-                  {demoState[selectedDemoModuleId].loading
-                    ? t.comparison.demoLoading
-                    : t.comparison.runDemo}
-                </button>
-                {demoState[selectedDemoModuleId].failed ? (
-                  <p className="demo-error" role="alert">
-                    {t.comparison.demoError}
-                  </p>
-                ) : null}
-              </>
-            ) : (
-              <p>{t.comparison.demoUnavailable}</p>
-            )}
-          </div>
-
           <div className="comparison-grid" id="demo-results">
             <ComparisonPanel
               badge={t.comparison.vulnerableBadge}
@@ -914,7 +864,7 @@ export function HomePage({
               }
               resultTitle={
                 publicShowcase
-                  ? t.comparison.vulnerableSyntheticResult
+                  ? t.comparison.vulnerableRequestResult
                   : t.comparison.vulnerableResult
               }
               noResultLabel={t.comparison.noResult}
@@ -940,12 +890,62 @@ export function HomePage({
               }
               resultTitle={
                 publicShowcase
-                  ? t.comparison.secureSyntheticResult
+                  ? t.comparison.secureRequestResult
                   : t.comparison.secureResult
               }
               noResultLabel={t.comparison.noResult}
               key={`secure-${selectedModule.id}`}
             />
+          </div>
+
+          <div
+            className="demo-action-row"
+            data-reveal
+            aria-busy={
+              selectedDemoModuleId
+                ? demoState[selectedDemoModuleId].loading
+                : undefined
+            }
+          >
+            {publicShowcase ? (
+              <>
+                <div className="public-showcase-notice" role="status">
+                  <strong>{t.comparison.publicShowcaseLabel}</strong>
+                  <span>{t.comparison.publicShowcaseText}</span>
+                </div>
+                {selectedDemoModuleId ? (
+                  <button
+                    aria-controls="demo-results"
+                    className="run-demo-button"
+                    type="button"
+                    onClick={() => handleRunDemo(selectedDemoModuleId)}
+                  >
+                    {t.comparison.showRequestResults}
+                  </button>
+                ) : null}
+              </>
+            ) : selectedDemoModuleId ? (
+              <>
+                <button
+                  aria-controls="demo-results"
+                  className="run-demo-button"
+                  type="button"
+                  onClick={() => handleRunDemo(selectedDemoModuleId)}
+                  disabled={demoState[selectedDemoModuleId].loading}
+                >
+                  {demoState[selectedDemoModuleId].loading
+                    ? t.comparison.demoLoading
+                    : t.comparison.runDemo}
+                </button>
+                {demoState[selectedDemoModuleId].failed ? (
+                  <p className="demo-error" role="alert">
+                    {t.comparison.demoError}
+                  </p>
+                ) : null}
+              </>
+            ) : (
+              <p>{t.comparison.demoUnavailable}</p>
+            )}
           </div>
         </section>
 

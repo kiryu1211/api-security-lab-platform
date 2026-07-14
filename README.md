@@ -10,9 +10,9 @@ The purpose of this system is to provide an isolated environment for examining h
 
 ## Public Showcase
 
-Read-only learning UI: <https://api-security-lab-platform.api-security-lab-platform.workers.dev>
+Read-only learning UI: <https://showcase.api-security-lab-platform.workers.dev/>
 
-Live API execution is disabled on the public site. The `Show synthetic results` control renders representative post-run vulnerable and secure results entirely in the browser without sending an API request. Live API comparisons remain local-only.
+Live API execution is disabled on the public site. The `Show request results` control renders representative vulnerable and secure results entirely in the browser without sending an API request. Live API comparisons remain local-only.
 
 ## Core Features
 
@@ -73,7 +73,7 @@ The vulnerable examples are for controlled local verification only. They must no
 
 Vulnerable API routes are disabled by default. They are enabled only when `LAB_MODE=local`, `NODE_ENV` is exactly `development` or `test`, and the request URL hostname is `localhost`, `127.0.0.1`, or `::1`. When present, the `Host` header must also identify one of those loopback hosts. Invalid `LAB_MODE` values fail closed. `npm run dev` and `npm run start` bind only to `127.0.0.1`; hostname checks are defense in depth and do not make a publicly forwarded development server safe. Secure routes remain available only outside public showcase mode for comparison and verification.
 
-Public deployments must set `PUBLIC_SHOWCASE=true` and `LAB_MODE=disabled`. Public showcase mode displays a bilingual read-only notice and a client-side synthetic result control while rejecting every `/api/*` request, including secure routes, with `403 PUBLIC_SHOWCASE_API_DISABLED` and `Cache-Control: no-store`. The synthetic control updates the existing result panels from static data and does not call `fetch`. Any non-empty `PUBLIC_SHOWCASE` value other than the explicit value `false` fails closed into public showcase mode.
+Public deployments must set `PUBLIC_SHOWCASE=true` and `LAB_MODE=disabled`. Public showcase mode displays a bilingual read-only notice and a client-side request-result control while rejecting every `/api/*` request, including secure routes, with `403 PUBLIC_SHOWCASE_API_DISABLED` and `Cache-Control: no-store`. The control updates the existing result panels from static synthetic data and does not call `fetch`. Any non-empty `PUBLIC_SHOWCASE` value other than the explicit value `false` fails closed into public showcase mode.
 
 SSRF and third-party API response demos do not perform real outbound network access from either vulnerable or secure APIs; they return verification preview metadata or synthetic responses only.
 
@@ -92,7 +92,7 @@ Demo `userId`, `actorUserId`, and token IDs are finite synthetic scenario select
 
 Vulnerable APIs are for local verification only. Do not run them in shared or public environments.
 
-The Cloudflare Workers configuration is a read-only public showcase. It exposes learning content, request examples, design differences, implementation flows, and interactive synthetic post-run result panels, but it does not provide live API demos.
+The Cloudflare Workers configuration is a read-only public showcase. It exposes learning content, request examples, design differences, implementation flows, and interactive request-result panels backed by synthetic data, but it does not provide live API demos.
 
 ## Development Commands
 
