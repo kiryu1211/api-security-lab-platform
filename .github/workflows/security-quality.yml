@@ -88,17 +88,7 @@ jobs:
             exit 1
           fi
 
-          home_status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8787/)
-          secure_status=$(curl --silent --show-error --dump-header "$RUNNER_TEMP/secure-headers.txt" --output "$RUNNER_TEMP/secure-body.json" --write-out '%{http_code}' http://127.0.0.1:8787/api/secure/health)
-          vulnerable_status=$(curl --silent --show-error --dump-header "$RUNNER_TEMP/vulnerable-headers.txt" --output "$RUNNER_TEMP/vulnerable-body.json" --write-out '%{http_code}' http://127.0.0.1:8787/api/vulnerable/health)
-
-          test "$home_status" = "200"
-          test "$secure_status" = "403"
-          test "$vulnerable_status" = "403"
-          grep --fixed-strings 'PUBLIC_SHOWCASE_API_DISABLED' "$RUNNER_TEMP/secure-body.json"
-          grep --fixed-strings 'PUBLIC_SHOWCASE_API_DISABLED' "$RUNNER_TEMP/vulnerable-body.json"
-          grep --ignore-case --fixed-strings 'cache-control: no-store' "$RUNNER_TEMP/secure-headers.txt"
-          grep --ignore-case --fixed-strings 'cache-control: no-store' "$RUNNER_TEMP/vulnerable-headers.txt"
+          node scripts/verify-public-showcase.mjs http://127.0.0.1:8787
 
       - name: Store verified Cloudflare Worker
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

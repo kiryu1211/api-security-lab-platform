@@ -195,6 +195,9 @@ describe("phase 7 security verification", () => {
       const body = await response.json();
 
       expect(response.status, route.name).toBe(403);
+      expect(response.headers.get("Content-Security-Policy"), route.name).toBe(
+        "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+      );
       expect(body.error.code, route.name).toBe("VULNERABLE_API_DISABLED");
       expect(body.meta, route.name).toMatchObject({
         routeType: "vulnerable",
@@ -317,6 +320,9 @@ describe("phase 7 security verification", () => {
     ]);
 
     expect(secureBola.status).toBe(403);
+    expect(secureBola.headers.get("Content-Security-Policy")).toBe(
+      "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+    );
     expect(secureAuth.status).toBe(401);
     expect(secureInvitation.status).toBe(403);
     expect(secureProfile.status).toBe(403);

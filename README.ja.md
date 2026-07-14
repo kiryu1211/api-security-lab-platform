@@ -77,7 +77,7 @@ OWASP API Security Top 10は、API固有の代表的で影響の大きいセキ�
 
 SSRFデモと外部API応答デモは、脆弱APIと安全APIのどちらも実際の外部ネットワークアクセスを行わず、検証用のプレビュー情報または合成応答のみを返します。
 
-HTMLとAPIレスポンスには、フレーム埋め込み拒否、Content Security Policy、MIMEスニッフィング防止、リファラー情報の制限、APIキャッシュ禁止などの共通ヘッダーを適用します。JSON本文は `application/json` と任意の `charset=utf-8` だけを受け付け、正しいUTF-8とJSONを要求し、宣言サイズと実際のバイト数を16 KiB以下に制限します。単一値のクエリパラメーターを重複指定した場合や、strictなクエリスキーマへ未知のパラメーターを指定した場合は、last-value-winsで処理せず拒否します。
+HTMLとAPIレスポンスには、フレーム埋め込み拒否、Content Security Policy、MIMEスニッフィング防止、リファラー情報の制限、キャッシュ禁止などの共通ヘッダーを適用します。HTMLはリクエストごとに新しいnonceを生成し、Next.jsのscriptへ付与することで、本番の`script-src`では`'unsafe-inline'`と`'unsafe-eval'`を許可しません。nonce付きHTMLは`no-store`とし、APIには`default-src 'none'`を基準とする厳格なCSPを適用します。JSON本文は `application/json` と任意の `charset=utf-8` だけを受け付け、正しいUTF-8とJSONを要求し、宣言サイズと実際のバイト数を16 KiB以下に制限します。単一値のクエリパラメーターを重複指定した場合や、strictなクエリスキーマへ未知のパラメーターを指定した場合は、last-value-winsで処理せず拒否します。
 
 デモの `userId`、`actorUserId`、トークンIDは、有限の合成シナリオを選択するための値であり、セッションやBearer認証情報ではありません。レート制限bucket、累積予約数、在庫、試行回数は単一プロセス内のデモ用インメモリ状態であり、再起動で失われ、本番環境や分散環境の制御としては使用できません。
 

@@ -22,6 +22,12 @@ export type ApiMeta = {
 function apiResponseInit(init?: ResponseInit): ResponseInit {
   const headers = new Headers(init?.headers);
   headers.set("Cache-Control", "no-store");
+  if (!headers.has("Content-Security-Policy")) {
+    headers.set(
+      "Content-Security-Policy",
+      "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+    );
+  }
   headers.set("Referrer-Policy", "no-referrer");
   headers.set("X-Content-Type-Options", "nosniff");
 

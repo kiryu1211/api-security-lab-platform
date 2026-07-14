@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Noto_Sans_JP } from "next/font/google";
+import { headers } from "next/headers";
 import Script from "next/script";
 import "./globals.css";
 
@@ -22,14 +23,17 @@ export const metadata: Metadata = {
     "脆弱なAPI例と安全なAPI例をローカル環境で比較する学習・検証プラットフォームです。",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   return (
     <html lang="ja" data-theme="light" suppressHydrationWarning>
       <head>
         <Script
           id="theme-initialization"
+          nonce={nonce}
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: themeInitializationScript }}
         />
