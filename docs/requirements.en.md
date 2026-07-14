@@ -62,6 +62,8 @@
 - Third-party API response demos must not perform real external API calls from either vulnerable or secure APIs.
 - OpenAPI must document implemented API routes, inputs, error responses, and safety notes.
 - Japanese and English UI modes must keep visible text consistent within the selected language.
+- Desktop and mobile Chromium tests run automated WCAG 2.0, 2.1, and 2.2 A/AA checks with axe against both the initial Japanese state and the English, dark-theme, result-visible state of a public-showcase-equivalent environment, with no automatically detectable violations.
+- Primary theme, language, and request-result controls must operate by keyboard, and keyboard focus must reach horizontally scrollable result regions.
 - Tests verify that an unset or invalid `LAB_MODE` keeps vulnerable APIs disabled and that only explicit local mode with loopback request conditions enables them.
 - Invalid UTF-8, malformed JSON, unsupported content types, and bodies larger than 16 KiB are rejected with consistent 400, 415, and 413 responses.
 - Tests verify that the HTML nonce changes on every request, every script and style element receives the matching nonce, production `script-src` and `style-src` contain no `'unsafe-inline'`, and `script-src` contains no `'unsafe-eval'`. Tests also verify that HTML has no style attributes, `style-src-attr 'none'` and `script-src-attr 'none'` are enforced, and both HTML and API responses use `no-store`.
@@ -177,6 +179,7 @@ flowchart TD
 - Request and response examples use a layout that makes comparison easy.
 - A shared language switcher must be available on every screen.
 - A shared theme switcher must expose labeled sun and moon controls, indicate the selected theme, and remain keyboard accessible.
+- Interactive targets must provide a size of at least 24 CSS pixels or sufficient spacing and expose a visible keyboard focus indicator.
 - Japanese mode must keep visible UI text in Japanese.
 - English mode must keep visible UI text in English.
 - Common technical terms such as API, BOLA, SSRF, CVSS, CWE, and OWASP may remain in English in Japanese mode.

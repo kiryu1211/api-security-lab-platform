@@ -1131,7 +1131,9 @@ function ComparisonPanel({
               <strong>{labels.resultMeaning}: </strong>
               {response}
             </p>
-            <pre>{`HTTP ${result.status}\n${JSON.stringify(result.body, null, 2)}`}</pre>
+            <pre
+              tabIndex={0}
+            >{`HTTP ${result.status}\n${JSON.stringify(result.body, null, 2)}`}</pre>
           </div>
         ) : (
           <p>{noResultLabel}</p>

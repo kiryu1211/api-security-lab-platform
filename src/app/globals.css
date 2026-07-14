@@ -2,7 +2,7 @@
   color-scheme: light;
   --background: #f7f2ea;
   --foreground: #17202a;
-  --muted: #5f6b7a;
+  --muted: #5e6978;
   --panel: #fffaf2;
   --panel-strong: #ffffff;
   --line: #eadfce;
@@ -328,6 +328,10 @@ a {
   background: var(--panel-strong);
 }
 
+.theme-switcher {
+  flex: 0 0 auto;
+}
+
 .language-switcher button,
 .theme-switcher button {
   display: grid;
@@ -348,8 +352,11 @@ a {
 }
 
 .theme-switcher button {
+  flex: 0 0 2.2rem;
   width: 2.2rem;
   height: 2.2rem;
+  min-width: 2.2rem;
+  min-height: 2.2rem;
   padding: 0.45rem;
 }
 
@@ -1436,6 +1443,11 @@ a {
   overflow-wrap: anywhere;
   word-break: break-all;
   contain: inline-size;
+}
+
+.api-result-box pre:focus-visible {
+  outline: 3px solid rgba(29, 78, 216, 0.28);
+  outline-offset: 3px;
 }
 
 .demo-action-row {
