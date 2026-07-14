@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   getImplementationWalkthrough,
   getLearningContextNote,
@@ -112,7 +112,6 @@ export function HomePage({
     if (isTheme(savedTheme)) {
       setTheme(savedTheme);
       document.documentElement.dataset.theme = savedTheme;
-      document.documentElement.style.colorScheme = savedTheme;
     }
 
     if (reduceMotion || openingSeen) {
@@ -153,11 +152,10 @@ export function HomePage({
       return;
     }
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    document.body.dataset.openingLocked = "true";
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      delete document.body.dataset.openingLocked;
     };
   }, [openingChecked, openingVisible]);
 
@@ -245,7 +243,6 @@ export function HomePage({
   function handleThemeChange(nextTheme: Theme) {
     setTheme(nextTheme);
     document.documentElement.dataset.theme = nextTheme;
-    document.documentElement.style.colorScheme = nextTheme;
 
     try {
       window.localStorage.setItem(themeStorageKey, nextTheme);
@@ -509,6 +506,7 @@ export function HomePage({
   return (
     <div
       className="app-shell"
+      data-language={language}
       data-entry={
         !openingChecked || (openingVisible && !openingLeaving)
           ? "opening"
@@ -641,29 +639,13 @@ export function HomePage({
                   <span
                     className="hero-title-character"
                     key={`${character}-${index}`}
-                    style={
-                      {
-                        "--character-delay": `${440 + index * 38}ms`,
-                      } as CSSProperties
-                    }
                   >
                     {character === " " ? "\u00a0" : character}
                   </span>
                 ))}
               </span>
             </h1>
-            <p
-              className="hero-lead"
-              style={
-                {
-                  "--hero-lead-delay": `${
-                    860 + Math.max(Array.from(t.hero.title).length - 1, 0) * 38
-                  }ms`,
-                } as CSSProperties
-              }
-            >
-              {t.hero.lead}
-            </p>
+            <p className="hero-lead">{t.hero.lead}</p>
           </div>
         </section>
 

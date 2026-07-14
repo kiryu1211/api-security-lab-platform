@@ -63,6 +63,9 @@ describe("public showcase boundary", () => {
     const scriptDirective = firstPolicy
       ?.split(";")
       .find((directive) => directive.trim().startsWith("script-src "));
+    const styleDirective = firstPolicy
+      ?.split(";")
+      .find((directive) => directive.trim().startsWith("style-src "));
 
     expect(firstResponse.headers.get("Cache-Control")).toBe("no-store");
     expect(firstNonce).toBeTruthy();
@@ -74,6 +77,19 @@ describe("public showcase boundary", () => {
     expect(scriptDirective).toContain("'strict-dynamic'");
     expect(scriptDirective).not.toContain("'unsafe-inline'");
     expect(firstPolicy).toContain("script-src-attr 'none'");
-    expect(firstPolicy).toContain("style-src 'self' 'unsafe-inline'");
+    expect(styleDirective).toContain(`'nonce-${firstNonce}'`);
+    expect(styleDirective).not.toContain("'unsafe-inline'");
+    expect(firstPolicy).toContain("style-src-attr 'none'");
+  });
+
+  it("keeps development-only CSP allowances out of production", () => {
+    vi.stubEnv("NODE_ENV", "development");
+    const response = middleware(new NextRequest("http://localhost/"));
+    const policy = response.headers.get("Content-Security-Policy");
+
+    expect(policy).toContain("script-src 'self'");
+    expect(policy).toContain("'unsafe-eval'");
+    expect(policy).toContain("style-src 'self' 'unsafe-inline'");
+    expect(policy).toContain("style-src-attr 'unsafe-inline'");
   });
 });

@@ -15,7 +15,7 @@ const jetBrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
-const themeInitializationScript = `try{const theme=localStorage.getItem("lab-ui-theme");const resolved=theme==="dark"?"dark":"light";document.documentElement.dataset.theme=resolved;document.documentElement.style.colorScheme=resolved}catch{document.documentElement.dataset.theme="light";document.documentElement.style.colorScheme="light"}`;
+const themeInitializationScript = `try{const theme=localStorage.getItem("lab-ui-theme");document.documentElement.dataset.theme=theme==="dark"?"dark":"light"}catch{document.documentElement.dataset.theme="light"}`;
 
 export const metadata: Metadata = {
   title: "APIセキュリティ学習・検証プラットフォーム",

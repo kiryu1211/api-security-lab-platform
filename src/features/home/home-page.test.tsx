@@ -22,6 +22,7 @@ describe("HomePage public showcase", () => {
     const { container } = render(<HomePage publicShowcase />);
 
     expect(screen.getByText("公開ショーケース")).toBeTruthy();
+    expect(container.querySelector("[style]")).toBeNull();
     const comparisonGrid = container.querySelector(".comparison-grid");
     const actionRow = container.querySelector(".demo-action-row");
 
@@ -64,5 +65,15 @@ describe("HomePage public showcase", () => {
         /displays representative request results without sending an API request/,
       ),
     ).toBeTruthy();
+  });
+
+  it("switches themes without creating inline style attributes", () => {
+    const { container } = render(<HomePage publicShowcase />);
+
+    fireEvent.click(screen.getByRole("button", { name: "ダークテーマ" }));
+
+    expect(document.documentElement.dataset.theme).toBe("dark");
+    expect(document.documentElement.hasAttribute("style")).toBe(false);
+    expect(container.querySelector("[style]")).toBeNull();
   });
 });

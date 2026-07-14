@@ -11,14 +11,19 @@ function createNonce() {
 }
 
 function createContentSecurityPolicy(nonce: string) {
+  const development = process.env.NODE_ENV === "development";
   const scriptSources = [
     "'self'",
     `'nonce-${nonce}'`,
     "'strict-dynamic'",
-    ...(process.env.NODE_ENV === "development" ? ["'unsafe-eval'"] : []),
+    ...(development ? ["'unsafe-eval'"] : []),
   ].join(" ");
+  const styleSources = development
+    ? "'self' 'unsafe-inline'"
+    : `'self' 'nonce-${nonce}'`;
+  const styleAttributes = development ? "'unsafe-inline'" : "'none'";
 
-  return `default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; script-src ${scriptSources}; script-src-attr 'none'; style-src 'self' 'unsafe-inline'`;
+  return `default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; script-src ${scriptSources}; script-src-attr 'none'; style-src ${styleSources}; style-src-attr ${styleAttributes}`;
 }
 
 export function middleware(request: NextRequest) {

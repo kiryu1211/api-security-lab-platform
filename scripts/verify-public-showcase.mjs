@@ -36,7 +36,12 @@ const scriptDirective =
   firstPolicy
     .split(";")
     .find((directive) => directive.trim().startsWith("script-src ")) ?? "";
+const styleDirective =
+  firstPolicy
+    .split(";")
+    .find((directive) => directive.trim().startsWith("style-src ")) ?? "";
 const scriptTags = [...firstHome.matchAll(/<script\b([^>]*)>/g)];
+const styleTags = [...firstHome.matchAll(/<style\b([^>]*)>/g)];
 
 requireCondition(
   firstHomeResponse.status === 200,
@@ -64,10 +69,27 @@ requireCondition(
   firstPolicy.includes("script-src-attr 'none'"),
   "Inline script attributes are not disabled.",
 );
+requireCondition(
+  styleDirective.includes(`'nonce-${firstNonce}'`) &&
+    !styleDirective.includes("'unsafe-inline'"),
+  "The production style-src directive is not nonce-based.",
+);
+requireCondition(
+  firstPolicy.includes("style-src-attr 'none'"),
+  "Inline style attributes are not disabled.",
+);
 requireCondition(scriptTags.length > 0, "No script tags were rendered.");
 requireCondition(
   scriptTags.every((match) => match[1].includes(`nonce="${firstNonce}"`)),
   "A rendered script is missing the response nonce.",
+);
+requireCondition(
+  styleTags.every((match) => match[1].includes(`nonce="${firstNonce}"`)),
+  "A rendered style element is missing the response nonce.",
+);
+requireCondition(
+  !/<[^>]+\sstyle=/.test(firstHome),
+  "The document contains an inline style attribute.",
 );
 requireCondition(
   secondHome.includes(`nonce="${secondNonce}"`),
@@ -115,5 +137,5 @@ for (const [path, init] of apiCases) {
 }
 
 console.log(
-  `Verified public showcase: ${scriptTags.length} nonce-bearing scripts, fresh nonces, and blocked APIs.`,
+  `Verified public showcase: ${scriptTags.length} scripts, ${styleTags.length} styles, strict nonces, and blocked APIs.`,
 );

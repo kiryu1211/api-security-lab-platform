@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light;
   --background: #f7f2ea;
   --foreground: #17202a;
   --muted: #5f6b7a;
@@ -42,6 +43,10 @@ body {
     sans-serif;
 }
 
+body[data-opening-locked="true"] {
+  overflow: hidden;
+}
+
 button,
 input,
 select,
@@ -54,7 +59,12 @@ a {
 }
 
 .app-shell {
+  --hero-lead-delay: 1354ms;
   min-height: 100vh;
+}
+
+.app-shell[data-language="en"] {
+  --hero-lead-delay: 1620ms;
 }
 
 .app-shell[data-entry="opening"] .site-header,
@@ -86,6 +96,90 @@ a {
 .app-shell[data-entry="opening-exit"] .hero-title-character {
   animation: hero-character-enter 620ms var(--motion-ease)
     var(--character-delay) both;
+}
+
+.hero-title-character:nth-child(1) {
+  --character-delay: 440ms;
+}
+
+.hero-title-character:nth-child(2) {
+  --character-delay: 478ms;
+}
+
+.hero-title-character:nth-child(3) {
+  --character-delay: 516ms;
+}
+
+.hero-title-character:nth-child(4) {
+  --character-delay: 554ms;
+}
+
+.hero-title-character:nth-child(5) {
+  --character-delay: 592ms;
+}
+
+.hero-title-character:nth-child(6) {
+  --character-delay: 630ms;
+}
+
+.hero-title-character:nth-child(7) {
+  --character-delay: 668ms;
+}
+
+.hero-title-character:nth-child(8) {
+  --character-delay: 706ms;
+}
+
+.hero-title-character:nth-child(9) {
+  --character-delay: 744ms;
+}
+
+.hero-title-character:nth-child(10) {
+  --character-delay: 782ms;
+}
+
+.hero-title-character:nth-child(11) {
+  --character-delay: 820ms;
+}
+
+.hero-title-character:nth-child(12) {
+  --character-delay: 858ms;
+}
+
+.hero-title-character:nth-child(13) {
+  --character-delay: 896ms;
+}
+
+.hero-title-character:nth-child(14) {
+  --character-delay: 934ms;
+}
+
+.hero-title-character:nth-child(15) {
+  --character-delay: 972ms;
+}
+
+.hero-title-character:nth-child(16) {
+  --character-delay: 1010ms;
+}
+
+.hero-title-character:nth-child(17) {
+  --character-delay: 1048ms;
+}
+
+.hero-title-character:nth-child(18) {
+  --character-delay: 1086ms;
+}
+
+.hero-title-character:nth-child(19) {
+  --character-delay: 1124ms;
+}
+
+.hero-title-character:nth-child(20) {
+  --character-delay: 1162ms;
+}
+
+.hero-title-character:nth-child(21) {
+  --character-delay: 1200ms;
 }
 
 .app-shell[data-entry="opening-exit"] .hero-lead {
@@ -1785,6 +1879,7 @@ a {
 }
 
 html[data-theme="dark"] {
+  color-scheme: dark;
   --background: #0b1220;
   --foreground: #e6edf7;
   --muted: #a9b7c8;
