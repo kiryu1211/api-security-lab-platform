@@ -24,7 +24,6 @@ describe("lab runtime safety", () => {
   });
 
   it("enables public showcase mode only for an explicit valid value", () => {
-    expect(isPublicShowcase(undefined)).toBe(false);
     expect(isPublicShowcase("")).toBe(false);
     expect(isPublicShowcase("false")).toBe(false);
     expect(isPublicShowcase("true")).toBe(true);

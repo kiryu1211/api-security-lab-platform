@@ -20,7 +20,6 @@ jobs:
     timeout-minutes: 15
     env:
       LAB_MODE: disabled
-      PUBLIC_SHOWCASE: "true"
     steps:
       - name: Check out repository
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
@@ -53,9 +52,13 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          PUBLIC_SHOWCASE: "true"
 
       - name: Build Cloudflare Worker
         run: npm run build:cloudflare
+        env:
+          PUBLIC_SHOWCASE: "true"
 
       - name: Verify Cloudflare free-tier bundle
         run: npm run dry-run:cloudflare
