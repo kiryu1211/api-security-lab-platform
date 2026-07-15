@@ -17,6 +17,9 @@ updates:
       - dependency-name: eslint
         update-types:
           - version-update:semver-major
+      - dependency-name: typescript
+        update-types:
+          - version-update:semver-major
     groups:
       production-minor-patch:
         dependency-type: production
