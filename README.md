@@ -94,7 +94,7 @@ Vulnerable APIs are for local verification only. Do not run them in shared or pu
 
 The Cloudflare Workers configuration is a read-only public showcase. It exposes learning content, request examples, design differences, implementation flows, and interactive request-result panels backed by synthetic data, but it does not provide live API demos.
 
-Development and verification require Node.js 22.12.0 or later. CI uses the latest available Node.js 22 release.
+Development and verification require Node.js 22.13.0 or later. CI uses the latest available Node.js 22 release.
 
 ## Development Commands
 

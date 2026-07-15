@@ -21,7 +21,7 @@
     "dry-run:cloudflare": "wrangler deploy --dry-run"
   },
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.13.0"
   },
   "dependencies": {
     "next": "^16.2.10",
