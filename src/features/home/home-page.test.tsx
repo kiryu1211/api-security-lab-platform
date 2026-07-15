@@ -67,6 +67,19 @@ describe("HomePage public showcase", () => {
     ).toBeTruthy();
   });
 
+  it("restores persisted language and theme preferences", () => {
+    window.localStorage.setItem("lab-ui-language", "en");
+    window.localStorage.setItem("lab-ui-theme", "dark");
+
+    render(<HomePage publicShowcase />);
+
+    expect(
+      screen.getByRole("button", { name: "Show request results" }),
+    ).toBeTruthy();
+    expect(document.documentElement.lang).toBe("en");
+    expect(document.documentElement.dataset.theme).toBe("dark");
+  });
+
   it("switches themes without creating inline style attributes", () => {
     const { container } = render(<HomePage publicShowcase />);
 

@@ -837,8 +837,9 @@ export const implementationWalkthroughs: Record<
       lines: [
         { code: "export async function GET(request, { params }) {" },
         { code: "  assertVulnerableApiEnabled();" },
+        { code: "  const { orderId } = await params;" },
         {
-          code: "  const order = findOrderById(params.orderId);",
+          code: "  const order = findOrderById(orderId);",
           highlight: "issue",
           comment: {
             ja: "利用者が指定したIDだけで対象データを取得しています。",
@@ -864,7 +865,8 @@ export const implementationWalkthroughs: Record<
       lines: [
         { code: "export async function GET(request, { params }) {" },
         { code: "  const userId = requireUserId(request);" },
-        { code: "  const order = findOrderById(params.orderId);" },
+        { code: "  const { orderId } = await params;" },
+        { code: "  const order = findOrderById(orderId);" },
         {
           code: "  if (order.ownerId !== userId) return forbidden();",
           highlight: "fix",

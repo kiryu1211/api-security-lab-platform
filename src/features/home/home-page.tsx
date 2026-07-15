@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
   getImplementationWalkthrough,
   getLearningContextNote,
@@ -23,6 +23,40 @@ type Theme = "light" | "dark";
 
 function isTheme(value: string | null): value is Theme {
   return value === "light" || value === "dark";
+}
+
+function subscribeToInitialBrowserState() {
+  return () => {};
+}
+
+function getStoredLanguage(): Language {
+  try {
+    const language = window.localStorage.getItem(languageStorageKey);
+    return isLanguage(language) ? language : defaultLanguage;
+  } catch {
+    return defaultLanguage;
+  }
+}
+
+function getStoredTheme(): Theme {
+  try {
+    const theme = window.localStorage.getItem(themeStorageKey);
+    return isTheme(theme) ? theme : "light";
+  } catch {
+    return "light";
+  }
+}
+
+function shouldSkipOpening() {
+  try {
+    if (window.sessionStorage.getItem(openingStorageKey) === "seen") {
+      return true;
+    }
+  } catch {
+    // Storage is optional; reduced motion still takes precedence when available.
+  }
+
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 const difficultyLabels = {
@@ -54,13 +88,28 @@ export function HomePage({
 }) {
   const openingAutoCloseTimerRef = useRef<number | null>(null);
   const brandRef = useRef<HTMLAnchorElement>(null);
-  const [language, setLanguage] = useState<Language>(defaultLanguage);
-  const [theme, setTheme] = useState<Theme>("light");
-  const [openingChecked, setOpeningChecked] = useState(false);
+  const storedLanguage = useSyncExternalStore(
+    subscribeToInitialBrowserState,
+    getStoredLanguage,
+    () => defaultLanguage,
+  );
+  const storedTheme = useSyncExternalStore(
+    subscribeToInitialBrowserState,
+    getStoredTheme,
+    () => "light",
+  );
+  const skipOpening = useSyncExternalStore(
+    subscribeToInitialBrowserState,
+    shouldSkipOpening,
+    () => false,
+  );
+  const [languageOverride, setLanguage] = useState<Language | null>(null);
+  const [themeOverride, setTheme] = useState<Theme | null>(null);
+  const [openingReady, setOpeningReady] = useState(false);
   const [openingVisible, setOpeningVisible] = useState(false);
   const [openingLeaving, setOpeningLeaving] = useState(false);
   const [openingCompleted, setOpeningCompleted] = useState(false);
-  const [contentRevealReady, setContentRevealReady] = useState(false);
+  const [contentRevealCompleted, setContentRevealCompleted] = useState(false);
   const [selectedModuleId, setSelectedModuleId] =
     useState<LearningModuleId>("bola");
   const [demoState, setDemoState] = useState<
@@ -77,6 +126,10 @@ export function HomePage({
     "api-inventory": { loading: false },
     "unsafe-consumption": { loading: false },
   });
+  const language = languageOverride ?? storedLanguage;
+  const theme = themeOverride ?? storedTheme;
+  const openingChecked = skipOpening || openingReady;
+  const contentRevealReady = skipOpening || contentRevealCompleted;
   const t = uiText[language];
   const selectedModule = getLearningModule(selectedModuleId);
   const implementationWalkthrough =
@@ -89,35 +142,8 @@ export function HomePage({
 
   useEffect(() => {
     let cancelled = false;
-    let savedLanguage: string | null = null;
-    let savedTheme: string | null = null;
-    let openingSeen = false;
 
-    try {
-      savedLanguage = window.localStorage.getItem(languageStorageKey);
-      savedTheme = window.localStorage.getItem(themeStorageKey);
-      openingSeen = window.sessionStorage.getItem(openingStorageKey) === "seen";
-    } catch {
-      // Storage is optional; privacy settings must not block the application.
-    }
-
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-
-    if (isLanguage(savedLanguage)) {
-      setLanguage(savedLanguage);
-      document.documentElement.lang = savedLanguage;
-    }
-
-    if (isTheme(savedTheme)) {
-      setTheme(savedTheme);
-      document.documentElement.dataset.theme = savedTheme;
-    }
-
-    if (reduceMotion || openingSeen) {
-      setOpeningChecked(true);
-      setContentRevealReady(true);
+    if (skipOpening) {
       return;
     }
 
@@ -129,7 +155,7 @@ export function HomePage({
       }
 
       setOpeningVisible(true);
-      setOpeningChecked(true);
+      setOpeningReady(true);
 
       openingAutoCloseTimerRef.current = window.setTimeout(() => {
         openingAutoCloseTimerRef.current = null;
@@ -146,7 +172,12 @@ export function HomePage({
         openingAutoCloseTimerRef.current = null;
       }
     };
-  }, []);
+  }, [skipOpening]);
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+    document.documentElement.dataset.theme = theme;
+  }, [language, theme]);
 
   useEffect(() => {
     if (openingChecked && !openingVisible) {
@@ -188,7 +219,7 @@ export function HomePage({
     const heroSequenceDuration =
       860 + Math.max(titleCharacterCount - 1, 0) * 38 + 680;
     const contentRevealTimer = window.setTimeout(() => {
-      setContentRevealReady(true);
+      setContentRevealCompleted(true);
     }, heroSequenceDuration);
 
     return () => window.clearTimeout(contentRevealTimer);
