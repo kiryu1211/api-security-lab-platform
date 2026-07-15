@@ -170,3 +170,92 @@ test("keeps the interactive showcase functional without CSP violations or API ca
     await page.evaluate(() => (window as CspWindow).__cspViolations ?? []),
   ).toEqual([]);
 });
+
+test("keeps the opening dialog keyboard accessible in both languages", async ({
+  page,
+}) => {
+  const consoleErrors: string[] = [];
+  const pageErrors: string[] = [];
+
+  page.on("console", (message) => {
+    if (message.type() === "error") {
+      consoleErrors.push(message.text());
+    }
+  });
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+
+  const response = await page.goto("/");
+  const japaneseDialog = page.getByRole("dialog", {
+    name: "APIを守る設計を、見える形に。",
+  });
+  const japaneseSkipButton = page.getByRole("button", { name: "スキップ" });
+
+  expect(response?.status()).toBe(200);
+  await expect(japaneseDialog).toBeVisible();
+  await expect(japaneseDialog).toHaveAttribute("aria-modal", "true");
+  await expect(japaneseSkipButton).toBeFocused();
+  await expect(page.locator("header")).toHaveAttribute("inert", "");
+  await expect(page.locator("main")).toHaveAttribute("inert", "");
+  await page.keyboard.press("Tab");
+  await expect(japaneseSkipButton).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(japaneseSkipButton).toBeFocused();
+  await page.evaluate(() => {
+    document.getAnimations().forEach((animation) => animation.finish());
+  });
+  await expectNoAccessibilityViolations(page);
+
+  await page.keyboard.press("Escape");
+  await expect(japaneseDialog).toHaveCount(0);
+  const japaneseBrand = page.getByRole("link", {
+    name: "APIセキュリティ学習・検証プラットフォーム",
+  });
+  await expect(japaneseBrand).toBeFocused();
+  await expect(page.locator("header")).not.toHaveAttribute("inert", "");
+  await expect(page.locator("main")).not.toHaveAttribute("inert", "");
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        window.sessionStorage.getItem("api-security-lab-opening-seen"),
+      ),
+    )
+    .toBe("seen");
+
+  await page.evaluate(() => {
+    window.localStorage.setItem("lab-ui-language", "en");
+    window.sessionStorage.removeItem("api-security-lab-opening-seen");
+  });
+  await page.reload();
+  const englishDialog = page.getByRole("dialog", {
+    name: "Make API Defenses Visible",
+  });
+  const englishSkipButton = page.getByRole("button", { name: "Skip" });
+
+  await expect(englishDialog).toBeVisible();
+  await expect(englishSkipButton).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(englishDialog).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: "API Security Lab Platform" }),
+  ).toBeFocused();
+  await expect(
+    page.getByRole("heading", { name: "API Security Risk Lab" }),
+  ).toBeVisible();
+
+  await page.evaluate(() => {
+    window.sessionStorage.removeItem("api-security-lab-opening-seen");
+  });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.reload();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "API Security Risk Lab" }),
+  ).toBeVisible();
+  await expect(page.locator("body")).not.toHaveAttribute(
+    "data-opening-locked",
+    "true",
+  );
+  expect(consoleErrors).toEqual([]);
+  expect(pageErrors).toEqual([]);
+});

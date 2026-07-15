@@ -64,6 +64,7 @@
 - Japanese and English UI modes must keep visible text consistent within the selected language.
 - Desktop and mobile Chromium tests run automated WCAG 2.0, 2.1, and 2.2 A/AA checks with axe against both the initial Japanese state and the English, dark-theme, result-visible state of a public-showcase-equivalent environment, with no automatically detectable violations.
 - Primary theme, language, and request-result controls must operate by keyboard, and keyboard focus must reach horizontally scrollable result regions.
+- The opening dialog must provide initial focus and a Tab/Shift+Tab focus trap, close through Escape and its skip control, move focus to the first main-screen control after closing, and be bypassed when reduced motion is requested.
 - Tests verify that an unset or invalid `LAB_MODE` keeps vulnerable APIs disabled and that only explicit local mode with loopback request conditions enables them.
 - Invalid UTF-8, malformed JSON, unsupported content types, and bodies larger than 16 KiB are rejected with consistent 400, 415, and 413 responses.
 - Tests verify that the HTML nonce changes on every request, every script and style element receives the matching nonce, production `script-src` and `style-src` contain no `'unsafe-inline'`, and `script-src` contains no `'unsafe-eval'`. Tests also verify that HTML has no style attributes, `style-src-attr 'none'` and `script-src-attr 'none'` are enforced, and both HTML and API responses use `no-store`.

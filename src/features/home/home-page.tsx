@@ -53,6 +53,7 @@ export function HomePage({
   publicShowcase?: boolean;
 }) {
   const openingAutoCloseTimerRef = useRef<number | null>(null);
+  const brandRef = useRef<HTMLAnchorElement>(null);
   const [language, setLanguage] = useState<Language>(defaultLanguage);
   const [theme, setTheme] = useState<Theme>("light");
   const [openingChecked, setOpeningChecked] = useState(false);
@@ -192,6 +193,12 @@ export function HomePage({
 
     return () => window.clearTimeout(contentRevealTimer);
   }, [openingCompleted, t.hero.title]);
+
+  useEffect(() => {
+    if (openingCompleted && !openingVisible) {
+      brandRef.current?.focus();
+    }
+  }, [openingCompleted, openingVisible]);
 
   useEffect(() => {
     if (!contentRevealReady) {
@@ -528,7 +535,7 @@ export function HomePage({
         aria-hidden={openingActive ? true : undefined}
         inert={openingActive ? true : undefined}
       >
-        <a className="brand" href="#top" aria-label={t.brand}>
+        <a className="brand" href="#top" aria-label={t.brand} ref={brandRef}>
           <span className="brand-mark" aria-hidden="true">
             <svg viewBox="0 0 48 48" role="img" focusable="false">
               <path
