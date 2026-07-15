@@ -194,7 +194,7 @@ a {
   gap: 1rem;
   padding: 1rem clamp(1rem, 4vw, 3rem);
   border-bottom: 1px solid rgba(234, 223, 206, 0.86);
-  background: rgba(255, 250, 242, 0.82);
+  background: var(--panel);
   backdrop-filter: blur(14px);
   position: sticky;
   top: 0;
@@ -1919,7 +1919,7 @@ html[data-theme="dark"] body {
 
 html[data-theme="dark"] .site-header {
   border-bottom-color: rgba(71, 85, 105, 0.78);
-  background: rgba(11, 18, 32, 0.84);
+  background: var(--background);
 }
 
 html[data-theme="dark"] .brand-mark {

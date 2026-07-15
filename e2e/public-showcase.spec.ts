@@ -12,6 +12,59 @@ const accessibilityTags = [
   "wcag22aa",
 ];
 
+const topicMatrix = [
+  {
+    ja: "BOLAとオブジェクト単位の認可確認",
+    en: "BOLA and Object Ownership Checks",
+    statuses: [200, 403],
+  },
+  {
+    ja: "認証とトークン検証",
+    en: "Authentication and Token Validation",
+    statuses: [200, 401],
+  },
+  {
+    ja: "Mass Assignmentとプロパティ認可",
+    en: "Mass Assignment and Property Authorization",
+    statuses: [200, 403],
+  },
+  {
+    ja: "レート制限と自動化悪用対策",
+    en: "Rate Limiting and Abuse Prevention",
+    statuses: [200, 429],
+  },
+  {
+    ja: "機能単位の認可と管理操作の保護",
+    en: "Function-Level Authorization for Admin Actions",
+    statuses: [200, 403],
+  },
+  {
+    ja: "Sensitive Business Flowsと業務フロー悪用対策",
+    en: "Sensitive Business Flows and Abuse Controls",
+    statuses: [200, 403],
+  },
+  {
+    ja: "SSRFと外部URL取得制御",
+    en: "SSRF and Outbound URL Controls",
+    statuses: [200, 403],
+  },
+  {
+    ja: "Security Misconfigurationと診断情報の公開制御",
+    en: "Security Misconfiguration and Diagnostic Exposure Controls",
+    statuses: [200, 200],
+  },
+  {
+    ja: "APIインベントリと旧バージョン管理",
+    en: "API Inventory and Legacy Version Management",
+    statuses: [200, 403],
+  },
+  {
+    ja: "外部API応答の過信と検証",
+    en: "Unsafe Consumption of Third-Party APIs",
+    statuses: [200, 403],
+  },
+] as const;
+
 async function expectNoAccessibilityViolations(page: Page) {
   await page.evaluate(async () => {
     await new Promise<void>((resolve) => {
@@ -169,6 +222,82 @@ test("keeps the interactive showcase functional without CSP violations or API ca
   expect(
     await page.evaluate(() => (window as CspWindow).__cspViolations ?? []),
   ).toEqual([]);
+});
+
+test("covers every learning topic in Japanese and English without accessibility regressions", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  const apiRequests: string[] = [];
+  const consoleErrors: string[] = [];
+  const pageErrors: string[] = [];
+
+  page.on("request", (request) => {
+    const pathname = new URL(request.url()).pathname;
+
+    if (pathname === "/api" || pathname.startsWith("/api/")) {
+      apiRequests.push(`${request.method()} ${pathname}`);
+    }
+  });
+  page.on("console", (message) => {
+    if (message.type() === "error") {
+      consoleErrors.push(message.text());
+    }
+  });
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem("api-security-lab-opening-seen", "seen");
+  });
+  const response = await page.goto("/");
+  const topicButtons = page.locator(".topic-card");
+  const resultBoxes = page.locator('.api-result-box[data-has-result="true"]');
+
+  expect(response?.status()).toBe(200);
+  await expect(topicButtons).toHaveCount(topicMatrix.length);
+
+  for (const topic of topicMatrix) {
+    const topicButton = page.getByRole("button", { name: topic.ja });
+
+    await topicButton.click();
+    await expect(topicButton).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator(".detail-panel h3")).toHaveText(topic.ja);
+    await page.getByRole("button", { name: "リクエスト結果を表示" }).click();
+    await expect(resultBoxes).toHaveCount(2);
+    await expect(resultBoxes.first().locator("pre")).toContainText(
+      `HTTP ${topic.statuses[0]}`,
+    );
+    await expect(resultBoxes.last().locator("pre")).toContainText(
+      `HTTP ${topic.statuses[1]}`,
+    );
+    await expectNoAccessibilityViolations(page);
+  }
+
+  await page.getByRole("button", { name: "英語" }).click();
+
+  for (const topic of topicMatrix) {
+    const topicButton = page.getByRole("button", { name: topic.en });
+
+    await topicButton.click();
+    await expect(topicButton).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator(".detail-panel h3")).toHaveText(topic.en);
+    await expect(resultBoxes).toHaveCount(2);
+    await expect(resultBoxes.first()).toContainText(
+      "Vulnerable API request result",
+    );
+    await expect(resultBoxes.last()).toContainText("Secure API request result");
+    await expect(resultBoxes.first().locator("pre")).toContainText(
+      `HTTP ${topic.statuses[0]}`,
+    );
+    await expect(resultBoxes.last().locator("pre")).toContainText(
+      `HTTP ${topic.statuses[1]}`,
+    );
+    await expectNoAccessibilityViolations(page);
+  }
+
+  expect(apiRequests).toEqual([]);
+  expect(consoleErrors).toEqual([]);
+  expect(pageErrors).toEqual([]);
 });
 
 test("keeps the opening dialog keyboard accessible in both languages", async ({
