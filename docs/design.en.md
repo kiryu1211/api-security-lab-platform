@@ -154,6 +154,7 @@ erDiagram
 - Visual regression checks capture the initial Japanese light-theme viewport plus the English dark-theme comparison heading and vulnerable result panel after fonts, two animation frames, and document animations settle. Animations and carets are disabled during capture, reduced motion is requested, and baselines are separated by Playwright project and operating system to account for platform font rendering.
 - Failed browser verification uploads Playwright screenshots, diffs, error context, and retained traces as a seven-day diagnostic artifact without exposing deployment credentials.
 - The `main` branch requires a pull request and a successful `verify` check produced by GitHub Actions, requires the branch to be up to date before merging, and enforces the protection for administrators. The single-maintainer workflow requires no approving review, while force pushes and branch deletion remain disabled. A successful merge triggers the existing push workflow, which repeats verification before deployment.
+- Development and CI support Node.js 22.12.0 or later, and direct Node.js declarations use the matching `@types/node` 22 major. Dependabot continues to propose minor and patch updates for those declarations but ignores their major updates until the supported runtime major is deliberately upgraded and verified.
 
 ### Route Separation And Vulnerable API Safety Guard
 

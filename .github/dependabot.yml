@@ -10,6 +10,10 @@ updates:
       timezone: Asia/Tokyo
     open-pull-requests-limit: 5
     rebase-strategy: auto
+    ignore:
+      - dependency-name: "@types/node"
+        update-types:
+          - version-update:semver-major
     groups:
       production-minor-patch:
         dependency-type: production
