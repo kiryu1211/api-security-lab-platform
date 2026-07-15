@@ -22,6 +22,13 @@ function nonceFrom(policy) {
   return policy.match(/'nonce-([^']+)'/)?.[1];
 }
 
+function attributeFrom(attributes, name) {
+  const match = attributes.match(
+    new RegExp(`\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`),
+  );
+  return match?.[1] ?? match?.[2];
+}
+
 const firstHomeResponse = await request("/");
 const firstHome = await firstHomeResponse.text();
 const secondHomeResponse = await request("/");
@@ -42,11 +49,19 @@ const styleDirective =
     .find((directive) => directive.trim().startsWith("style-src ")) ?? "";
 const scriptTags = [...firstHome.matchAll(/<script\b([^>]*)>/g)];
 const styleTags = [...firstHome.matchAll(/<style\b([^>]*)>/g)];
+const linkTags = [...firstHome.matchAll(/<link\b([^>]*)>/g)];
+const scriptPaths = [
+  ...new Set(
+    scriptTags.map((match) => attributeFrom(match[1], "src")).filter(Boolean),
+  ),
+];
 const stylesheetPaths = [
   ...new Set(
-    [...firstHome.matchAll(/<link\b[^>]*href="([^"]+\.css)"[^>]*>/g)].map(
-      (match) => match[1],
-    ),
+    linkTags
+      .map((match) => attributeFrom(match[1], "href"))
+      .filter(
+        (path) => path && new URL(path, baseUrl).pathname.endsWith(".css"),
+      ),
   ),
 ];
 
@@ -86,6 +101,18 @@ requireCondition(
   "Inline style attributes are not disabled.",
 );
 requireCondition(scriptTags.length > 0, "No script tags were rendered.");
+requireCondition(scriptPaths.length > 0, "No external scripts were rendered.");
+requireCondition(
+  scriptPaths.every((path) => {
+    const url = new URL(path, baseUrl);
+    return (
+      url.origin === baseUrl.origin &&
+      url.pathname.startsWith("/_next/static/") &&
+      url.pathname.endsWith(".js")
+    );
+  }),
+  "A rendered external script is not a self-hosted Next.js static asset.",
+);
 requireCondition(
   scriptTags.every((match) => match[1].includes(`nonce="${firstNonce}"`)),
   "A rendered script is missing the response nonce.",
@@ -109,6 +136,18 @@ requireCondition(
   "The public showcase controls are missing or misplaced.",
 );
 requireCondition(stylesheetPaths.length > 0, "No stylesheets were rendered.");
+
+for (const path of scriptPaths) {
+  const response = await request(path);
+  const cacheControl = response.headers.get("cache-control") ?? "";
+
+  requireCondition(response.status === 200, `${path} did not return 200.`);
+  requireCondition(
+    cacheControl.includes("max-age=31536000") &&
+      cacheControl.includes("immutable"),
+    `${path} is not cached as an immutable content-identified script.`,
+  );
+}
 
 for (const path of stylesheetPaths) {
   const response = await request(path);
@@ -158,5 +197,5 @@ for (const [path, init] of apiCases) {
 }
 
 console.log(
-  `Verified public showcase: ${scriptTags.length} scripts, ${styleTags.length} styles, ${stylesheetPaths.length} revalidated stylesheets, strict nonces, and blocked APIs.`,
+  `Verified public showcase: ${scriptPaths.length} immutable scripts, ${styleTags.length} styles, ${stylesheetPaths.length} revalidated stylesheets, strict nonces, and blocked APIs.`,
 );
