@@ -151,6 +151,9 @@ erDiagram
 - 公開ショーケースモードは`PUBLIC_SHOWCASE=true`で有効化する。Middlewareは安全APIを含むすべての`/api/*`リクエストをRoute Handlerへ到達する前に拒否する。UIでは日英の読み取り専用案内を維持し、`fetch`を呼び出さずに合成データによるリクエスト結果を既存の結果パネルへ読み込めるようにする。空でない値のうち明示的な`false`以外は、安全側へ倒して公開境界を有効にする。
 - CIでは`LAB_MODE=disabled`と`PUBLIC_SHOWCASE=true`を強制し、依存関係とアプリケーションの検証、OpenNext Workerの1回だけのビルド、Wrangler dry run、workerdへのHTTP境界検証を順に実行する。workerd検証ではHTMLを2回取得し、nonceの一意性、全script・style要素との一致、HTMLからのstyle属性除外、本番`script-src`・`style-src`からの`'unsafe-inline'`除外、`script-src`からの`'unsafe-eval'`除外、公開API遮断を確認する。同じworkerd成果物に対するPlaywrightのデスクトップ・モバイルChromiumテストで、CSP違反、公開操作からの`/api`通信、結果表示、テーマ保持、日英切替を実ブラウザー検証する。テストはreduced-motion状態でaxeを実行し、日本語初期状態と英語・ダークテーマ・結果表示後のWCAG 2.0・2.1・2.2 A/AA違反を検査する。全テーマ横断テストはOWASP API1からAPI10までを日本語で選択してテーマ固有の合成結果を表示し、英語へ切り替えて同じ10テーマのタイトル、結果ステータス、axe違反なし、`/api`通信なしを再確認する。テーマ、言語、結果表示をTabとEnterで操作し、スクロール可能な結果本文へのフォーカスも確認する。オープニング専用テストでは通常モーションで日英の初回ダイアログ、初期フォーカス、Tab・Shift+Tabトラップ、Escape・スキップ終了、終了後のブランドフォーカス、表示済み状態の保存を確認し、reduced-motionではダイアログを省略する。検証はpush、Pull Request、手動実行、および毎週月曜12:17（日本時間）に行う。scheduleイベントではdeploy jobの条件を満たさず、Cloudflare認証情報を使用しない。npm依存関係は毎週火曜、GitHub Actionsは毎週水曜にDependabotが確認し、minor・patch更新を用途別にグループ化したPull Request、major更新を個別Pull Requestとして提示する。検証済みの`.open-next`成果物を変更せずdeploy jobへ渡し、Cloudflare認証情報は`main`へのpushで全検証が成功した後の最終deployステップだけへ公開する。デプロイはリポジトリ設定で明示的に有効化した場合だけ実行する。
 
+- 視覚回帰テストでは、フォントの読み込み、2回の描画フレーム、文書内アニメーションの完了後に、日本語・ライトテーマの初期表示範囲、英語・ダークテーマの比較見出しと脆弱側結果パネルを取得する。取得時はアニメーションとキャレットを無効化して動きを抑える設定を要求し、OS固有のフォント描画差を考慮してPlaywrightのプロジェクト・OS別に基準画像を分離する。
+- ブラウザー検証に失敗した場合は、Playwrightのスクリーンショット、差分、エラー情報、保持したtraceを、デプロイ用認証情報に触れない7日間の診断用artifactとして保存する。
+
 ### ルート分離と脆弱API安全ガード
 
 安全APIは各モジュールの検証を通過した場合だけ合成データを処理します。脆弱APIはそれに加えて共通の安全ガードを通り、ローカル学習環境の条件を満たさない場合はデモ処理へ進みません。

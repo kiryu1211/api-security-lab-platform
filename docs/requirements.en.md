@@ -72,6 +72,7 @@
 - Public showcase tests and a workerd preview verify that secure and vulnerable API routes both return `403 PUBLIC_SHOWCASE_API_DISABLED` before route handling.
 - Component tests verify that the public request-result control appears after the API examples and renders both comparison results without calling `fetch`; static-data tests cover every learning module.
 - Playwright desktop and mobile Chromium tests verify that no CSP violation occurs, the public control makes no `/api` request, vulnerable and secure request results render, theme selection persists, and Japanese/English switching works.
+- Desktop and mobile Chromium screenshot tests compare the initial Japanese light-theme viewport and representative English dark-theme comparison regions with OS-specific baselines after fonts, animation frames, and document animations have settled.
 
 ### Requirements-to-Verification Traceability
 

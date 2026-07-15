@@ -103,7 +103,7 @@ Cloudflare Workers向け設定は、読み取り専用の公開ショーケー�
 - `npm run format`: Prettierでフォーマットを確認する。
 - `npm run typecheck`: TypeScriptの型チェックを実行する。
 - `npm run test`: Vitestのテストを実行する。
-- `npm run test:e2e`: `PLAYWRIGHT_BASE_URL`で指定した公開ショーケース相当環境に対し、Chromiumのデスクトップ・モバイルE2Eテストを実行する。CSPとAPI境界に加えて、全10学習テーマの日英表示・合成結果・axe検査、主要操作とオープニングダイアログのキーボード動作、reduced-motion時の省略、WCAG 2.0・2.1・2.2 A/AAの自動検査を確認する。初回は`npx playwright install chromium`でブラウザーを導入する。
+- `npm run test:e2e`: `PLAYWRIGHT_BASE_URL`で指定した公開ショーケース相当環境に対し、Chromiumのデスクトップ・モバイルE2Eテストを実行する。CSPとAPI境界に加えて、全10学習テーマの日英表示・合成結果・axe検査、主要操作とオープニングダイアログのキーボード動作、reduced-motion時の省略、WCAG 2.0・2.1・2.2 A/AAの自動検査、代表的なライト・ダーク表示のOS別視覚回帰用基準画像を確認する。初回は`npx playwright install chromium`でブラウザーを導入する。
 - `npm run build`: 本番ビルドを作成する。
 - `npm run build:cloudflare`: OpenNextでCloudflare Worker bundleを作成する。
 - `npm run preview:cloudflare`: Workerをビルドし、workerdでローカルプレビューする。
