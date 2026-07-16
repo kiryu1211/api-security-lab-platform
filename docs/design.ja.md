@@ -187,7 +187,7 @@ flowchart TD
 
 ### Cloudflare公開ショーケース
 
-- `@opennextjs/cloudflare`でNext.jsアプリケーションを`.open-next/worker.js`へ変換し、Wranglerが`.open-next/assets`の生成済み静的アセットを配信する。`assets.run_worker_first=true`により静的アセットのリクエストも先にWorkerへ通し、すべてのパスをHTTPS転送とHSTSの対象にする。
+- `@opennextjs/cloudflare`でNext.jsアプリケーションを`.open-next/worker.js`へ変換し、`worker.ts`で生成済みfetchハンドラーをラップする。`next-router-prefetch`をそのまま渡すとOpenNextランタイムで500になるため、ラッパーが文書prefetch hintをNext.js処理前に除去する。その後、リクエストはMiddlewareを通り、通常のnonce CSPを受け取る。Wranglerは`.open-next/assets`の生成済み静的アセットを配信する。`assets.run_worker_first=true`により静的アセットのリクエストも先にWorkerへ通し、すべてのパスをHTTPS転送とHSTSの対象にする。
 - `wrangler.jsonc`で公開実行環境を`LAB_MODE=disabled`、`NODE_ENV=production`、`PUBLIC_SHOWCASE=true`に固定する。
 - GitHub ActionsではCloudflare認証情報を`production` EnvironmentのSecretsで管理し、Account IDやAPI Tokenを追跡対象ファイルへ記録しない。デプロイ後は公開URLに対して同じ境界検証を再実行する。
 - 公開サイトでは学習コンテンツ、リクエスト例、合成レスポンス例、設計差分、実装フローだけを表示し、安全APIと脆弱APIのライブ実行は提供しない。

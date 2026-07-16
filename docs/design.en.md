@@ -187,7 +187,7 @@ Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route
 
 ### Cloudflare Public Showcase
 
-- `@opennextjs/cloudflare` converts the Next.js application into `.open-next/worker.js`; Wrangler serves generated static assets from `.open-next/assets`. `assets.run_worker_first=true` sends static assets through the Worker first so HTTPS redirects and HSTS cover every path.
+- `@opennextjs/cloudflare` converts the Next.js application into `.open-next/worker.js`, and `worker.ts` wraps that generated fetch handler. The wrapper removes document-prefetch hints before Next.js processing because `next-router-prefetch` otherwise causes a 500 response in the OpenNext runtime; the request then passes through Middleware and receives the normal nonce CSP. Wrangler serves generated static assets from `.open-next/assets`. `assets.run_worker_first=true` sends static assets through the Worker first so HTTPS redirects and HSTS cover every path.
 - `wrangler.jsonc` fixes the public runtime to `LAB_MODE=disabled`, `NODE_ENV=production`, and `PUBLIC_SHOWCASE=true`.
 - GitHub Actions keeps Cloudflare credentials in `production` Environment secrets and does not place account identifiers or API tokens in tracked files. The deployed public URL is verified with the same boundary checks after deployment.
 - The public site exposes only learning content, request examples, synthetic response examples, design differences, and implementation flows. Live secure and vulnerable API execution remains unavailable.
