@@ -154,6 +154,9 @@ describe("public showcase boundary", () => {
       expect(response.headers.get("Content-Security-Policy")).toContain(
         "'nonce-",
       );
+      expect(response.headers.get("x-middleware-override-headers")).not.toMatch(
+        /next-router-prefetch|purpose/,
+      );
     },
   );
 });
