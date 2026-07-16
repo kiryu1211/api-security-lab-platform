@@ -3,7 +3,7 @@
   "info": {
     "title": "API Security Lab Platform API",
     "version": "0.1.0",
-    "description": "Local-first API specification for comparing vulnerable and secure API examples. Vulnerable routes are local-only, disabled by default, and require LAB_MODE=local, NODE_ENV=development or test, a loopback request URL hostname, and a loopback Host header when present. They must not be publicly deployed. JSON bodies allow application/json with optional charset=utf-8, require valid UTF-8 and JSON, and enforce declared and actual sizes up to 16 KiB. Demo identity fields select finite synthetic scenarios and are not authenticated principals. In-memory counters are single-process demo controls. Shared API responses include a Content-Security-Policy based on default-src 'none', Cache-Control: no-store, Referrer-Policy: no-referrer, and X-Content-Type-Options: nosniff; Next.js applies the remaining baseline security headers to all paths."
+    "description": "Local-first API specification for comparing vulnerable and secure API examples. Vulnerable routes are local-only, disabled by default, and require LAB_MODE=local, NODE_ENV=development or test, a loopback request URL hostname, and a loopback Host header when present. They must not be publicly deployed. JSON bodies allow application/json with optional charset=utf-8, require valid UTF-8 and JSON, and enforce declared and actual sizes up to 16 KiB. Demo identity fields select finite synthetic scenarios and are not authenticated principals. In-memory counters are single-process demo controls. Shared API responses enforce Cache-Control: no-store, a Content-Security-Policy based on default-src 'none', cross-origin protections, Permissions Policy, Referrer-Policy: no-referrer, X-Content-Type-Options: nosniff, and frame denial without enabling CORS."
   },
   "servers": [
     {
@@ -1298,10 +1298,10 @@
         "schema": { "type": "integer", "minimum": 1 }
       },
       "ContentSecurityPolicy": {
-        "description": "Restrictive policy applied to protected diagnostic responses.",
+        "description": "Restrictive policy applied to API responses.",
         "schema": {
           "type": "string",
-          "const": "default-src 'none'; frame-ancestors 'none'"
+          "const": "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
         }
       },
       "CrossOriginResourcePolicy": {

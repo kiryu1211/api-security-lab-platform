@@ -16,6 +16,55 @@ function requireCondition(condition, message) {
   }
 }
 
+function headerValue(headers, name) {
+  if (headers instanceof Headers) {
+    return headers.get(name);
+  }
+
+  const value = headers[name.toLowerCase()];
+  return Array.isArray(value) ? value.join(", ") : (value ?? null);
+}
+
+function verifyApiResponseHeaders(headers, label) {
+  const expectations = {
+    "cache-control": "no-store",
+    "content-security-policy":
+      "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+    "cross-origin-opener-policy": "same-origin",
+    "cross-origin-resource-policy": "same-origin",
+    "permissions-policy": "camera=(), geolocation=(), microphone=()",
+    "referrer-policy": "no-referrer",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "DENY",
+  };
+
+  requireCondition(
+    headerValue(headers, "content-type")?.includes("application/json"),
+    `${label} is missing the JSON Content-Type.`,
+  );
+  for (const [name, value] of Object.entries(expectations)) {
+    requireCondition(
+      headerValue(headers, name) === value,
+      `${label} has an unexpected ${name} header.`,
+    );
+  }
+  for (const name of [
+    "access-control-allow-credentials",
+    "access-control-allow-headers",
+    "access-control-allow-methods",
+    "access-control-allow-origin",
+    "access-control-allow-private-network",
+    "access-control-expose-headers",
+    "access-control-max-age",
+    "x-powered-by",
+  ]) {
+    requireCondition(
+      headerValue(headers, name) === null,
+      `${label} must not include ${name}.`,
+    );
+  }
+}
+
 async function reservePort() {
   const server = createServer();
 
@@ -160,6 +209,7 @@ async function waitForVulnerableHealth(serverProcess, port) {
       response.status === 200,
       `The loopback vulnerable health check returned ${response.status}.`,
     );
+    verifyApiResponseHeaders(response.headers, "Vulnerable health response");
     const body = await response.json();
     requireCondition(
       body.ok === true &&
@@ -172,6 +222,25 @@ async function waitForVulnerableHealth(serverProcess, port) {
   }
 
   throw new Error("The local development server did not become ready in time.");
+}
+
+async function verifySecureHealth(port) {
+  const response = await fetch(
+    `http://${loopbackAddress}:${port}/api/secure/health`,
+    {
+      redirect: "error",
+      signal: AbortSignal.timeout(connectionTimeoutMs),
+    },
+  );
+  const body = await response.json();
+
+  requireCondition(
+    response.status === 200 &&
+      body.ok === true &&
+      body.meta?.routeType === "secure",
+    "The loopback secure health response was not successful.",
+  );
+  verifyApiResponseHeaders(response.headers, "Secure health response");
 }
 
 async function requestWithHostHeader(port, host) {
@@ -202,6 +271,7 @@ async function requestWithHostHeader(port, host) {
           try {
             resolve({
               body: JSON.parse(Buffer.concat(chunks).toString("utf8")),
+              headers: response.headers,
               status: response.statusCode,
             });
           } catch {
@@ -220,7 +290,7 @@ async function requestWithHostHeader(port, host) {
 }
 
 async function verifyHostHeaderRejection(port) {
-  const { body, status } = await requestWithHostHeader(
+  const { body, headers, status } = await requestWithHostHeader(
     port,
     "non-loopback.example",
   );
@@ -231,6 +301,7 @@ async function verifyHostHeaderRejection(port) {
       body.error?.code === "VULNERABLE_API_DISABLED",
     "A non-loopback Host header was not rejected by the vulnerable API.",
   );
+  verifyApiResponseHeaders(headers, "Non-loopback Host rejection");
 }
 
 function nonLoopbackIpv4Addresses() {
@@ -313,11 +384,12 @@ process.once("SIGTERM", () => handleSignal(143));
 
 try {
   await waitForVulnerableHealth(serverProcess, port);
+  await verifySecureHealth(port);
   await verifyHostHeaderRejection(port);
   const checkedAddressCount = await verifyNonLoopbackBinding(port);
 
   console.log(
-    `Verified local lab boundary: loopback health enabled, non-loopback Host rejected, and ${checkedAddressCount} non-loopback IPv4 interface(s) unreachable.`,
+    `Verified local lab boundary: protected secure and vulnerable health responses, non-loopback Host rejection, and ${checkedAddressCount} unreachable non-loopback IPv4 interface(s).`,
   );
 } finally {
   await cleanup();

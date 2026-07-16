@@ -45,7 +45,7 @@
 - 認証モジュールでは、不十分なトークン検証を行う脆弱なセッションAPIと、署名状態、期限、失効、権限を検証する安全なセッションAPIを実行して比較できます。
 - レート制限、Broken Function Level Authorization、Sensitive Business Flows、Mass Assignment、SSRF、Security Misconfiguration、Improper Inventory Management、Unsafe Consumption of APIsモジュールでは、脆弱APIと安全APIを実行して比較できます。Broken Function Level Authorizationデモは合成した招待プレビューだけを返し、実際のメール送信やアカウント作成は行いません。Security Misconfigurationデモは合成した診断メタデータだけを使い、実際の設定情報、秘密情報、ログを公開しません。Sensitive Business Flowsデモは合成した限定商品データだけを使い、実際の購入や外部決済は行いません。Improper Inventory Managementデモは実際のトークン発行や通知送信を行いません。SSRFデモとUnsafe Consumption of APIsデモは安全なプレビューまたは合成応答だけを返し、実際の外部ネットワークアクセスは行いません。
 - 比較画面では、API1からAPI10までの各テーマについて、`/api/vulnerable/*` と `/api/secure/*` のAPIプログラム全体の流れを表示し、問題箇所を赤、改善箇所を青で確認できます。
-- セキュリティ検証テストでは、公開環境に相当する設定ですべての脆弱APIが無効化されること、安全APIで各脆弱性が再現しないこと、OpenAPIの脆弱ルート説明がローカル限定であること、UI文言リソースが日英で揃っていることを確認します。
+- セキュリティ検証テストでは、公開環境に相当する設定ですべての脆弱APIが無効化されること、安全APIで各脆弱性が再現しないこと、全API操作でCORSを有効化せずに共通レスポンスセキュリティヘッダーを維持すること、OpenAPIの脆弱ルート説明がローカル限定であること、UI文言リソースが日英で揃っていることを確認します。
 - OpenNextを使用してCloudflare Workers向けにビルドできます。公開ショーケースモードでは学習UIを表示しますが、`/api/vulnerable/*` と `/api/secure/*` の両方をRoute Handlerへ到達する前に拒否します。
 
 ## OWASP API Security Top 10参照
