@@ -44,7 +44,7 @@ Live API execution is disabled on the public site. The `Show request results` co
 - The BOLA module includes runnable vulnerable and secure order APIs for comparing missing ownership checks with verified ownership checks.
 - The authentication module includes runnable vulnerable and secure session APIs for comparing insufficient token validation with signature, expiration, revocation, and permission validation.
 - Rate limiting, Broken Function Level Authorization, Sensitive Business Flows, Mass Assignment, SSRF, Security Misconfiguration, Improper Inventory Management, and Unsafe Consumption of APIs modules include runnable vulnerable and secure APIs. Broken Function Level Authorization demos use synthetic invitation previews only and send no real email or account creation. Security Misconfiguration demos use synthetic diagnostic metadata only and expose no real configuration, secrets, or logs. Sensitive Business Flows demos use synthetic limited-product data only and perform no real purchase or external payment. Improper Inventory Management demos issue no real tokens and send no notifications. SSRF and Unsafe Consumption of APIs demos return safe previews or synthetic responses only and do not perform real outbound network access.
-- The comparison view shows the full API program flow for every API1 through API10 topic, highlighting problem areas in `/api/vulnerable/*` in red and improvements in `/api/secure/*` in blue.
+- The comparison view shows the full API processing flow for every API1 through API10 topic, highlighting problem areas in `/api/vulnerable/*` in red and improvements in `/api/secure/*` in blue.
 - Security verification tests confirm that every vulnerable API is disabled in production-like settings, secure APIs do not reproduce the covered vulnerabilities, all API operations retain the shared response security headers without enabling CORS, OpenAPI vulnerable-route descriptions remain local-only, and Japanese/English UI text resources stay aligned.
 - The application can be built for Cloudflare Workers with OpenNext. Public showcase mode displays the learning UI but rejects both `/api/vulnerable/*` and `/api/secure/*` before route handling.
 
@@ -77,7 +77,7 @@ Public deployments must set `PUBLIC_SHOWCASE=true` and `LAB_MODE=disabled`. Publ
 
 SSRF and third-party API response demos do not perform real outbound network access from either vulnerable or secure APIs; they return verification preview metadata or synthetic responses only.
 
-HTML and API responses apply baseline controls such as frame denial, Content Security Policy, MIME-sniffing prevention, referrer restrictions, and cache prevention. HTML receives a fresh nonce per request, which Next.js applies to its scripts and styles. UI style-attribute dependencies have moved to external CSS and `data-*` state, so production `script-src` and `style-src` permit no `'unsafe-inline'`; `script-src` also permits no `'unsafe-eval'`. Nonce-bearing HTML uses `no-store`, while APIs receive a strict CSP based on `default-src 'none'`. JSON bodies require `application/json`, optionally with `charset=utf-8`, must contain valid UTF-8 and JSON, and are limited to 16 KiB by declared and actual byte size. Repeated scalar query parameters and unknown parameters on strict query schemas are rejected rather than resolved with last-value-wins behavior.
+HTML and API responses apply baseline controls such as frame denial, Content Security Policy, MIME-sniffing prevention, referrer restrictions, and cache prevention. Requests to a public host over HTTP are permanently redirected to HTTPS, and HTTPS responses apply HSTS. HTML receives a fresh nonce per request, which Next.js applies to its scripts and styles. UI style-attribute dependencies have moved to external CSS and `data-*` state, so production `script-src` and `style-src` permit no `'unsafe-inline'`; `script-src` also permits no `'unsafe-eval'`. Nonce-bearing HTML uses `no-store`, while APIs receive a strict CSP based on `default-src 'none'`. JSON bodies require `application/json`, optionally with `charset=utf-8`, must contain valid UTF-8 and JSON, and are limited to 16 KiB by declared and actual byte size. Repeated scalar query parameters and unknown parameters on strict query schemas are rejected rather than resolved with last-value-wins behavior.
 
 Demo `userId`, `actorUserId`, and token IDs are finite synthetic scenario selectors, not sessions or Bearer credentials. Rate-limit buckets, reservation totals, inventory, and attempt counters are single-process in-memory demo state; they reset on restart and are not production or distributed controls.
 
@@ -102,7 +102,7 @@ Development and verification require Node.js 22.13.0 or later. CI uses the lates
 - `npm run dev`: start the local development server bound only to `127.0.0.1`.
 - `npm run security:audit`: audit dependencies for known vulnerabilities.
 - `npm run security:local-boundary`: start the development server temporarily, verify the vulnerable health route through loopback with Host-header rejection, and confirm that non-loopback IPv4 interfaces cannot reach the server port.
-- `npm run security:repository`: verify that Git tracks no environment files, private keys, local databases, logs, or developer-only files.
+- `npm run security:repository`: reject prohibited environment, key, certificate, local database, log, and developer-only paths plus private-key markers in Git-tracked files.
 - `npm run lint`: run ESLint.
 - `npm run format`: check formatting with Prettier.
 - `npm run typecheck`: run TypeScript type checking.
@@ -112,7 +112,7 @@ Development and verification require Node.js 22.13.0 or later. CI uses the lates
 - `npm run build:cloudflare`: create the OpenNext Cloudflare Worker bundle.
 - `npm run preview:cloudflare`: build and preview the Worker locally with workerd.
 - `npm run dry-run:cloudflare`: validate the Worker upload and report its bundle size without deploying.
-- `npm run deploy:cloudflare`: deploy the already built Worker with Wrangler credentials supplied by the deployment environment.
+- `npm run deploy:cloudflare`: deploy the already built Worker with Wrangler credentials supplied by the `production` environment. The workflow re-verifies the public URL after deployment.
 
 Run verification commands sequentially. `npm run build` and `npm run typecheck` both read Next.js generated type files under `.next/`, so they should not be run in parallel.
 
@@ -132,6 +132,6 @@ The default UI language is Japanese. Every screen should provide a shared langua
 
 ## Publication Safety Check
 
-Before publication, verify that no secrets, credentials, private logs, local databases, or developer-only roadmaps are tracked by Git. `npm run security:repository` enforces this rule in CI before dependency installation. Public documentation must clearly state that vulnerable demos are local-only and must not be run in public environments. Cloudflare account IDs and API tokens are deployment secrets and must not be stored in repository files. Security and quality verification runs on pushes, pull requests, manual dispatches, and a weekly schedule, while Cloudflare deployment remains limited to pushes to `main`. Weekly Dependabot pull requests surface candidate updates for npm dependencies and GitHub Actions.
+Before publication, verify that no secrets, credentials, private logs, local databases, or developer-only roadmaps are tracked by Git. Before dependency installation, CI uses `npm run security:repository` to reject prohibited paths and private-key markers; GitHub secret scanning and push protection supplement it with common credential patterns. Public documentation must clearly state that vulnerable demos are local-only and must not be run in public environments. Cloudflare account IDs and API tokens are deployment secrets and must not be stored in repository files. Security and quality verification runs on pushes, pull requests, manual dispatches, and a weekly schedule. Cloudflare deployment is limited to pushes to `main` and runs only when explicitly enabled in repository settings. Weekly Dependabot pull requests surface candidate updates for npm dependencies and GitHub Actions.
 
 This project is available under the [MIT License](LICENSE). Report security issues through the process in [`SECURITY.md`](SECURITY.md), and never place sensitive details in a public issue.

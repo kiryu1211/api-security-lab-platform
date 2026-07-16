@@ -7,7 +7,7 @@
 | FR-01 | 学習テーマ一覧           | APIセキュリティの学習テーマを一覧表示できる。                                                                                                     |
 | FR-02 | 脆弱APIデモ              | ローカル限定で脆弱なAPI例を実行できる。                                                                                                           |
 | FR-03 | 安全APIデモ              | 同じテーマに対する安全な実装例を実行できる。                                                                                                      |
-| FR-04 | 比較表示                 | 脆弱な例と安全な例のリクエスト、レスポンス、設計差分、APIプログラム全体の流れ、実装フローの問題箇所と改善箇所を比較できる。                       |
+| FR-04 | 比較表示                 | 脆弱な例と安全な例のリクエスト、レスポンス、設計差分、API処理全体の流れ、実装フローの問題箇所と改善箇所を比較できる。                             |
 | FR-05 | BOLAシナリオ             | オブジェクトレベル認可不備の例と対策を確認できる。                                                                                                |
 | FR-06 | 認証シナリオ             | 認証不備やトークン管理の問題と対策を確認できる。                                                                                                  |
 | FR-07 | レート制限シナリオ       | 過剰リクエストを制限する設計を確認できる。                                                                                                        |
@@ -32,24 +32,25 @@
 
 ## セキュリティ要件
 
-| ID    | 要件             | 内容                                                                                                                                                                                                                                                                                                                                               |
-| ----- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SR-01 | ローカル限定     | 脆弱APIを公開環境へデプロイしてはいけないことをREADMEと画面に明記する。                                                                                                                                                                                                                                                                            |
-| SR-02 | ルート分離       | 脆弱APIと安全APIを明確に分離し、誤利用を防ぐ。                                                                                                                                                                                                                                                                                                     |
-| SR-03 | 認可検証         | 安全APIでは、有限の合成シナリオ主体と対象リソースの関係を検証する。実サービスでは検証済みセッション等から主体を確定する。                                                                                                                                                                                                                          |
-| SR-04 | 入力検証         | リクエスト本文、クエリ、URLをスキーマで検証し、単一値パラメーターの重複やstrictスキーマの未知項目を拒否する。                                                                                                                                                                                                                                      |
-| SR-05 | レート制限       | 安全APIでは、単一プロセス内のデモ制御として過剰リクエストを制限する。                                                                                                                                                                                                                                                                              |
-| SR-06 | 機能単位認可     | 安全APIでは管理機能に必要な権限を確認し、権限不足をデフォルト拒否（deny-by-default）の方針で拒否する。                                                                                                                                                                                                                                             |
-| SR-07 | 業務フロー制御   | 安全APIでは重要な業務フローの順序、ユーザー単位上限、在庫制約を検証する。                                                                                                                                                                                                                                                                          |
-| SR-08 | SSRF対策         | 実ネットワークアクセスは行わず、URL検証プレビューで許可リスト、プライベートホスト拒否、リダイレクト方針を確認できるようにする。                                                                                                                                                                                                                    |
-| SR-09 | セキュリティ設定 | 安全APIではデバッグ情報を抑制し、実際の `Origin` をリクエスト先と比較してcross-originアクセスを許可せず、セキュリティヘッダーとキャッシュ無効化を診断APIにも適用する。                                                                                                                                                                             |
-| SR-10 | API管理          | 安全APIではAPIの環境、バージョン、公開範囲、所有者、退役状態、保護策の適用状況を確認する。                                                                                                                                                                                                                                                         |
-| SR-11 | 外部応答検証     | 外部API応答を信頼境界外の入力として扱い、提供元、リダイレクト先、応答スキーマ、権限フィールドを検証する。                                                                                                                                                                                                                                          |
-| SR-12 | 秘密情報管理     | `.env`、鍵、トークンをGit管理対象に含めない。                                                                                                                                                                                                                                                                                                      |
-| SR-13 | リクエスト境界   | JSON本文は `application/json` と任意の `charset=utf-8` に限定し、UTF-8と構文を検証し、宣言値または実測値が16 KiBを超える本文を拒否する。                                                                                                                                                                                                           |
-| SR-14 | ブラウザー防御   | HTMLにはリクエスト単位のnonceを使い、本番の`script-src`と`style-src`で`'unsafe-inline'`を許可せず、`script-src`で`'unsafe-eval'`も許可しないCSPを適用する。style属性とscript属性は`'none'`で拒否する。APIには`default-src 'none'`を基準とするCSPを適用し、フレーム埋め込み拒否、MIMEスニッフィング防止、リファラー情報の制限、機能制限も維持する。 |
-| SR-15 | 安全な開発工程   | 脆弱APIを既定無効とし、development/test、loopback URL/Host検査、ループバックアドレス限定の待受を適用する。CIでは依存監査、整形、lint、テスト、型検査、ビルドをpush、Pull Request、手動、週次で実行する。週次実行ではデプロイせず、npm依存関係とGitHub Actionsの更新候補はDependabot Pull Requestで個別に検証する。                                 |
-| SR-16 | 公開API停止      | `PUBLIC_SHOWCASE=true`の場合、安全APIを含むすべての`/api/*`リクエストをRoute Handlerへ到達する前に拒否し、APIレスポンスをキャッシュさせない。                                                                                                                                                                                                      |
+| ID    | 要件             | 内容                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ----- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SR-01 | ローカル限定     | 脆弱APIを公開環境へデプロイしてはいけないことをREADMEと画面に明記する。                                                                                                                                                                                                                                                                                                                                 |
+| SR-02 | ルート分離       | 脆弱APIと安全APIを明確に分離し、誤利用を防ぐ。                                                                                                                                                                                                                                                                                                                                                          |
+| SR-03 | 認可検証         | 安全APIでは、有限個の合成シナリオで定義した主体と対象リソースの関係を検証する。実サービスでは検証済みのセッションまたはトークンから主体を確定する。                                                                                                                                                                                                                                                     |
+| SR-04 | 入力検証         | リクエスト本文、クエリ、URLをスキーマで検証し、単一値パラメーターの重複やstrictスキーマの未知項目を拒否する。                                                                                                                                                                                                                                                                                           |
+| SR-05 | レート制限       | 安全APIでは、単一プロセス内のデモ制御として過剰リクエストを制限する。                                                                                                                                                                                                                                                                                                                                   |
+| SR-06 | 機能単位認可     | 安全APIでは管理機能に必要な権限を確認し、未定義の機能や権限不足をデフォルト拒否（deny by default）とする。                                                                                                                                                                                                                                                                                              |
+| SR-07 | 業務フロー制御   | 安全APIでは重要な業務フローの順序、ユーザー単位上限、在庫制約を検証する。                                                                                                                                                                                                                                                                                                                               |
+| SR-08 | SSRF対策         | 実際のネットワークアクセスは行わず、URL検証プレビューで許可リスト、プライベートホスト拒否、リダイレクト方針を確認できるようにする。                                                                                                                                                                                                                                                                     |
+| SR-09 | セキュリティ設定 | 安全APIではデバッグ情報を抑制し、実際の `Origin` をリクエスト先と比較してcross-originアクセスを許可せず、セキュリティヘッダーとキャッシュ無効化を診断APIにも適用する。                                                                                                                                                                                                                                  |
+| SR-10 | API管理          | 安全APIではAPIの環境、バージョン、公開範囲、所有者、退役状態、保護策の適用状況を確認する。                                                                                                                                                                                                                                                                                                              |
+| SR-11 | 外部応答検証     | 外部API応答を信頼境界外の入力として扱い、提供元、リダイレクト先、応答スキーマ、権限フィールドを検証する。                                                                                                                                                                                                                                                                                               |
+| SR-12 | 秘密情報管理     | `.env`、鍵、トークンをGit管理対象に含めない。                                                                                                                                                                                                                                                                                                                                                           |
+| SR-13 | リクエスト境界   | JSON本文は `application/json` と任意の `charset=utf-8` に限定し、UTF-8と構文を検証し、宣言値または実測値が16 KiBを超える本文を拒否する。                                                                                                                                                                                                                                                                |
+| SR-14 | ブラウザー防御   | HTMLにはリクエスト単位のnonceを使い、本番の`script-src`と`style-src`で`'unsafe-inline'`を許可せず、`script-src`で`'unsafe-eval'`も許可しないCSPを適用する。`style-src-attr`と`script-src-attr`を`'none'`とし、インラインのstyle属性とscript属性を拒否する。APIには`default-src 'none'`を基準とするCSPを適用し、フレーム埋め込み拒否、MIMEスニッフィング防止、リファラー情報の制限、機能制限も維持する。 |
+| SR-15 | 安全な開発工程   | 脆弱APIを既定無効とし、development/test、loopback URL/Host検査、ループバックアドレス限定の待受を適用する。CIでは依存監査、整形、lint、テスト、型検査、ビルドをpush、Pull Request、手動、週次で実行する。週次実行ではデプロイせず、npm依存関係とGitHub Actionsの更新候補はDependabot Pull Requestで個別に検証する。                                                                                      |
+| SR-16 | 公開API停止      | `PUBLIC_SHOWCASE=true`の場合、安全APIを含むすべての`/api/*`リクエストをRoute Handlerへ到達する前に拒否し、APIレスポンスをキャッシュさせない。                                                                                                                                                                                                                                                           |
+| SR-17 | 通信経路保護     | 公開ホストへのHTTPリクエストをHTTPSへ恒久的に転送し、HTTPS応答へHSTSを適用する。ローカルのループバック検証はHTTPのまま利用できるようにする。                                                                                                                                                                                                                                                            |
 
 ## 検証要件
 
@@ -70,8 +71,10 @@
 - 公開ショーケースの全10学習テーマを日本語と英語で順番に選択し、選択状態、テーマ固有の合成結果ステータス、通信なしの結果表示、axeによる検出可能な違反がないことをデスクトップ・モバイルで確認する。
 - 未設定または不正な`LAB_MODE`で脆弱APIが無効となり、明示的なローカル設定とloopbackリクエスト条件を満たす場合だけ有効になることを確認する。CIでは開発サーバーをローカルモードで起動し、ループバック経由で`/api/vulnerable/health`へ到達できること、ループバック以外の`Host`ヘッダーが拒否されること、ループバック以外のIPv4インターフェースからサーバーポートへ接続できないことを確認する。
 - 不正UTF-8、不正JSON、非対応Content-Type、16 KiBを超える本文が統一した400、415、413レスポンスで拒否されることを確認する。ルート一覧に基づくテストでは、すべてのPOST・PATCH操作が共通JSON解析処理を呼び出すことを必須とし、対応する全Route Handlerへ非対応Content-Type、過大な宣言サイズ、過大な実本文を送信するほか、16 KiBちょうどの本文がschema検証へ進むことを確認する。
-- HTMLのnonceがリクエストごとに更新され、すべてのscriptとstyle要素へ同じnonceが付与され、本番の`script-src`と`style-src`に`'unsafe-inline'`が含まれず、`script-src`に`'unsafe-eval'`も含まれないことを確認する。HTMLにstyle属性がなく、`style-src-attr 'none'`と`script-src-attr 'none'`が適用されること、HTMLとAPIの両方が`no-store`となることも確認する。すべてのAPI操作で、共通のCSP、クロスオリジン保護、権限制御、Referrer制御、MIME sniffing防止、フレーム埋め込み拒否ヘッダーを返し、CORS許可ヘッダーを返さないことを必須とする。ローカルNext.jsと公開workerdへのHTTP検証でも同じAPIヘッダー契約と`X-Powered-By`がないことを確認する。
+- HTMLのnonceがリクエストごとに更新され、すべてのscriptとstyle要素へ同じnonceが付与され、本番の`script-src`と`style-src`に`'unsafe-inline'`が含まれず、`script-src`に`'unsafe-eval'`も含まれないことを確認する。HTMLにstyle属性がなく、`style-src-attr 'none'`と`script-src-attr 'none'`が適用されること、HTMLとAPIの両方が`no-store`となることも確認する。すべてのAPI操作で、共通のCSP、クロスオリジン保護、権限制御、Referrer制御、MIMEスニッフィング防止、フレーム埋め込み拒否ヘッダーを返し、CORS許可ヘッダーを返さないことを必須とする。ローカルNext.jsと公開workerdへのHTTP検証でも同じAPIヘッダー契約と`X-Powered-By`がないことを確認する。
 - 公開ショーケースのテストとworkerdプレビューで、安全APIと脆弱APIの両方がRoute Handlerへ到達する前に`403 PUBLIC_SHOWCASE_API_DISABLED`を返すことを確認する。
+- 公開ホストへのHTTPリクエストが308で同一URLのHTTPSへ転送され、HTTPSのHTMLとAPI応答にHSTSが付与されることを確認する。ループバックのHTTP検証は転送しない。
+- `next-router-prefetch`または`purpose: prefetch`を含む文書リクエストもMiddlewareのnonce境界を通り、500を返さないことを確認する。
 - コンポーネントテストで、公開用のリクエスト結果操作がAPI例の後に配置され、`fetch`を呼び出さずに両方の比較結果を表示することを確認し、静的データテストで全学習テーマを検証する。
 - ローカルモードのコンポーネントテストでは全10学習テーマを選択し、4回連続で安全APIを呼び出すレート制限シナリオを含め、各ライブデモのHTTPメソッド、URL、JSON本文を確認する。通信失敗とJSON解析失敗では実行中状態を解除し、選択中の言語でエラーを表示することも確認する。
 - Playwrightのデスクトップ・モバイルChromiumテストで、CSP違反が発生しないこと、公開用操作が`/api`へ通信しないこと、脆弱側・安全側のリクエスト結果表示、テーマ選択の保持、日英切替が動作することを確認する。
@@ -125,6 +128,27 @@ requirementDiagram
         verifymethod: Test
     }
 
+    functionalRequirement public_results {
+        id: "FR-17"
+        text: "公開環境では通信せず合成結果を表示する"
+        risk: Medium
+        verifymethod: Test
+    }
+
+    requirement public_api_shutdown {
+        id: "SR-16"
+        text: "公開環境ではすべてのライブAPIを停止する"
+        risk: High
+        verifymethod: Test
+    }
+
+    requirement transport_protection {
+        id: "SR-17"
+        text: "公開ホストをHTTPSとHSTSで保護する"
+        risk: High
+        verifymethod: Test
+    }
+
     element security_tests {
         type: "Vitestテストスイート"
         docref: "src/lib/security-verification.test.ts"
@@ -155,6 +179,16 @@ requirementDiagram
         docref: "src/lib/request-validation.ts / next.config.ts / .github/workflows"
     }
 
+    element public_boundary {
+        type: "Middlewareと公開workerd検証"
+        docref: "src/middleware.ts / scripts/verify-public-showcase.mjs"
+    }
+
+    element showcase_ui {
+        type: "公開用UI、合成結果、ブラウザーテスト"
+        docref: "src/features/home / src/data/showcase-results.ts / e2e"
+    }
+
     security_tests - verifies -> local_only
     security_tests - verifies -> secure_controls
     openapi_contract - verifies -> route_separation
@@ -163,6 +197,9 @@ requirementDiagram
     repository_exclusions - satisfies -> secret_exclusion
     ui_resources - satisfies -> bilingual_ui
     shared_security_pipeline - satisfies -> platform_hardening
+    public_boundary - satisfies -> public_api_shutdown
+    public_boundary - verifies -> transport_protection
+    showcase_ui - satisfies -> public_results
 ```
 
 ## 学習モジュールの操作フロー
@@ -172,10 +209,13 @@ requirementDiagram
 ```mermaid
 flowchart TD
     A[テーマを選択] --> B[概要と防御設計を確認]
-    B --> C[APIデモを実行]
-    C --> D[脆弱APIと安全APIを並行実行]
-    D --> E[両方の結果を比較]
-    E --> F[実装フローとチェックリストを確認]
+    B --> C[リクエスト結果の表示操作を行う]
+    C --> D{実行モード}
+    D -- ローカルラボ --> E[脆弱APIと安全APIを並行実行]
+    D -- 公開ショーケース --> F[通信せず合成結果を読み込む]
+    E --> G[両方の結果を比較]
+    F --> G
+    G --> H[実装フローとチェックリストを確認]
 ```
 
 ## UI/UX要件

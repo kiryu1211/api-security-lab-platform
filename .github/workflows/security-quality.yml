@@ -133,6 +133,9 @@ jobs:
     needs: verify
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    environment:
+      name: production
+      url: https://showcase.api-security-lab-platform.workers.dev/
     env:
       LAB_MODE: disabled
       PUBLIC_SHOWCASE: "true"
@@ -162,3 +165,8 @@ jobs:
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Verify deployed public boundary
+        run: >-
+          node scripts/verify-public-showcase.mjs
+          https://showcase.api-security-lab-platform.workers.dev/

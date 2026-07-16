@@ -39,7 +39,7 @@ const topicMatrix = [
     statuses: [200, 403],
   },
   {
-    ja: "Sensitive Business Flowsと業務フロー悪用対策",
+    ja: "重要な業務フローと悪用対策",
     en: "Sensitive Business Flows and Abuse Controls",
     statuses: [200, 403],
   },
@@ -49,7 +49,7 @@ const topicMatrix = [
     statuses: [200, 403],
   },
   {
-    ja: "Security Misconfigurationと診断情報の公開制御",
+    ja: "セキュリティ設定不備と診断情報の公開制御",
     en: "Security Misconfiguration and Diagnostic Exposure Controls",
     statuses: [200, 200],
   },
@@ -327,7 +327,17 @@ test("keeps the opening dialog keyboard accessible in both languages", async ({
   await expect(page.locator("header")).toHaveAttribute("inert", "");
   await expect(page.locator("main")).toHaveAttribute("inert", "");
   await page.keyboard.press("Tab");
-  await expect(japaneseSkipButton).toBeFocused();
+  const japaneseLanguageButton = page.getByRole("button", { name: "日本語" });
+  await expect(japaneseLanguageButton).toBeFocused();
+  await page.keyboard.press("Tab");
+  const englishLanguageButton = page.getByRole("button", { name: "英語" });
+  await expect(englishLanguageButton).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(
+    page.getByRole("dialog", { name: "Make API Defenses Visible" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Japanese" }).click();
+  await expect(japaneseDialog).toBeVisible();
   await page.keyboard.press("Shift+Tab");
   await expect(japaneseSkipButton).toBeFocused();
   await page.evaluate(() => {

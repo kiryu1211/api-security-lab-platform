@@ -21,7 +21,9 @@ TypeScriptを使用する理由は、APIリクエスト、レスポンス、認�
 ```mermaid
 flowchart LR
     U[利用者のブラウザー] --> UI[学習UI]
-    UI --> API[APIルーティング層]
+    UI --> Mode{実行モード}
+    Mode -- ローカルラボ --> API[APIルーティング層]
+    Mode -- 公開ショーケース --> Showcase[クライアント側の合成結果]
     API --> Safe[安全APIモジュール]
     API --> Guard[脆弱API安全ガード]
     Guard --> Vuln[脆弱APIモジュール]
@@ -31,7 +33,7 @@ flowchart LR
 
 現在のデモデータは、`src/data/` 配下の合成データとして管理します。永続化は現在の実装範囲に含めません。
 
-## モジュール構成
+## 実装上のモジュール構成
 
 ```mermaid
 classDiagram
@@ -46,15 +48,11 @@ classDiagram
         +defensiveDesign[ja,en]
         +checklist[ja,en][]
     }
-    class VulnerableScenario {
+    class Scenario {
         +route
-        +requestExample
-        +expectedIssue
-    }
-    class SecureScenario {
-        +route
-        +requestExample
-        +mitigation
+        +request
+        +response[ja,en]
+        +note[ja,en]
     }
     class ImplementationWalkthrough {
         +vulnerable
@@ -65,10 +63,9 @@ classDiagram
         +en
     }
 
-    LearningModule "1" --> "1" VulnerableScenario
-    LearningModule "1" --> "1" SecureScenario
-    LearningModule "1" --> "1" ImplementationWalkthrough
-    LearningModule "1" --> "1" LearningContextNote
+    LearningModule "1" *-- "2" Scenario
+    LearningModule ..> ImplementationWalkthrough : IDで参照
+    LearningModule ..> LearningContextNote : IDで参照
 ```
 
 ## BOLA検証シーケンス
@@ -82,14 +79,17 @@ sequenceDiagram
     participant DemoData
 
     User->>UI: 他ユーザーのリソースIDを指定
-    UI->>VulnAPI: GET /api/vulnerable/orders/{id}
-    VulnAPI->>DemoData: IDのみで注文を取得
-    DemoData-->>VulnAPI: 注文データ
-    VulnAPI-->>UI: 認可不備のレスポンス
-    UI->>SafeAPI: GET /api/secure/orders/{id}
-    SafeAPI->>DemoData: 注文と所有者を確認
-    DemoData-->>SafeAPI: 所有者情報
-    SafeAPI-->>UI: 権限がなければ拒否
+    par 脆弱API
+        UI->>VulnAPI: GET /api/vulnerable/orders/{id}
+        VulnAPI->>DemoData: IDのみで注文を取得
+        DemoData-->>VulnAPI: 注文データ
+        VulnAPI-->>UI: 他ユーザーの注文データを返却
+    and 安全API
+        UI->>SafeAPI: GET /api/secure/orders/{id}
+        SafeAPI->>DemoData: 注文と所有者を確認
+        DemoData-->>SafeAPI: 所有者情報
+        SafeAPI-->>UI: 権限がなければ拒否
+    end
 ```
 
 ## 将来構想：永続化を導入する場合の概念データモデル（未実装）
@@ -139,17 +139,18 @@ erDiagram
 - 脆弱APIは `/api/vulnerable/*`、安全APIは `/api/secure/*` として明確に分離する。
 - 脆弱APIは既定で無効とし、`LAB_MODE=local`、`NODE_ENV`が`development`または`test`、リクエストURLのhostnameがloopback、かつ存在する`Host`ヘッダーもloopbackを示す場合だけ有効化する。不正な`LAB_MODE`は`disabled`として扱う。開発・起動コマンドは`127.0.0.1`だけで待ち受ける。hostname検査は接続元の証明ではないため、公開転送を安全にする境界として扱わない。
 - 脆弱APIを操作する画面には、ローカル限定であり外部公開してはいけないことを常に表示する。
-- 安全APIでは、ユーザーID、ロール、対象リソース所有者をAPI層で検証する。
-- Broken Function Level Authorization対策では、管理機能に必要な機能権限をAPI層で確認し、権限不足をdeny-by-defaultで拒否する。
+- 安全APIでは、有限個の合成シナリオで定義したユーザーID、ロール、対象リソース所有者の関係をAPI層で検証する。
+- Broken Function Level Authorization対策では、管理機能に必要な機能権限をAPI層で確認し、必要な権限がなければデフォルト拒否（deny by default）とする。
 - Sensitive Business Flows対策では、重要な予約・購入フローについて、フロー順序、ユーザー単位上限、在庫制約、自動化の兆候をAPI層で検証する。
-- SSRF対策では、実ネットワークアクセスを行わず、許可リスト、プライベートホスト拒否、リダイレクト方針、タイムアウト方針をプレビューとして返す。
+- SSRF対策では、実際のネットワークアクセスを行わず、許可リスト、プライベートホスト拒否、リダイレクト方針、タイムアウト方針をプレビューとして返す。
 - Security Misconfiguration対策では、デバッグ情報を抑制し、実際の`Origin`ヘッダーがリクエスト先と同一オリジンであることを確認し、診断APIのキャッシュ無効化とセキュリティレスポンスヘッダーを適用する。本文の`requestedOrigin`は合成した監査シナリオ入力であり、認可判断には使用しない。
 - Unsafe Consumption of APIs対策では、外部API応答を`unknown`として扱い、strictなZodスキーマ、提供元、HTTPSの完全なorigin、実ペイロードサイズ、権限フィールドを検証する。
 - Improper Inventory Management対策では、APIの環境、バージョン、公開範囲、所有者、文書の更新状況、退役状態、保護策の適用状況を処理前に検証する。
 - レート制限は、有限の既知デモユーザーとAPIルート単位で60秒間に3回まで適用し、4回目を429で拒否する。期限切れbucketを削除し、インメモリストアは最大100件に制限する。複数プロセス間の共有や送信元単位の制限は現在の実装範囲に含めない。
-- HTMLレスポンスではMiddlewareが暗号学的に予測困難なnonceをリクエストごとに生成し、CSPリクエストヘッダーを通じてNext.jsのframework script、page script、インライン初期化script、style要素へ同じnonceを付与する。本番の`script-src`は`'strict-dynamic'`を使用し、`script-src`と`style-src`の両方で`'unsafe-inline'`を許可せず、`script-src`では`'unsafe-eval'`も許可しない。`script-src-attr`と`style-src-attr`は`'none'`とする。ヒーローアニメーション遅延、テーマの`color-scheme`、オープニング中のスクロール固定は、style属性やDOM style操作ではなく外部CSSと`data-*`状態で表現する。nonceの再利用を防ぐためHTMLを動的描画して`Cache-Control: no-store`を設定する。Next.jsのCSS URLは内容変更後も再利用される場合があるため、CSS assetは`max-age=0, must-revalidate`として古い表示を再検証させる。内容識別子付きのscriptとfontは1年間`immutable`で保持する。APIレスポンスには`default-src 'none'`を基準とするCSPと`Cache-Control: no-store`を適用する。HTMLとAPIの両方でフレーム埋め込み拒否、MIME sniffing拒否、Referrer制御を維持し、HTMLにはPermissions Policyも適用する。
-- `public/_headers`では、リクエストごとのnonceを静的な方針へ含められないためCSPを定義しない。生成済み静的asset向けの基本レスポンスヘッダーとキャッシュ規則は維持し、HTMLのCSPはMiddlewareだけを正本とする。
+- HTMLレスポンスではMiddlewareが暗号学的に予測困難なnonceをリクエストごとに生成し、CSPリクエストヘッダーを通じてNext.jsのフレームワークスクリプト、ページスクリプト、インライン初期化スクリプト、style要素へ同じnonceを付与する。本番の`script-src`は`'strict-dynamic'`を使用し、`script-src`と`style-src`の両方で`'unsafe-inline'`を許可せず、`script-src`では`'unsafe-eval'`も許可しない。`script-src-attr`と`style-src-attr`は`'none'`とする。ヒーローアニメーション遅延、テーマの`color-scheme`、オープニング中のスクロール固定は、style属性やDOM style操作ではなく外部CSSと`data-*`状態で表現する。nonceの再利用を防ぐためHTMLを動的描画して`Cache-Control: no-store`を設定する。Next.jsのCSS URLは内容変更後も再利用される場合があるため、CSSアセットは`max-age=0, must-revalidate`として古い表示を再検証させる。内容識別子付きのスクリプトとフォントは1年間`immutable`で保持する。APIレスポンスには`default-src 'none'`を基準とするCSPと`Cache-Control: no-store`を適用する。HTMLとAPIの両方でフレーム埋め込み拒否、MIMEスニッフィング防止、Referrer制御を維持し、HTMLにはPermissions Policyも適用する。
+- `public/_headers`では、リクエストごとのnonceを静的な方針へ含められないためCSPを定義しない。生成済み静的アセット向けの基本レスポンスヘッダーとキャッシュ規則は維持し、HTMLのCSPはMiddlewareだけを正本とする。
 - 公開ショーケースモードは`PUBLIC_SHOWCASE=true`で有効化する。Middlewareは安全APIを含むすべての`/api/*`リクエストをRoute Handlerへ到達する前に拒否する。UIでは日英の読み取り専用案内を維持し、`fetch`を呼び出さずに合成データによるリクエスト結果を既存の結果パネルへ読み込めるようにする。空でない値のうち明示的な`false`以外は、安全側へ倒して公開境界を有効にする。
+- Middlewareは非ループバックホストへのHTTPリクエストを同じURLのHTTPSへ308で転送し、HTTPSのHTMLとAPI応答へ`Strict-Transport-Security: max-age=31536000`を付与する。ループバックで行うローカル検証はHTTPのまま維持する。Next.js 16では`proxy.ts`が推奨されるが、現在のOpenNext CloudflareアダプターはNode.js Proxyを未サポートのため、Edge互換の`middleware.ts`を継続使用する。
 - CIでは`LAB_MODE=disabled`と`PUBLIC_SHOWCASE=true`を強制し、依存関係とアプリケーションの検証、OpenNext Workerの1回だけのビルド、Wrangler dry run、workerdへのHTTP境界検証を順に実行する。workerd検証ではHTMLを2回取得し、nonceの一意性、全script・style要素との一致、HTMLからのstyle属性除外、本番`script-src`・`style-src`からの`'unsafe-inline'`除外、`script-src`からの`'unsafe-eval'`除外、公開API遮断を確認する。同じworkerd成果物に対するPlaywrightのデスクトップ・モバイルChromiumテストで、CSP違反、公開操作からの`/api`通信、結果表示、テーマ保持、日英切替を実ブラウザー検証する。テストはreduced-motion状態でaxeを実行し、日本語初期状態と英語・ダークテーマ・結果表示後のWCAG 2.0・2.1・2.2 A/AA違反を検査する。全テーマ横断テストはOWASP API1からAPI10までを日本語で選択してテーマ固有の合成結果を表示し、英語へ切り替えて同じ10テーマのタイトル、結果ステータス、axe違反なし、`/api`通信なしを再確認する。テーマ、言語、結果表示をTabとEnterで操作し、スクロール可能な結果本文へのフォーカスも確認する。オープニング専用テストでは通常モーションで日英の初回ダイアログ、初期フォーカス、Tab・Shift+Tabトラップ、Escape・スキップ終了、終了後のブランドフォーカス、表示済み状態の保存を確認し、reduced-motionではダイアログを省略する。検証はpush、Pull Request、手動実行、および毎週月曜12:17（日本時間）に行う。scheduleイベントではdeploy jobの条件を満たさず、Cloudflare認証情報を使用しない。npm依存関係は毎週火曜、GitHub Actionsは毎週水曜にDependabotが確認し、minor・patch更新を用途別にグループ化したPull Request、major更新を個別Pull Requestとして提示する。検証済みの`.open-next`成果物を変更せずdeploy jobへ渡し、Cloudflare認証情報は`main`へのpushで全検証が成功した後の最終deployステップだけへ公開する。デプロイはリポジトリ設定で明示的に有効化した場合だけ実行する。
 
 - ローカル境界を検証するCIステップだけは、ラボ無効の既定値に対する明示的な例外として、一時的に`LAB_MODE=local`と`PUBLIC_SHOWCASE=false`を設定する。本番ビルドとworkerd検証では、引き続きラボを無効化して公開ショーケース境界を使用する。
@@ -165,7 +166,7 @@ erDiagram
 
 ```mermaid
 flowchart TD
-    Request["APIリクエスト"] --> PublicShowcase{"PUBLIC_SHOWCASE = true"}
+    Request["APIリクエスト"] --> PublicShowcase{"公開ショーケース判定<br/>空またはfalse以外"}
     PublicShowcase -- "はい" --> PublicDisabled["403 PUBLIC_SHOWCASE_API_DISABLED"]
     PublicShowcase -- "いいえ" --> Route{"ルート種別"}
     Route -- "/api/secure/*" --> SecureChecks["入力検証とモジュール別の防御"]
@@ -186,23 +187,23 @@ flowchart TD
 
 ### Cloudflare公開ショーケース
 
-- `@opennextjs/cloudflare`でNext.jsアプリケーションを`.open-next/worker.js`へ変換し、Wranglerが`.open-next/assets`の生成済み静的assetを配信する。
+- `@opennextjs/cloudflare`でNext.jsアプリケーションを`.open-next/worker.js`へ変換し、Wranglerが`.open-next/assets`の生成済み静的アセットを配信する。`assets.run_worker_first=true`により静的アセットのリクエストも先にWorkerへ通し、すべてのパスをHTTPS転送とHSTSの対象にする。
 - `wrangler.jsonc`で公開実行環境を`LAB_MODE=disabled`、`NODE_ENV=production`、`PUBLIC_SHOWCASE=true`に固定する。
-- GitHub ActionsではCloudflare認証情報をリポジトリのSecretsで管理し、Account IDやAPI Tokenを追跡対象ファイルへ記録しない。
+- GitHub ActionsではCloudflare認証情報を`production` EnvironmentのSecretsで管理し、Account IDやAPI Tokenを追跡対象ファイルへ記録しない。デプロイ後は公開URLに対して同じ境界検証を再実行する。
 - 公開サイトでは学習コンテンツ、リクエスト例、合成レスポンス例、設計差分、実装フローだけを表示し、安全APIと脆弱APIのライブ実行は提供しない。
 - `src/data/showcase-results.ts`で全学習テーマの安定した合成レスポンス形式を管理する。公開ショーケース案内と「リクエスト結果を表示」操作は脆弱側・安全側のAPI例の後に配置する。操作時は合成データをクライアント状態へコピーしてローカルデモと同じ結果パネルを再利用し、Route Handlerやサービス関数を呼び出さない。
 
 ## API基盤
 
-- 共通APIレスポンスは `src/lib/api-response.ts` で定義し、成功時は `{ ok, data, meta }`、エラー時は `{ ok, error, meta }` を返す。Route Handlerとルート到達前のMiddleware応答に対するAPIセキュリティヘッダーの正本とし、キャッシュ禁止、厳格なCSP、クロスオリジン保護、Permissions Policy、Referrer・MIME sniffing制御、フレーム埋め込み拒否を適用し、CORS許可ヘッダーを除去する。
-- 共通リクエスト検証は `src/lib/request-validation.ts` で定義し、JSON本文に`application/json`と任意の`charset=utf-8`だけを許可する。正しいUTF-8とJSONを要求し、宣言サイズと実読込サイズを16 KiB以下に制限してからZodスキーマを使用する。不正UTF-8・JSON、過大本文、非対応Content-Typeは統一した400、413、415エラーへ変換する。テストでは不正なマルチバイト列を文字列変換前のRequest本文へ直接渡し、UTF-8拒否を確認する。単一値クエリの重複は配列化してスキーマ検証で拒否する。
+- 共通APIレスポンスは `src/lib/api-response.ts` で定義し、成功時は `{ ok, data, meta }`、エラー時は `{ ok, error, meta }` を返す。Route Handlerとルート到達前のMiddleware応答に対するAPIセキュリティヘッダーの正本とし、キャッシュ禁止、厳格なCSP、クロスオリジン保護、Permissions Policy、Referrer・MIMEスニッフィング制御、フレーム埋め込み拒否を適用し、CORS許可ヘッダーを除去する。
+- 共通リクエスト検証は `src/lib/request-validation.ts` で定義し、JSON本文に`application/json`と任意の`charset=utf-8`だけを許可する。妥当なUTF-8とJSONを要求し、宣言サイズと実読込サイズを16 KiB以下に制限してからZodスキーマを使用する。不正UTF-8・JSON、過大本文、非対応Content-Typeは統一した400、413、415エラーへ変換する。テストでは不正なマルチバイト列を文字列変換前のRequest本文へ直接渡し、UTF-8拒否を確認する。単一値クエリの重複は配列化してスキーマ検証で拒否する。
 - ローカル用のサンプルユーザーとサンプルリソースは `src/data/lab-samples.ts` で定義する。合成したデモ用IDだけを使用し、実在する個人情報、ログ、認証情報、トークンは含めない。
 - `src/lib/lab-sample-service.ts` は、永続化を導入する前の段階でデータベース依存を増やさず、APIモジュールへフィルタ済みサンプルデータを提供する。
 - `docs/api/openapi.json` では、実装済みルート、安全/脆弱タグの分離、共通の成功/エラーレスポンス形式、脆弱ルートのローカル限定動作を記述する。
 
 ### デモ用信頼境界
 
-このラボの`userId`、`actorUserId`、デモトークンIDは、各認可・認証パターンを比較するための有限な合成シナリオ入力です。実在する利用者を認証するセッションやBearer tokenではなく、安全APIの各例もそのモジュールが扱う防御観点に限定されています。実サービスへ適用する場合は、サーバー側で検証したセッションまたは署名済みトークンから主体を確定し、クライアント指定のIDを認証主体として使用してはいけません。
+このラボの`userId`、`actorUserId`、デモトークンIDは、各認可・認証パターンを比較するための有限な合成シナリオ入力です。実在する利用者を認証するセッションやBearerトークンではなく、安全APIの各例もそのモジュールが扱う防御観点に限定されています。実サービスへ適用する場合は、サーバー側で検証したセッションまたは署名済みトークンから主体を確定し、クライアント指定のIDを認証主体として使用してはいけません。
 
 ```mermaid
 flowchart LR
@@ -312,7 +313,7 @@ flowchart TD
 - 同テストでは、安全APIがBOLA、認証不備、レート制限不足、機能単位認可不備、業務フロー悪用、Mass Assignment、SSRF、セキュリティ設定不備、旧API管理不備、外部API応答の過信を再現しないことを確認する。
 - `src/lib/openapi.test.ts` は、すべての脆弱API操作にローカル限定の説明と公開環境相当での無効化レスポンスが記述されていることを確認する。
 - `src/test-utils/route-inventory.ts`はRoute Handlerの実ファイル、エクスポートされたHTTPメソッド、動的パスパラメーターを検出する。ルート一覧テストでは安全・脆弱API操作の対応、脆弱API操作ごとのローカル限定ガード呼び出し、OpenAPIの完全な収録、公開環境相当の実行検証一覧への登録を必須とする。
-- ルート一覧ではTypeScriptの構文木を使用し、関数、変数、名前付き再exportによるHTTPメソッドを検出する。各POST・PATCH操作が共通JSON解析処理を呼び出すことも必須とする。動的なRoute Handler検証一覧から、検出したすべての本文付き操作へ非対応Content-Type、過大な宣言サイズ、上限ちょうどの本文、過大な実本文を送信し、共通のHTTPステータス、エラーコード、ルートメタデータ、`no-store`、MIME sniffing防止を確認する。
+- ルート一覧ではTypeScriptの構文木を使用し、関数、変数、名前付き再exportによるHTTPメソッドを検出する。各POST・PATCH操作が共通JSON解析処理を呼び出すことも必須とする。動的なRoute Handler検証一覧から、検出したすべての本文付き操作へ非対応Content-Type、過大な宣言サイズ、上限ちょうどの本文、過大な実本文を送信し、共通のHTTPステータス、エラーコード、ルートメタデータ、`no-store`、MIMEスニッフィング防止を確認する。
 - 意味的に有効な成功fixture一覧から全24 API操作を実行し、完全な共通APIセキュリティヘッダー、JSON応答形式、ルートメタデータ、CORS許可ヘッダーがないことを必須とする。既存のリクエスト境界一覧と公開環境相当の脆弱ルート一覧でも、413、415、403応答に同じ契約を適用する。ローカルNext.js境界スクリプトでは安全・脆弱healthの200応答と`Host`拒否を検証し、公開workerdスクリプトではルート到達前の全API遮断ケースと`X-Powered-By`がないことを確認する。
 - `scripts/verify-repository-safety.mjs`は依存関係のインストール前にGit追跡対象のパスとファイル内容を検査する。`.env.example`だけを許可し、開発者専用文書、環境変数・Worker変数ファイル、鍵・証明書、ログ、ローカルDBを拒否するほか、秘密情報の内容を表示せずに秘密鍵ヘッダーを検出する。
 - UI文言リソースは、日英のキー構造が揃っていることをテストし、共通画面ラベルの言語混在を避ける。
@@ -324,7 +325,7 @@ flowchart TD
 
 - 学習テーマ一覧: 各モジュールのリスクカテゴリ、難易度、進捗、概要、選択状態を表示する。
 - 学習詳細: 選択したモジュールの概要、脆弱性が生じる条件、防御設計を表示する。
-- 比較ビュー: 脆弱APIと安全APIのルート、リクエスト、レスポンス、設計上の説明、実装フローを並べて表示する。実装フローでは、APIプログラム全体の流れを表示し、`/api/vulnerable/*` の問題箇所を赤、`/api/secure/*` の改善箇所を青で示す。
+- 比較ビュー: 脆弱APIと安全APIのルート、リクエスト、レスポンス、設計上の説明、実装フローを並べて表示する。実装フローでは、API処理全体の流れを表示し、`/api/vulnerable/*` の問題箇所を赤、`/api/secure/*` の改善箇所を青で示す。
 - チェックリスト: 選択したモジュールの実装時に確認すべき防御観点を表示する。現在、進捗は保存しない。
 - 脆弱APIの比較領域には、ローカル限定かつ外部公開禁止であることを常に表示する。
 - 言語設定、テーマ設定、オープニング表示済み状態のWeb Storageへの保存は任意とし、アクセスが拒否されても既定値を使って通常画面の表示を継続する。

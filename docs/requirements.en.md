@@ -7,7 +7,7 @@
 | FR-01 | Learning topic list             | Display API security learning topics.                                                                                                                                               |
 | FR-02 | Vulnerable API demo             | Run vulnerable API examples in a local-only environment.                                                                                                                            |
 | FR-03 | Secure API demo                 | Run secure implementations for the same topics.                                                                                                                                     |
-| FR-04 | Comparison view                 | Compare requests, responses, design differences, the full API program flow, and implementation-flow problem/improvement points between vulnerable and secure examples.              |
+| FR-04 | Comparison view                 | Compare requests, responses, design differences, the full API processing flow, and implementation-flow problem/improvement points between vulnerable and secure examples.           |
 | FR-05 | BOLA scenario                   | Demonstrate object-level authorization flaws and mitigations.                                                                                                                       |
 | FR-06 | Authentication scenario         | Demonstrate authentication and token handling issues and mitigations.                                                                                                               |
 | FR-07 | Rate limiting scenario          | Demonstrate designs for limiting excessive requests.                                                                                                                                |
@@ -32,24 +32,25 @@
 
 ## Security Requirements
 
-| ID    | Requirement                  | Description                                                                                                                                                                                                                                                                                                                                                                                 |
-| ----- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SR-01 | Local-only execution         | README and UI screens must state that vulnerable APIs must not be deployed publicly.                                                                                                                                                                                                                                                                                                        |
-| SR-02 | Route separation             | Vulnerable APIs and secure APIs are clearly separated to prevent accidental misuse.                                                                                                                                                                                                                                                                                                         |
-| SR-03 | Authorization checks         | Secure APIs validate the relationship between finite synthetic scenario principals and target resources. Real services must derive principals from validated sessions or tokens.                                                                                                                                                                                                            |
-| SR-04 | Input validation             | Request bodies, queries, and URLs are schema-validated; duplicate scalar parameters and unknown fields in strict schemas are rejected.                                                                                                                                                                                                                                                      |
-| SR-05 | Rate limiting                | Secure APIs limit excessive requests as a single-process demonstration control.                                                                                                                                                                                                                                                                                                             |
-| SR-06 | Function-level authorization | Secure APIs validate required permissions for administrative functions with deny-by-default behavior.                                                                                                                                                                                                                                                                                       |
-| SR-07 | Business flow control        | Secure APIs validate sensitive workflow order, per-user limits, and stock constraints.                                                                                                                                                                                                                                                                                                      |
-| SR-08 | SSRF protection              | URL validation previews use allowlists, private host rejection, and redirect policy metadata without real network access.                                                                                                                                                                                                                                                                   |
-| SR-09 | Security configuration       | Secure APIs suppress debug details, compare the actual `Origin` with the request target without enabling cross-origin access, apply security headers, and disable diagnostic caching.                                                                                                                                                                                                       |
-| SR-10 | API inventory management     | Secure APIs validate API environment, version, exposure, owner, lifecycle state, and protection parity before processing.                                                                                                                                                                                                                                                                   |
-| SR-11 | External response validation | Third-party API responses are treated as untrusted input and validated for provider identity, redirect target, schema, and privileged fields.                                                                                                                                                                                                                                               |
-| SR-12 | Secret management            | `.env`, keys, and tokens are excluded from Git tracking.                                                                                                                                                                                                                                                                                                                                    |
-| SR-13 | Request boundary             | JSON bodies require `application/json` with optional `charset=utf-8`, valid UTF-8 and JSON, and declared and actual sizes no greater than 16 KiB.                                                                                                                                                                                                                                           |
-| SR-14 | Browser defenses             | HTML uses a per-request nonce. Production `script-src` and `style-src` permit no `'unsafe-inline'`, `script-src` also permits no `'unsafe-eval'`, and style and script attributes are denied with `'none'`. APIs use a CSP based on `default-src 'none'`; frame denial, MIME-sniffing prevention, referrer restrictions, and feature restrictions remain in place.                          |
-| SR-15 | Secure development process   | Vulnerable APIs default to disabled and require development/test mode, loopback URL/Host checks, and loopback binding. CI runs dependency audit, formatting, lint, tests, type-checking, and build on pushes, pull requests, manual dispatches, and weekly schedules. Scheduled runs do not deploy; candidate npm and GitHub Actions updates are verified through Dependabot pull requests. |
-| SR-16 | Public API shutdown          | With `PUBLIC_SHOWCASE=true`, every `/api/*` request is rejected before route handling, including secure routes, and API responses remain non-cacheable.                                                                                                                                                                                                                                     |
+| ID    | Requirement                  | Description                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ----- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| SR-01 | Local-only execution         | README and UI screens must state that vulnerable APIs must not be deployed publicly.                                                                                                                                                                                                                                                                                                                         |
+| SR-02 | Route separation             | Vulnerable APIs and secure APIs are clearly separated to prevent accidental misuse.                                                                                                                                                                                                                                                                                                                          |
+| SR-03 | Authorization checks         | Secure APIs validate the relationship between finite synthetic scenario principals and target resources. Real services must derive principals from validated sessions or tokens.                                                                                                                                                                                                                             |
+| SR-04 | Input validation             | Request bodies, queries, and URLs are schema-validated; duplicate scalar parameters and unknown fields in strict schemas are rejected.                                                                                                                                                                                                                                                                       |
+| SR-05 | Rate limiting                | Secure APIs limit excessive requests as a single-process demonstration control.                                                                                                                                                                                                                                                                                                                              |
+| SR-06 | Function-level authorization | Secure APIs validate required permissions for administrative functions and deny undefined functions or insufficient permissions by default.                                                                                                                                                                                                                                                                  |
+| SR-07 | Business flow control        | Secure APIs validate sensitive workflow order, per-user limits, and stock constraints.                                                                                                                                                                                                                                                                                                                       |
+| SR-08 | SSRF protection              | URL validation previews use allowlists, private host rejection, and redirect policy metadata without real network access.                                                                                                                                                                                                                                                                                    |
+| SR-09 | Security configuration       | Secure APIs suppress debug details, compare the actual `Origin` with the request target without enabling cross-origin access, apply security headers, and disable diagnostic caching.                                                                                                                                                                                                                        |
+| SR-10 | API inventory management     | Secure APIs validate API environment, version, exposure, owner, lifecycle state, and protection parity before processing.                                                                                                                                                                                                                                                                                    |
+| SR-11 | External response validation | Third-party API responses are treated as untrusted input and validated for provider identity, redirect target, schema, and privileged fields.                                                                                                                                                                                                                                                                |
+| SR-12 | Secret management            | `.env`, keys, and tokens are excluded from Git tracking.                                                                                                                                                                                                                                                                                                                                                     |
+| SR-13 | Request boundary             | JSON bodies require `application/json` with optional `charset=utf-8`, valid UTF-8 and JSON, and declared and actual sizes no greater than 16 KiB.                                                                                                                                                                                                                                                            |
+| SR-14 | Browser defenses             | HTML uses a per-request nonce. Production `script-src` and `style-src` permit no `'unsafe-inline'`, `script-src` also permits no `'unsafe-eval'`, and `style-src-attr` and `script-src-attr` use `'none'` to deny inline style and script attributes. APIs use a CSP based on `default-src 'none'`; frame denial, MIME-sniffing prevention, referrer restrictions, and feature restrictions remain in place. |
+| SR-15 | Secure development process   | Vulnerable APIs default to disabled and require development/test mode, loopback URL/Host checks, and loopback binding. CI runs dependency audit, formatting, lint, tests, type-checking, and build on pushes, pull requests, manual dispatches, and weekly schedules. Scheduled runs do not deploy; candidate npm and GitHub Actions updates are verified through Dependabot pull requests.                  |
+| SR-16 | Public API shutdown          | With `PUBLIC_SHOWCASE=true`, every `/api/*` request is rejected before route handling, including secure routes, and API responses remain non-cacheable.                                                                                                                                                                                                                                                      |
+| SR-17 | Transport protection         | HTTP requests to public hosts are permanently redirected to HTTPS, and HTTPS responses apply HSTS. Local loopback verification remains available over HTTP.                                                                                                                                                                                                                                                  |
 
 ## Verification Requirements
 
@@ -72,6 +73,8 @@
 - Invalid UTF-8, malformed JSON, unsupported content types, and bodies larger than 16 KiB are rejected with consistent 400, 415, and 413 responses. Inventory-driven tests require shared JSON parsing in every POST and PATCH operation and execute unsupported-content-type, declared-size, and actual-size checks against every corresponding Route Handler, including acceptance of exactly 16 KiB for schema validation.
 - Tests verify that the HTML nonce changes on every request, every script and style element receives the matching nonce, production `script-src` and `style-src` contain no `'unsafe-inline'`, and `script-src` contains no `'unsafe-eval'`. Tests also verify that HTML has no style attributes, `style-src-attr 'none'` and `script-src-attr 'none'` are enforced, and both HTML and API responses use `no-store`. Every API operation must return the shared CSP, cross-origin protections, permissions, referrer, MIME-sniffing, and frame-denial headers without CORS allow headers. Local Next.js and public workerd HTTP checks verify the same API header contract and the absence of `X-Powered-By`.
 - Public showcase tests and a workerd preview verify that secure and vulnerable API routes both return `403 PUBLIC_SHOWCASE_API_DISABLED` before route handling.
+- Tests verify that HTTP requests to public hosts receive a 308 redirect to the same URL over HTTPS and that HTTPS HTML and API responses include HSTS. Loopback HTTP verification is not redirected.
+- Document requests carrying `next-router-prefetch` or `purpose: prefetch` must still pass through the Middleware nonce boundary and must not return 500.
 - Component tests verify that the public request-result control appears after the API examples and renders both comparison results without calling `fetch`; static-data tests cover every learning module.
 - Local-mode component tests select all ten learning topics and verify each live demo request method, URL, and JSON body, including the four-request secure rate-limit sequence. Network and JSON parsing failures must clear the running state and display the selected language's error message.
 - Playwright desktop and mobile Chromium tests verify that no CSP violation occurs, the public control makes no `/api` request, vulnerable and secure request results render, theme selection persists, and Japanese/English switching works.
@@ -125,6 +128,27 @@ requirementDiagram
         verifymethod: Test
     }
 
+    functionalRequirement public_results {
+        id: "FR-17"
+        text: "Render synthetic results publicly without network access"
+        risk: Medium
+        verifymethod: Test
+    }
+
+    requirement public_api_shutdown {
+        id: "SR-16"
+        text: "Disable every live API in public deployment"
+        risk: High
+        verifymethod: Test
+    }
+
+    requirement transport_protection {
+        id: "SR-17"
+        text: "Protect public hosts with HTTPS and HSTS"
+        risk: High
+        verifymethod: Test
+    }
+
     element security_tests {
         type: "Vitest test suite"
         docref: "src/lib/security-verification.test.ts"
@@ -155,6 +179,16 @@ requirementDiagram
         docref: "src/lib/request-validation.ts / next.config.ts / .github/workflows"
     }
 
+    element public_boundary {
+        type: "Middleware and public workerd verification"
+        docref: "src/middleware.ts / scripts/verify-public-showcase.mjs"
+    }
+
+    element showcase_ui {
+        type: "Public UI, synthetic results, and browser tests"
+        docref: "src/features/home / src/data/showcase-results.ts / e2e"
+    }
+
     security_tests - verifies -> local_only
     security_tests - verifies -> secure_controls
     openapi_contract - verifies -> route_separation
@@ -163,6 +197,9 @@ requirementDiagram
     repository_exclusions - satisfies -> secret_exclusion
     ui_resources - satisfies -> bilingual_ui
     shared_security_pipeline - satisfies -> platform_hardening
+    public_boundary - satisfies -> public_api_shutdown
+    public_boundary - verifies -> transport_protection
+    showcase_ui - satisfies -> public_results
 ```
 
 ## Learning Module Interaction Flow
@@ -172,10 +209,13 @@ The current UI does not persist completion state. In the local lab, running a de
 ```mermaid
 flowchart TD
     A[Select a topic] --> B[Review overview and defensive design]
-    B --> C[Run API demo]
-    C --> D[Invoke vulnerable and secure APIs in parallel]
-    D --> E[Compare both results]
-    E --> F[Review implementation flow and checklist]
+    B --> C[Display request results]
+    C --> D{Runtime mode}
+    D -- Local lab --> E[Invoke vulnerable and secure APIs in parallel]
+    D -- Public showcase --> F[Load synthetic results without network access]
+    E --> G[Compare both results]
+    F --> G
+    G --> H[Review implementation flow and checklist]
 ```
 
 ## UI/UX Requirements

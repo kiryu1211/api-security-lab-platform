@@ -10,6 +10,7 @@
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS",
+    "run_worker_first": true,
   },
   "vars": {
     "LAB_MODE": "disabled",

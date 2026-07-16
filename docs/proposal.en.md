@@ -25,6 +25,7 @@ This system is designed as an environment for examining representative API secur
 - Separates `/api/vulnerable/*` and `/api/secure/*` so vulnerable and secure behavior can be compared for the same topic.
 - SSRF and third-party API response demos return verification preview metadata or synthetic responses only and do not perform real outbound network access.
 - The UI defaults to Japanese and can be switched to English through a shared language switcher.
+- Public deployment provides a read-only showcase that disables every live API and renders synthetic results without network requests.
 
 ## Development Process Decision
 
@@ -38,16 +39,19 @@ However, because vulnerable API examples are included, local-only execution, non
 flowchart TD
     A[Review API and OWASP API Security Top 10 basics] --> B[Select learning topic]
     B --> C[Review risk overview and real-world context]
-    C --> D[Run vulnerable and secure APIs locally in parallel]
-    D --> E[Compare both results and their meaning]
-    E --> F[Review design differences]
-    F --> G[Review red and blue implementation-flow annotations]
-    G --> H[Review mitigations and implementation checklist]
+    C --> D{Runtime mode}
+    D -- Local lab --> E[Run vulnerable and secure APIs in parallel]
+    D -- Public showcase --> F[Render synthetic results without network requests]
+    E --> G[Compare both results and their meaning]
+    F --> G
+    G --> H[Review design differences]
+    H --> I[Review red and blue implementation-flow annotations]
+    I --> J[Review mitigations and implementation checklist]
 ```
 
 ## UI/UX Direction
 
-Each learning module provides a comparison screen for the vulnerable implementation, secure implementation, request example, response example, design differences, implementation flow, and defensive checklist. The implementation flow shows the full API program flow, highlights vulnerable problem areas in red, and highlights secure improvements in blue. After an API demo runs, the UI shows both the response and what the result means.
+Each learning module provides a comparison screen for the vulnerable implementation, secure implementation, request example, response example, design differences, implementation flow, and defensive checklist. The implementation flow shows the full API processing flow, highlights vulnerable problem areas in red, and highlights secure improvements in blue. After an API demo runs, the UI shows both the response and what the result means.
 
 The top-level screen explains what an API is and how OWASP API Security Top 10 is used. Each topic detail separates the overview, real-world context and impact examples, vulnerable conditions, and defensive design so beginners can follow the purpose of each comparison.
 
