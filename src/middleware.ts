@@ -93,6 +93,11 @@ export function middleware(request: NextRequest) {
   const nonce = createNonce();
   const contentSecurityPolicy = createContentSecurityPolicy(nonce);
   const requestHeaders = new Headers(request.headers);
+  // OpenNext cannot render a document when Next.js receives these prefetch hints.
+  requestHeaders.delete("next-router-prefetch");
+  if (requestHeaders.get("purpose")?.toLowerCase() === "prefetch") {
+    requestHeaders.delete("purpose");
+  }
   requestHeaders.set("Content-Security-Policy", contentSecurityPolicy);
   requestHeaders.set("x-nonce", nonce);
 
