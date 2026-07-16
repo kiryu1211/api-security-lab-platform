@@ -127,6 +127,35 @@ describe("request validation", () => {
     });
   });
 
+  it("returns a shared 400 error for an invalid UTF-8 byte sequence", async () => {
+    // 0xc3 requires a continuation byte, but 0x28 terminates the sequence.
+    const invalidUtf8Json = new Uint8Array([
+      0x7b, 0x22, 0x6c, 0x61, 0x62, 0x65, 0x6c, 0x22, 0x3a, 0x22, 0xc3, 0x28,
+      0x22, 0x7d,
+    ]);
+    const result = await parseJsonRequest(
+      new Request("http://localhost/api/secure/example", {
+        method: "POST",
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+        body: invalidUtf8Json,
+      }),
+      secureRouteMeta(),
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error("Expected invalid UTF-8 to fail.");
+    }
+
+    expect(result.response.status).toBe(400);
+    expect(result.response.headers.get("Cache-Control")).toBe("no-store");
+    await expect(result.response.json()).resolves.toMatchObject({
+      ok: false,
+      error: { code: "INVALID_JSON" },
+      meta: { routeType: "secure" },
+    });
+  });
+
   it("rejects a declared Content-Length over 16 KiB", async () => {
     const result = await parseJsonRequest(
       new Request("http://localhost/api/secure/example", {

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   safeProfileUpdate,
   unsafeProfileUpdate,
@@ -11,6 +11,10 @@ import {
   unsafeSearch,
 } from "./rate-limit-service";
 import { safeFetchPreview, unsafeFetchPreview } from "./ssrf-service";
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe("rate limit service", () => {
   beforeEach(() => {
@@ -99,12 +103,38 @@ describe("SSRF service", () => {
     });
   });
 
-  it("secure preview allows allowlisted HTTPS host without real network access", () => {
-    expect(safeFetchPreview("https://api.example.test/resource")).toMatchObject(
-      {
-        allowed: true,
-        networkAccessPerformed: false,
-      },
-    );
+  it("secure preview rejects non-HTTPS URLs before host evaluation", () => {
+    expect(safeFetchPreview("http://api.example.test/resource")).toEqual({
+      allowed: false,
+      reason: "protocol-not-allowed",
+    });
+  });
+
+  it("secure preview rejects public hosts outside the allowlist", () => {
+    expect(safeFetchPreview("https://public.example.test/resource")).toEqual({
+      allowed: false,
+      reason: "host-not-allowed",
+    });
+  });
+
+  it("secure preview returns the constrained redirect and timeout policy", () => {
+    expect(safeFetchPreview("https://api.example.test/resource")).toEqual({
+      allowed: true,
+      wouldFetch: "https://api.example.test/resource",
+      redirectPolicy: "manual",
+      timeoutMs: 2000,
+      networkAccessPerformed: false,
+    });
+  });
+
+  it("never performs outbound fetches for vulnerable or secure previews", () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(() => {
+      throw new Error("SSRF previews must not perform outbound fetches.");
+    });
+
+    unsafeFetchPreview("http://127.0.0.1/admin");
+    safeFetchPreview("https://api.example.test/resource");
+
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 });

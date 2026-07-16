@@ -16,6 +16,7 @@ describe("phase 6 demo routes", () => {
 
   afterEach(() => {
     vi.unstubAllEnvs();
+    vi.restoreAllMocks();
   });
 
   it("vulnerable rate-limit route does not apply limits", async () => {
@@ -139,19 +140,41 @@ describe("phase 6 demo routes", () => {
     });
   });
 
-  it("vulnerable SSRF route accepts private URL previews", async () => {
+  it("both SSRF routes return previews without outbound fetches", async () => {
     vi.stubEnv("LAB_MODE", "local");
     vi.stubEnv("NODE_ENV", "test");
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(() => {
+      throw new Error("SSRF routes must not perform outbound fetches.");
+    });
 
-    const response = await vulnerableFetchUrlPost(
+    const vulnerableResponse = await vulnerableFetchUrlPost(
       new Request("http://localhost/api/vulnerable/fetch-url", {
         method: "POST",
         headers: jsonHeaders,
         body: JSON.stringify({ url: "http://127.0.0.1/admin" }),
       }),
     );
+    const secureResponse = await secureFetchUrlPost(
+      new Request("http://localhost/api/secure/fetch-url", {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify({
+          url: "https://api.example.test/resource",
+        }),
+      }),
+    );
+    const vulnerableBody = await vulnerableResponse.json();
+    const secureBody = await secureResponse.json();
 
-    expect(response.status).toBe(200);
+    expect(vulnerableResponse.status).toBe(200);
+    expect(secureResponse.status).toBe(200);
+    expect(vulnerableBody.data.preview.networkAccessPerformed).toBe(false);
+    expect(secureBody.data.preview).toMatchObject({
+      redirectPolicy: "manual",
+      timeoutMs: 2000,
+      networkAccessPerformed: false,
+    });
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it("secure SSRF route rejects private URL previews", async () => {

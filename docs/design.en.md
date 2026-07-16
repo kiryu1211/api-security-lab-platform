@@ -193,7 +193,7 @@ Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route
 ## API Foundation
 
 - Shared API response helpers are defined in `src/lib/api-response.ts` and return `{ ok, data, meta }` for success or `{ ok, error, meta }` for errors.
-- Shared request validation is defined in `src/lib/request-validation.ts`. JSON bodies allow only `application/json` with optional `charset=utf-8`, must contain valid UTF-8 and JSON, and have both declared and actual sizes capped at 16 KiB before Zod schemas run. Invalid UTF-8 or JSON, oversized bodies, and unsupported content types map to consistent 400, 413, and 415 errors. Repeated scalar query values become arrays and fail validation instead of using last-value-wins behavior.
+- Shared request validation is defined in `src/lib/request-validation.ts`. JSON bodies allow only `application/json` with optional `charset=utf-8`, must contain valid UTF-8 and JSON, and have both declared and actual sizes capped at 16 KiB before Zod schemas run. Invalid UTF-8 or JSON, oversized bodies, and unsupported content types map to consistent 400, 413, and 415 errors. Tests pass a raw invalid multibyte sequence to the request body so UTF-8 rejection is verified before string conversion. Repeated scalar query values become arrays and fail validation instead of using last-value-wins behavior.
 - Local sample users and resources are defined in `src/data/lab-samples.ts`. They use synthetic demo identifiers and do not include real personal data, logs, credentials, or tokens.
 - `src/lib/lab-sample-service.ts` provides filtered sample data for API modules without introducing database dependencies before persistence is added.
 - `docs/api/openapi.json` documents implemented routes, separated secure/vulnerable tags, shared success/error response shapes, and local-only vulnerable route behavior.
@@ -233,7 +233,7 @@ The in-memory rate limits, reservation totals, stock, and attempt counters are s
 - The vulnerable rate-limit route `/api/vulnerable/rate-limit/search` accepts repeated requests without applying limits. The secure route `/api/secure/rate-limit/search` allows three requests in a 60-second bucket keyed by route and demo user, then returns `429 RATE_LIMITED` for the fourth.
 - The vulnerable Mass Assignment route `/api/vulnerable/profile` applies all accepted properties, including privileged fields such as `ownerId` and `role`. The secure route `/api/secure/profile` restricts normal updates to allowlisted profile fields and returns 403 when privileged or ownership fields are present.
 - The vulnerable SSRF route `/api/vulnerable/fetch-url` accepts arbitrary URLs for demonstration without real outbound network access. The secure route `/api/secure/fetch-url` returns a preview that requires HTTPS, rejects private hosts, and allows only `api.example.test`.
-- SSRF demos never perform real outbound network access; both vulnerable and secure routes return preview metadata only.
+- SSRF demos never perform real outbound network access; both vulnerable and secure routes return preview metadata only. Service and Route Handler tests verify protocol and allowlist rejection, manual redirect handling, the 2000 ms timeout policy, and replace `fetch` with a fail-fast mock so any outbound call fails before network access.
 
 ## Broken Function Level Authorization Module Design
 

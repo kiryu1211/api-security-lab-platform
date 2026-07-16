@@ -193,7 +193,7 @@ flowchart TD
 ## API基盤
 
 - 共通APIレスポンスは `src/lib/api-response.ts` で定義し、成功時は `{ ok, data, meta }`、エラー時は `{ ok, error, meta }` を返す。
-- 共通リクエスト検証は `src/lib/request-validation.ts` で定義し、JSON本文に`application/json`と任意の`charset=utf-8`だけを許可する。正しいUTF-8とJSONを要求し、宣言サイズと実読込サイズを16 KiB以下に制限してからZodスキーマを使用する。不正UTF-8・JSON、過大本文、非対応Content-Typeは統一した400、413、415エラーへ変換する。単一値クエリの重複は配列化してスキーマ検証で拒否する。
+- 共通リクエスト検証は `src/lib/request-validation.ts` で定義し、JSON本文に`application/json`と任意の`charset=utf-8`だけを許可する。正しいUTF-8とJSONを要求し、宣言サイズと実読込サイズを16 KiB以下に制限してからZodスキーマを使用する。不正UTF-8・JSON、過大本文、非対応Content-Typeは統一した400、413、415エラーへ変換する。テストでは不正なマルチバイト列を文字列変換前のRequest本文へ直接渡し、UTF-8拒否を確認する。単一値クエリの重複は配列化してスキーマ検証で拒否する。
 - ローカル用のサンプルユーザーとサンプルリソースは `src/data/lab-samples.ts` で定義する。合成したデモ用IDだけを使用し、実在する個人情報、ログ、認証情報、トークンは含めない。
 - `src/lib/lab-sample-service.ts` は、永続化を導入する前の段階でデータベース依存を増やさず、APIモジュールへフィルタ済みサンプルデータを提供する。
 - `docs/api/openapi.json` では、実装済みルート、安全/脆弱タグの分離、共通の成功/エラーレスポンス形式、脆弱ルートのローカル限定動作を記述する。
@@ -233,7 +233,7 @@ flowchart LR
 - 脆弱なレート制限ルート `/api/vulnerable/rate-limit/search` は、繰り返しリクエストに制限を適用しない。安全なルート `/api/secure/rate-limit/search` は、ルートとデモユーザーをキーに、60秒のbucket内で3回まで許可し、4回目は `429 RATE_LIMITED` を返す。
 - 脆弱なMass Assignmentルート `/api/vulnerable/profile` は、`ownerId` や `role` など権限が必要な項目も含め、受け入れたプロパティをそのまま適用する。安全なルート `/api/secure/profile` は、通常更新で許可するプロフィール項目を許可リストで制限し、権限項目や所有者項目が含まれる場合は403で拒否する。
 - 脆弱なSSRFルート `/api/vulnerable/fetch-url` は、任意URLを受け入れる例として動作する。ただし、実際の外部ネットワークアクセスは行わない。安全なルート `/api/secure/fetch-url` はHTTPSを必須とし、プライベートホストを拒否し、`api.example.test` のみを許可するプレビューを返す。
-- SSRFデモでは実際の外部ネットワークアクセスを行わず、脆弱APIと安全APIのどちらもプレビュー用メタデータだけを返す。
+- SSRFデモでは実際の外部ネットワークアクセスを行わず、脆弱APIと安全APIのどちらもプレビュー用メタデータだけを返す。サービスとRoute Handlerのテストでは、HTTPと許可リスト外ホストの拒否、リダイレクトの手動処理、2000 msのタイムアウト方針を確認し、`fetch`を呼ぶと即座に失敗するモックへ置き換えて外部通信を開始させない。
 
 ## Broken Function Level Authorizationモジュール設計
 
