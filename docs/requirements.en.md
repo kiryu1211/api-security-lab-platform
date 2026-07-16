@@ -72,6 +72,7 @@
 - Tests verify that the HTML nonce changes on every request, every script and style element receives the matching nonce, production `script-src` and `style-src` contain no `'unsafe-inline'`, and `script-src` contains no `'unsafe-eval'`. Tests also verify that HTML has no style attributes, `style-src-attr 'none'` and `script-src-attr 'none'` are enforced, and both HTML and API responses use `no-store`.
 - Public showcase tests and a workerd preview verify that secure and vulnerable API routes both return `403 PUBLIC_SHOWCASE_API_DISABLED` before route handling.
 - Component tests verify that the public request-result control appears after the API examples and renders both comparison results without calling `fetch`; static-data tests cover every learning module.
+- Local-mode component tests select all ten learning topics and verify each live demo request method, URL, and JSON body, including the four-request secure rate-limit sequence. Network and JSON parsing failures must clear the running state and display the selected language's error message.
 - Playwright desktop and mobile Chromium tests verify that no CSP violation occurs, the public control makes no `/api` request, vulnerable and secure request results render, theme selection persists, and Japanese/English switching works.
 - Desktop and mobile Chromium screenshot tests compare the initial Japanese light-theme viewport and representative English dark-theme comparison regions with OS-specific baselines after fonts, animation frames, and document animations have settled.
 

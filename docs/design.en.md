@@ -312,6 +312,7 @@ flowchart TD
 - `scripts/verify-repository-safety.mjs` inspects Git-tracked paths and file contents before dependency installation. It permits only `.env.example`, rejects developer-only documents, environment and Worker variable files, key and certificate files, logs, and local databases, and detects private-key headers without printing secret contents.
 - UI text resources are tested for matching Japanese and English key structures to avoid mixed-language shared screen labels.
 - `src/lib/public-showcase.test.ts` verifies the pre-route shutdown for both API families. Component tests verify no-network synthetic result rendering, and static-data tests cover every module. OpenNext build, Wrangler dry run, and CI workerd HTTP checks verify the exact artifact passed to deployment.
+- Local-mode `HomePage` component tests select every learning topic and verify all live demo request methods, URLs, JSON bodies, and the secure rate-limit sequence. Separate network and JSON failure cases verify that loading is cleared, the action is re-enabled, and the Japanese or English error alert is displayed.
 
 ## Screen Design
 
