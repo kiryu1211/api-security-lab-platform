@@ -208,6 +208,7 @@ describe("HomePage public showcase", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(resultBoxes).toHaveLength(2);
     expect(resultBoxes[0].textContent).toContain("脆弱APIのリクエスト結果");
+    expect(resultBoxes[0].textContent).toContain("APIレスポンス（原文）");
     expect(resultBoxes[0].textContent).toContain("HTTP 200");
     expect(resultBoxes[0].textContent).toContain("order-demo-002");
     expect(resultBoxes[0].textContent).toContain('"synthetic": true');
@@ -217,6 +218,9 @@ describe("HomePage public showcase", () => {
   });
 
   it("switches the public action and notice completely to English", () => {
+    const description = document.createElement("meta");
+    description.name = "description";
+    document.head.append(description);
     render(<HomePage publicShowcase />);
 
     fireEvent.click(screen.getByRole("button", { name: "英語" }));
@@ -229,6 +233,15 @@ describe("HomePage public showcase", () => {
         /displays representative request results without sending an API request/,
       ),
     ).toBeTruthy();
+    expect(document.documentElement.lang).toBe("en");
+    expect(document.title).toBe("API Security Lab Platform");
+    expect(
+      document
+        .querySelector('meta[name="description"]')
+        ?.getAttribute("content"),
+    ).toBe(
+      "A learning and verification platform for comparing vulnerable and secure API examples in a local environment.",
+    );
   });
 
   it("restores persisted language and theme preferences", () => {
@@ -324,7 +337,7 @@ describe("HomePage local API demos", () => {
     expect(
       (
         screen.getByRole("button", {
-          name: "APIを実行しています...",
+          name: "APIを実行しています…",
         }) as HTMLButtonElement
       ).disabled,
     ).toBe(true);

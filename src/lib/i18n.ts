@@ -8,6 +8,11 @@ export function isLanguage(value: string | null): value is Language {
 
 export const uiText = {
   ja: {
+    metadata: {
+      title: "APIセキュリティ学習・検証プラットフォーム",
+      description:
+        "脆弱なAPI例と安全なAPI例をローカル環境で比較するための学習・検証プラットフォームです。",
+    },
     languageSwitcherLabel: "言語を切り替え",
     languageNames: {
       ja: "日本語",
@@ -125,7 +130,7 @@ export const uiText = {
       secureBadge: "対策済み",
       runDemo: "APIデモを実行",
       demoUnavailable: "このテーマでは実行可能なAPIデモが定義されていません。",
-      demoLoading: "APIを実行しています...",
+      demoLoading: "APIを実行しています…",
       demoError:
         "APIデモを完了できませんでした。ローカルサーバーの状態を確認して、もう一度実行してください。",
       publicShowcaseLabel: "公開ショーケース",
@@ -137,6 +142,7 @@ export const uiText = {
       vulnerableRequestResult: "脆弱APIのリクエスト結果",
       secureRequestResult: "安全APIのリクエスト結果",
       resultMeaning: "この結果が表すこと",
+      rawResponse: "APIレスポンス（原文）",
       selectedTopic: "選択中のテーマ",
       noResult: "まだ実行していません。",
     },
@@ -146,6 +152,11 @@ export const uiText = {
     },
   },
   en: {
+    metadata: {
+      title: "API Security Lab Platform",
+      description:
+        "A learning and verification platform for comparing vulnerable and secure API examples in a local environment.",
+    },
     languageSwitcherLabel: "Language switcher",
     languageNames: {
       ja: "Japanese",
@@ -181,7 +192,7 @@ export const uiText = {
     opening: {
       badge: "Local API Security Lab",
       title: "Make API Defenses Visible",
-      lead: "Explore OWASP API Security Top 10 from API1 through API10 by comparing vulnerable and secure examples. Review requests, responses, and implementation differences to see how local-only defenses stop attacks.",
+      lead: "Explore OWASP API Security Top 10 from API1 through API10 by comparing vulnerable and secure examples. Review requests, responses, and implementation differences to see in a local environment how defensive design stops attacks.",
       clientA: "Client A",
       clientB: "Client B",
       api: "API",
@@ -275,6 +286,7 @@ export const uiText = {
       vulnerableRequestResult: "Vulnerable API request result",
       secureRequestResult: "Secure API request result",
       resultMeaning: "What this result means",
+      rawResponse: "API response (raw)",
       selectedTopic: "Selected topic",
       noResult: "Not run yet.",
     },

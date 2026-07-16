@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
-import { middleware } from "@/middleware";
+import { config, middleware } from "@/middleware";
+
+const prefetchHeaderCases: Array<Record<string, string>> = [
+  { "next-router-prefetch": "1" },
+  { purpose: "prefetch" },
+];
 
 describe("public showcase boundary", () => {
   afterEach(() => {
@@ -18,6 +23,9 @@ describe("public showcase boundary", () => {
 
       expect(response.status).toBe(403);
       expect(response.headers.get("Cache-Control")).toBe("no-store");
+      expect(response.headers.get("Strict-Transport-Security")).toBe(
+        "max-age=31536000",
+      );
       expect(response.headers.get("Content-Security-Policy")).toBe(
         "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
       );
@@ -68,6 +76,9 @@ describe("public showcase boundary", () => {
       .find((directive) => directive.trim().startsWith("style-src "));
 
     expect(firstResponse.headers.get("Cache-Control")).toBe("no-store");
+    expect(firstResponse.headers.get("Strict-Transport-Security")).toBe(
+      "max-age=31536000",
+    );
     expect(firstNonce).toBeTruthy();
     expect(secondNonce).toBeTruthy();
     expect(firstNonce).not.toBe(secondNonce);
@@ -92,4 +103,57 @@ describe("public showcase boundary", () => {
     expect(policy).toContain("style-src 'self' 'unsafe-inline'");
     expect(policy).toContain("style-src-attr 'unsafe-inline'");
   });
+
+  it("redirects non-loopback HTTP requests to HTTPS without sending HSTS over HTTP", () => {
+    const response = middleware(
+      new NextRequest("http://showcase.example/path?q=1"),
+    );
+
+    expect(response.status).toBe(308);
+    expect(response.headers.get("Location")).toBe(
+      "https://showcase.example/path?q=1",
+    );
+    expect(response.headers.get("Strict-Transport-Security")).toBeNull();
+  });
+
+  it("applies transport security to static assets without disabling their cache policy", () => {
+    const insecureResponse = middleware(
+      new NextRequest("http://showcase.example/_next/static/app.js"),
+    );
+    const secureResponse = middleware(
+      new NextRequest("https://showcase.example/_next/static/app.js"),
+    );
+
+    expect(insecureResponse.status).toBe(308);
+    expect(secureResponse.headers.get("x-middleware-next")).toBe("1");
+    expect(secureResponse.headers.get("Cache-Control")).toBeNull();
+    expect(secureResponse.headers.get("Strict-Transport-Security")).toBe(
+      "max-age=31536000",
+    );
+  });
+
+  it.each(["http://localhost/", "http://127.0.0.1/", "http://[::1]/"])(
+    "keeps loopback verification on HTTP without HSTS: %s",
+    (url) => {
+      const response = middleware(new NextRequest(url));
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Strict-Transport-Security")).toBeNull();
+    },
+  );
+
+  it.each(prefetchHeaderCases)(
+    "keeps document prefetch requests inside the nonce boundary",
+    (headers) => {
+      expect(config.matcher).toBe("/:path*");
+
+      const response = middleware(
+        new NextRequest("https://showcase.example/", { headers }),
+      );
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Content-Security-Policy")).toContain(
+        "'nonce-",
+      );
+    },
+  );
 });

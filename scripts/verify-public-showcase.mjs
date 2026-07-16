@@ -1,4 +1,7 @@
 const baseUrl = new URL(process.argv[2] ?? "http://127.0.0.1:8787");
+const loopbackHostnames = new Set(["localhost", "127.0.0.1", "[::1]"]);
+const publicHttps =
+  baseUrl.protocol === "https:" && !loopbackHostnames.has(baseUrl.hostname);
 
 if (!["http:", "https:"].includes(baseUrl.protocol)) {
   throw new Error("The showcase URL must use HTTP or HTTPS.");
@@ -33,6 +36,12 @@ function verifyApiResponseHeaders(headers, label) {
       `${label} has an unexpected ${name} header.`,
     );
   }
+  if (publicHttps) {
+    requireCondition(
+      headers.get("strict-transport-security") === "max-age=31536000",
+      `${label} is missing the public HSTS policy.`,
+    );
+  }
   for (const name of [
     "access-control-allow-credentials",
     "access-control-allow-headers",
@@ -58,6 +67,30 @@ async function request(path, init) {
   });
 }
 
+async function verifyPublicAssetTransport(path, response) {
+  if (!publicHttps) {
+    return;
+  }
+
+  requireCondition(
+    response.headers.get("strict-transport-security") === "max-age=31536000",
+    `${path} is missing the public HSTS policy.`,
+  );
+
+  const secureUrl = new URL(path, baseUrl);
+  const insecureUrl = new URL(secureUrl);
+  insecureUrl.protocol = "http:";
+  const insecureResponse = await fetch(insecureUrl, {
+    redirect: "manual",
+    signal: AbortSignal.timeout(15_000),
+  });
+  requireCondition(
+    insecureResponse.status === 308 &&
+      insecureResponse.headers.get("location") === secureUrl.href,
+    `${path} bypasses the public HTTP-to-HTTPS redirect.`,
+  );
+}
+
 function nonceFrom(policy) {
   return policy.match(/'nonce-([^']+)'/)?.[1];
 }
@@ -73,6 +106,14 @@ const firstHomeResponse = await request("/");
 const firstHome = await firstHomeResponse.text();
 const secondHomeResponse = await request("/");
 const secondHome = await secondHomeResponse.text();
+const prefetchHomeResponse = await request("/", {
+  headers: { "next-router-prefetch": "1" },
+});
+const prefetchHome = await prefetchHomeResponse.text();
+const purposePrefetchResponse = await request("/", {
+  headers: { purpose: "prefetch" },
+});
+const purposePrefetchHome = await purposePrefetchResponse.text();
 const firstPolicy =
   firstHomeResponse.headers.get("content-security-policy") ?? "";
 const secondPolicy =
@@ -117,6 +158,29 @@ requireCondition(
   firstHomeResponse.headers.get("cache-control") === "no-store",
   "The nonce-bearing HTML response must not be cached.",
 );
+if (publicHttps) {
+  requireCondition(
+    firstHomeResponse.headers.get("strict-transport-security") ===
+      "max-age=31536000",
+    "The public HTTPS document is missing the HSTS policy.",
+  );
+
+  const insecureUrl = new URL(baseUrl);
+  insecureUrl.protocol = "http:";
+  const insecureResponse = await fetch(insecureUrl, {
+    redirect: "manual",
+    signal: AbortSignal.timeout(15_000),
+  });
+  requireCondition(
+    insecureResponse.status === 308 &&
+      insecureResponse.headers.get("location") === baseUrl.href,
+    "The public HTTP endpoint does not permanently redirect to the same HTTPS URL.",
+  );
+  requireCondition(
+    insecureResponse.headers.get("strict-transport-security") === null,
+    "The insecure redirect must not send HSTS over HTTP.",
+  );
+}
 requireCondition(
   firstNonce && secondNonce && firstNonce !== secondNonce,
   "The document nonce must be present and unique per request.",
@@ -170,6 +234,22 @@ requireCondition(
   "The second document does not contain its response nonce.",
 );
 requireCondition(
+  prefetchHomeResponse.status === 200 &&
+    prefetchHomeResponse.headers
+      .get("content-security-policy")
+      ?.includes("'nonce-") &&
+    prefetchHome.includes("API Security"),
+  "A document prefetch bypassed the nonce boundary or failed to render.",
+);
+requireCondition(
+  purposePrefetchResponse.status === 200 &&
+    purposePrefetchResponse.headers
+      .get("content-security-policy")
+      ?.includes("'nonce-") &&
+    purposePrefetchHome.includes("API Security"),
+  "A purpose-prefetch document bypassed the nonce boundary or failed to render.",
+);
+requireCondition(
   firstHome.includes("リクエスト結果を表示") &&
     firstHome.indexOf('class="public-showcase-notice"') >
       firstHome.indexOf('class="comparison-grid"'),
@@ -187,6 +267,7 @@ for (const path of scriptPaths) {
       cacheControl.includes("immutable"),
     `${path} is not cached as an immutable content-identified script.`,
   );
+  await verifyPublicAssetTransport(path, response);
 }
 
 for (const path of stylesheetPaths) {
@@ -200,6 +281,7 @@ for (const path of stylesheetPaths) {
       !cacheControl.includes("immutable"),
     `${path} can retain stale CSS without revalidation.`,
   );
+  await verifyPublicAssetTransport(path, response);
 }
 
 const apiCases = [

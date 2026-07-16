@@ -177,7 +177,11 @@ export function HomePage({
   useEffect(() => {
     document.documentElement.lang = language;
     document.documentElement.dataset.theme = theme;
-  }, [language, theme]);
+    document.title = t.metadata.title;
+    document
+      .querySelector('meta[name="description"]')
+      ?.setAttribute("content", t.metadata.description);
+  }, [language, t.metadata.description, t.metadata.title, theme]);
 
   useEffect(() => {
     if (openingChecked && !openingVisible) {
@@ -555,8 +559,12 @@ export function HomePage({
     >
       {!openingChecked || openingVisible ? (
         <OpeningAnimation
+          language={language}
+          languageNames={t.languageNames}
+          languageSwitcherLabel={t.languageSwitcherLabel}
           ready={openingChecked}
           leaving={openingLeaving}
+          onLanguageChange={handleLanguageChange}
           onSkip={handleSkipOpening}
           text={t.opening}
         />
@@ -643,6 +651,7 @@ export function HomePage({
           <div
             className="language-switcher"
             aria-label={t.languageSwitcherLabel}
+            role="group"
           >
             <button
               type="button"
@@ -996,16 +1005,26 @@ export function HomePage({
 }
 
 function OpeningAnimation({
+  language,
+  languageNames,
+  languageSwitcherLabel,
   ready,
   leaving,
+  onLanguageChange,
   onSkip,
   text,
 }: {
+  language: Language;
+  languageNames: (typeof uiText)[Language]["languageNames"];
+  languageSwitcherLabel: string;
   ready: boolean;
   leaving: boolean;
+  onLanguageChange: (language: Language) => void;
   onSkip: () => void;
   text: (typeof uiText)[Language]["opening"];
 }) {
+  const japaneseButtonRef = useRef<HTMLButtonElement>(null);
+  const englishButtonRef = useRef<HTMLButtonElement>(null);
   const skipButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -1029,12 +1048,47 @@ function OpeningAnimation({
 
         if (event.key === "Tab") {
           event.preventDefault();
-          skipButtonRef.current?.focus();
+          const controls = [
+            japaneseButtonRef.current,
+            englishButtonRef.current,
+            skipButtonRef.current,
+          ].filter((control): control is HTMLButtonElement => control !== null);
+          const currentIndex = controls.indexOf(
+            document.activeElement as HTMLButtonElement,
+          );
+          const offset = event.shiftKey ? -1 : 1;
+          const nextIndex =
+            currentIndex === -1
+              ? controls.length - 1
+              : (currentIndex + offset + controls.length) % controls.length;
+          controls[nextIndex]?.focus();
         }
       }}
     >
       <div className="opening-grid" aria-hidden="true" />
       <div className="opening-card">
+        <div
+          className="language-switcher opening-language-switcher"
+          aria-label={languageSwitcherLabel}
+          role="group"
+        >
+          <button
+            ref={japaneseButtonRef}
+            type="button"
+            aria-pressed={language === "ja"}
+            onClick={() => onLanguageChange("ja")}
+          >
+            {languageNames.ja}
+          </button>
+          <button
+            ref={englishButtonRef}
+            type="button"
+            aria-pressed={language === "en"}
+            onClick={() => onLanguageChange("en")}
+          >
+            {languageNames.en}
+          </button>
+        </div>
         <div className="opening-copy">
           <span className="opening-badge">{text.badge}</span>
           <h2>{text.title}</h2>
@@ -1169,6 +1223,7 @@ function ComparisonPanel({
               <strong>{labels.resultMeaning}: </strong>
               {response}
             </p>
+            <span className="mini-label">{labels.rawResponse}</span>
             <pre
               tabIndex={0}
             >{`HTTP ${result.status}\n${JSON.stringify(result.body, null, 2)}`}</pre>

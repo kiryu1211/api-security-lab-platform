@@ -106,5 +106,5 @@ if (violations.length > 0) {
 }
 
 console.log(
-  `Verified repository safety: ${trackedFiles.length} tracked files contain no prohibited local or secret material.`,
+  `Verified repository safety: ${trackedFiles.length} tracked files contain no prohibited paths or private-key markers.`,
 );

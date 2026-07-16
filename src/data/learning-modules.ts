@@ -296,7 +296,7 @@ const learningModuleDefinitions: LearningModule[] = [
       en: "The operation looks administrative in the UI or URL, but the API accepts direct requests from regular authenticated users without checking the required permission.",
     },
     defensiveDesign: {
-      ja: "APIごとに必要な機能権限を定義し、認証済みユーザーのロールと権限を処理前に検証します。未定義の機能、権限不足、ロールの不一致はdeny-by-defaultで拒否します。",
+      ja: "APIごとに必要な機能権限を定義し、認証済みユーザーのロールと権限を処理前に検証します。未定義の機能、権限不足、ロールの不一致はデフォルト拒否（deny by default）で拒否します。",
       en: "Define the required permission for each API function and validate the authenticated user's role and permissions before processing. Undefined functions, missing permissions, and role mismatches are rejected by default.",
     },
     vulnerable: {
@@ -330,7 +330,7 @@ const learningModuleDefinitions: LearningModule[] = [
         "管理者向け、運用者向け、サポート担当者向けなど、特別な権限が必要なAPI機能を一覧化している。",
         "画面のメニュー非表示やURLの分かりにくさだけに頼らず、API層で機能ごとの権限を確認している。",
         "一般ユーザー、管理者、サポート担当者、読み取り専用担当者など、ロールごとの許可操作を明確にしている。",
-        "未定義の機能、権限不足、想定外のロールは既定で拒否するdeny-by-defaultにしている。",
+        "未定義の機能、権限不足、想定外のロールはデフォルト拒否（deny by default）としている。",
         "GET、POST、PATCH、DELETEなどHTTPメソッドを変えても、権限チェックを迂回できない。",
         "管理APIや一括操作APIは、通常APIと同じコントローラー内にあっても必ず権限を確認している。",
         "権限不足で拒否するとき、管理機能の内部情報や存在しないはずのデータを過剰に返していない。",
@@ -359,7 +359,7 @@ const learningModuleDefinitions: LearningModule[] = [
     difficulty: "Advanced",
     progress: "ready",
     title: {
-      ja: "Sensitive Business Flowsと業務フロー悪用対策",
+      ja: "重要な業務フローと悪用対策",
       en: "Sensitive Business Flows and Abuse Controls",
     },
     summary: {
@@ -543,7 +543,7 @@ const learningModuleDefinitions: LearningModule[] = [
         'POST /api/secure/fetch-url\n{\n  "url": "https://127.0.0.1/admin"\n}',
       response: {
         ja: "HTTP 400または403は、許可されていないホスト、内部IP、危険なリダイレクト候補を検出し、取得処理を拒否したことを表します。",
-        en: "HTTP 400 or 403 means the API detected an unallowed host, internal IP, or unsafe redirect candidate and rejected the fetch.",
+        en: "HTTP 400 or 403 means the API detected a disallowed host, internal IP, or unsafe redirect candidate and rejected the fetch.",
       },
       note: {
         ja: "安全APIでは、許可リスト、IP範囲、リダイレクト、タイムアウトを確認します。",
@@ -584,7 +584,7 @@ const learningModuleDefinitions: LearningModule[] = [
     difficulty: "Intermediate",
     progress: "ready",
     title: {
-      ja: "Security Misconfigurationと診断情報の公開制御",
+      ja: "セキュリティ設定不備と診断情報の公開制御",
       en: "Security Misconfiguration and Diagnostic Exposure Controls",
     },
     summary: {
@@ -596,7 +596,7 @@ const learningModuleDefinitions: LearningModule[] = [
       en: "A diagnostics or configuration API exposes debug details, internal paths, synthetic stack traces, overly broad CORS behavior, missing cache controls, or missing security headers.",
     },
     defensiveDesign: {
-      ja: "公開してよい設定だけを返し、許可Origin、no-store、Content-Type、nosniffなどのヘッダー、詳細エラー抑制をAPI層で適用します。診断APIも通常APIと同じ保護対象として扱います。",
+      ja: "公開してよい設定だけを返し、許可されたオリジン、no-store、Content-Type、nosniffなどのヘッダー、詳細エラー抑制をAPI層で適用します。診断APIも通常APIと同じ保護対象として扱います。",
       en: "Return only approved public configuration while applying origin allowlists, no-store caching, Content-Type, nosniff, and suppressed verbose errors in the API layer. Diagnostics endpoints are protected like normal APIs.",
     },
     vulnerable: {
@@ -680,7 +680,7 @@ const learningModuleDefinitions: LearningModule[] = [
         'POST /api/vulnerable/third-party/profile-import\n{\n  "providerResponseId": "partner-response-redirect-admin",\n  "expectedProvider": "trusted-profile-service"\n}',
       response: {
         ja: "HTTP 200で取り込み結果が返る場合、合成外部応答に含まれる許可されていないリダイレクト先や管理者ロールを検証せず受け入れていることを表します。",
-        en: "HTTP 200 means the synthetic third-party response was imported without validating the unallowed redirect target or admin role.",
+        en: "HTTP 200 means the synthetic third-party response was imported without validating the disallowed redirect target or admin role.",
       },
       note: {
         ja: "実際の外部API通信は行わず、合成した外部応答だけを使用します。",
@@ -693,7 +693,7 @@ const learningModuleDefinitions: LearningModule[] = [
         'POST /api/secure/third-party/profile-import\n{\n  "providerResponseId": "partner-response-redirect-admin",\n  "expectedProvider": "trusted-profile-service"\n}',
       response: {
         ja: "HTTP 403は、外部API応答内の未許可リダイレクト先や権限フィールドを検出し、信頼境界外の入力として拒否したことを表します。",
-        en: "HTTP 403 means an unallowed redirect target or privileged field was detected in the third-party response and rejected as untrusted input.",
+        en: "HTTP 403 means a disallowed redirect target or privileged field was detected in the third-party response and rejected as untrusted input.",
       },
       note: {
         ja: "安全APIでは、外部API応答を信頼境界外の入力として検証します。",
@@ -1209,7 +1209,7 @@ export const implementationWalkthroughs: Record<
     },
     secure: {
       summary: {
-        ja: "許可Originと公開可能なメタデータだけを返し、詳細エラーや内部情報を抑制する実装です。",
+        ja: "許可されたオリジンと公開可能なメタデータだけを返し、詳細エラーや内部情報を抑制する実装です。",
         en: "The route returns only approved public metadata for allowed origins and suppresses verbose errors and internals.",
       },
       lines: [
@@ -1221,7 +1221,7 @@ export const implementationWalkthroughs: Record<
           code: "  requireSameOrigin(request.headers.get('Origin'), request.url);",
           highlight: "fix",
           comment: {
-            ja: "本文値ではなく実際のOriginヘッダーをリクエスト先と比較します。",
+            ja: "本文値ではなく実際の Origin ヘッダーをリクエスト先と比較します。",
             en: "The actual Origin header is compared with the request target instead of trusting a body value.",
           },
         },
@@ -1384,10 +1384,10 @@ export const learningContextNotes: Record<
   },
   ssrf: {
     ja: "画像URL取り込み、Webhookテスト、URLプレビュー、外部ファイル取得、カスタムSSO連携など、サーバーが利用者指定URLへアクセスするAPIで起きます。OWASP公式では、内部ポートスキャンやクラウドメタデータサービスからの認証情報取得が例示されています。実害としては、内部サービス探索、ファイアウォール回避、クラウド認証情報漏えい、サーバーの踏み台化があります。このラボでは実通信は行わず、脆弱APIが内部向けURLを受け入れるプレビューを返し、安全APIが許可外URLを拒否する差を確認します。",
-    en: "This appears when a server accesses user-supplied URLs, such as image imports, webhook tests, URL previews, external file fetching, or custom SSO integrations. OWASP examples include internal port scanning and retrieving cloud metadata credentials. Real impact includes internal service discovery, firewall bypass, credential exposure, or using the server as a proxy. This lab performs no real network access; the vulnerable API accepts an internal URL preview, while the secure API rejects unallowed URLs.",
+    en: "This appears when a server accesses user-supplied URLs, such as image imports, webhook tests, URL previews, external file fetching, or custom SSO integrations. OWASP examples include internal port scanning and retrieving cloud metadata credentials. Real impact includes internal service discovery, firewall bypass, credential exposure, or using the server as a proxy. This lab performs no real network access; the vulnerable API accepts an internal URL preview, while the secure API rejects disallowed URLs.",
   },
   "security-config": {
-    ja: "CORS、キャッシュ、HTTPヘッダー、エラー出力、診断API、ログ設定、TLS、不要なHTTPメソッドなど、API周辺の設定で発生します。OWASP公式では、ログ設定の危険な既定値や、Cache-Control不足によるプライベートメッセージのブラウザキャッシュが例示されています。実害としては、内部情報の漏えい、ブラウザ保護の無効化、機密データのキャッシュ、既知脆弱性の悪用があります。このラボでは、脆弱APIが合成デバッグ情報と広すぎるCORSメタデータを返し、安全APIが許可Originと公開可能情報だけに制限する差を確認します。",
+    ja: "CORS、キャッシュ、HTTPヘッダー、エラー出力、診断API、ログ設定、TLS、不要なHTTPメソッドなど、API周辺の設定で発生します。OWASP公式では、ログ設定の危険な既定値や、Cache-Control不足によるプライベートメッセージのブラウザーキャッシュが例示されています。実害としては、内部情報の漏えい、ブラウザー保護の無効化、機密データのキャッシュ、既知脆弱性の悪用があります。このラボでは、脆弱APIが合成デバッグ情報と広すぎるCORSメタデータを返し、安全APIが許可されたオリジンと公開可能情報だけに制限する差を確認します。",
     en: "This appears in API-adjacent configuration such as CORS, caching, HTTP headers, error output, diagnostics APIs, logging settings, TLS, and unnecessary HTTP methods. OWASP examples include unsafe default logging behavior and missing Cache-Control for private messages. Real impact includes internal information disclosure, weakened browser protections, sensitive data caching, and exploitation of known weaknesses. In this lab, the vulnerable API returns synthetic debug and broad CORS metadata, while the secure API limits output to allowed origins and public information.",
   },
   "api-inventory": {
@@ -1396,7 +1396,7 @@ export const learningContextNotes: Record<
   },
   "unsafe-consumption": {
     ja: "住所補完、医療情報保管、決済、配送、ID確認、リポジトリ連携など、外部APIの応答を自システムに取り込む場面で起きます。OWASP公式では、外部サービス由来のSQLインジェクション、第三者APIのリダイレクト追従による機密データ送信、リポジトリ名を安全だと誤信したSQLインジェクションが例示されています。実害としては、注入攻撃、機密データ漏えい、DoS、権限やリダイレクト先の不正取り込みがあります。このラボでは、脆弱APIが合成外部応答のadminロールや未許可リダイレクトを受け入れ、安全APIが提供元、スキーマ、許可フィールドで拒否する差を確認します。",
-    en: "This appears when your system imports responses from third-party APIs, such as address enrichment, medical record storage, payments, shipping, identity verification, and repository integrations. OWASP examples include SQL injection from external service data, sensitive data leakage through followed redirects, and trusting repository names as safe input. Real impact includes injection, sensitive data exposure, denial of service, or importing unauthorized roles and redirects. In this lab, the vulnerable API accepts a synthetic admin role and unallowed redirect from a partner response, while the secure API validates provider, schema, and allowed fields.",
+    en: "This appears when your system imports responses from third-party APIs, such as address enrichment, medical record storage, payments, shipping, identity verification, and repository integrations. OWASP examples include SQL injection from external service data, sensitive data leakage through followed redirects, and trusting repository names as safe input. Real impact includes injection, sensitive data exposure, denial of service, or importing unauthorized roles and redirects. In this lab, the vulnerable API accepts a synthetic admin role and disallowed redirect from a partner response, while the secure API validates provider, schema, and allowed fields.",
   },
 };
 

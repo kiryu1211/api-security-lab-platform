@@ -786,6 +786,22 @@ a {
   outline: none;
 }
 
+.opening-language-switcher {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  border-color: rgba(226, 232, 240, 0.2);
+  background: rgba(15, 23, 42, 0.74);
+}
+
+.opening-language-switcher button {
+  color: #cbd5e1;
+}
+
+.opening-language-switcher button:focus-visible {
+  outline-color: rgba(147, 197, 253, 0.72);
+}
+
 [data-reveal] {
   opacity: 0;
   transform: translateY(1.4rem);

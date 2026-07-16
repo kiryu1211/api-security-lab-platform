@@ -14,14 +14,16 @@ The current implementation prioritizes clear API specifications, request validat
 - Public runtime: Cloudflare Workers through OpenNext, in read-only public showcase mode
 - Database and ORM: not introduced; current demos use in-memory state and synthetic data
 
-TypeScript is suitable because API requests, responses, authorization targets, and learning modules can be managed with types. OpenAPI documents implemented API specifications and verification perspectives.
+TypeScript is suitable because API requests, responses, authorization targets, and learning modules can be managed with types, making differences between vulnerable and secure examples explicit. OpenAPI documents implemented API specifications and verification perspectives.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
     U[User Browser] --> UI[Learning UI]
-    UI --> API[API Layer]
+    UI --> Mode{Runtime Mode}
+    Mode -- Local lab --> API[API Layer]
+    Mode -- Public showcase --> Showcase[Client-side Synthetic Results]
     API --> Safe[Secure API Modules]
     API --> Guard[Vulnerable API Safety Guard]
     Guard --> Vuln[Vulnerable API Modules]
@@ -31,7 +33,7 @@ flowchart LR
 
 Current demo data is managed as synthetic data under `src/data/`. Persistence is outside the current implementation scope.
 
-## Module Structure
+## Implementation Module Structure
 
 ```mermaid
 classDiagram
@@ -46,15 +48,11 @@ classDiagram
         +defensiveDesign[ja,en]
         +checklist[ja,en][]
     }
-    class VulnerableScenario {
+    class Scenario {
         +route
-        +requestExample
-        +expectedIssue
-    }
-    class SecureScenario {
-        +route
-        +requestExample
-        +mitigation
+        +request
+        +response[ja,en]
+        +note[ja,en]
     }
     class ImplementationWalkthrough {
         +vulnerable
@@ -65,10 +63,9 @@ classDiagram
         +en
     }
 
-    LearningModule "1" --> "1" VulnerableScenario
-    LearningModule "1" --> "1" SecureScenario
-    LearningModule "1" --> "1" ImplementationWalkthrough
-    LearningModule "1" --> "1" LearningContextNote
+    LearningModule "1" *-- "2" Scenario
+    LearningModule ..> ImplementationWalkthrough : Referenced by ID
+    LearningModule ..> LearningContextNote : Referenced by ID
 ```
 
 ## BOLA Verification Sequence
@@ -82,14 +79,17 @@ sequenceDiagram
     participant DemoData
 
     User->>UI: Specify another user's resource ID
-    UI->>VulnAPI: GET /api/vulnerable/orders/{id}
-    VulnAPI->>DemoData: Fetch order by ID only
-    DemoData-->>VulnAPI: Order data
-    VulnAPI-->>UI: Unauthorized data exposure
-    UI->>SafeAPI: GET /api/secure/orders/{id}
-    SafeAPI->>DemoData: Check order and owner
-    DemoData-->>SafeAPI: Owner information
-    SafeAPI-->>UI: Reject if unauthorized
+    par Vulnerable API
+        UI->>VulnAPI: GET /api/vulnerable/orders/{id}
+        VulnAPI->>DemoData: Fetch order by ID only
+        DemoData-->>VulnAPI: Order data
+        VulnAPI-->>UI: Return another user's order
+    and Secure API
+        UI->>SafeAPI: GET /api/secure/orders/{id}
+        SafeAPI->>DemoData: Check order and owner
+        DemoData-->>SafeAPI: Owner information
+        SafeAPI-->>UI: Reject if unauthorized
+    end
 ```
 
 ## Future Concept: Persistence Data Model (Not Implemented)
@@ -139,7 +139,7 @@ erDiagram
 - Vulnerable APIs are clearly separated under `/api/vulnerable/*`, while secure APIs use `/api/secure/*`.
 - Vulnerable APIs default to disabled and require `LAB_MODE=local`, `NODE_ENV` exactly `development` or `test`, a loopback request URL hostname, and a loopback `Host` header when present. Invalid `LAB_MODE` values are treated as disabled. Development and start commands bind only to `127.0.0.1`. Hostname checks do not prove the connection source and must not be treated as making a publicly forwarded server safe.
 - Screens that operate vulnerable APIs always display warnings that they are local-only and must not be publicly exposed.
-- Secure APIs validate user ID, role, and target resource ownership in the API layer.
+- Secure APIs validate the relationship between user ID, role, and target resource ownership within finite synthetic scenarios in the API layer.
 - Broken Function Level Authorization protection validates required feature permissions for administrative functions with deny-by-default behavior.
 - Sensitive Business Flows protection validates workflow order, per-user limits, stock constraints, and automation-abuse signals for critical reservation or purchase flows in the API layer.
 - SSRF protection returns validation previews for allowlists, private host rejection, redirect policy, and timeout policy without real network access.
@@ -150,6 +150,7 @@ erDiagram
 - For HTML responses, Middleware generates a cryptographically unpredictable nonce for every request and passes the CSP through request headers so Next.js applies that nonce to framework scripts, page scripts, the inline initialization script, and style elements. Production `script-src` uses `'strict-dynamic'`; neither `script-src` nor `style-src` permits `'unsafe-inline'`, and `script-src` also permits no `'unsafe-eval'`. Both `script-src-attr` and `style-src-attr` use `'none'`. Hero animation delays, theme `color-scheme`, and opening scroll locking use external CSS and `data-*` state instead of style attributes or DOM style operations. HTML is dynamically rendered and uses `Cache-Control: no-store` to prevent nonce reuse. Because Next.js can reuse a CSS URL after its content changes, CSS assets use `max-age=0, must-revalidate` so clients revalidate stale presentation. Content-identified scripts and fonts remain immutable for one year. API responses use a CSP based on `default-src 'none'` and `Cache-Control: no-store`. HTML and APIs retain frame denial, MIME-sniffing prevention, and referrer restrictions; HTML also retains Permissions Policy.
 - `public/_headers` does not define CSP because a static policy cannot contain the per-request nonce. It retains baseline response headers and cache rules for generated static assets; Middleware remains the only HTML CSP authority.
 - Public showcase mode is enabled with `PUBLIC_SHOWCASE=true`. Middleware rejects every `/api/*` request before route handling, including secure routes. The UI keeps a bilingual read-only notice and lets users load static synthetic results into the existing result panels without calling `fetch`. Any non-empty value other than explicit `false` enables the fail-closed public boundary.
+- Middleware permanently redirects HTTP requests for non-loopback hosts to the same URL over HTTPS and adds `Strict-Transport-Security: max-age=31536000` to HTTPS HTML and API responses. Loopback HTTP remains available for local verification. Next.js 16 recommends `proxy.ts`, but the current OpenNext Cloudflare adapter does not support Node.js Proxy, so the Edge-compatible `middleware.ts` convention remains in use.
 - CI forces `LAB_MODE=disabled` and `PUBLIC_SHOWCASE=true`, sequentially runs dependency and application checks, builds the OpenNext Worker once, performs a Wrangler dry run, and verifies the public boundary over HTTP in workerd. The workerd check requests HTML twice and verifies nonce uniqueness, nonce coverage across every script and style element, removal of style attributes from HTML, removal of `'unsafe-inline'` from production `script-src` and `style-src`, removal of `'unsafe-eval'` from `script-src`, and the public API shutdown. Playwright desktop and mobile Chromium tests run against that same workerd artifact to verify the absence of CSP violations, `/api` traffic from the public control, result rendering, theme persistence, and Japanese/English switching in a real browser. Tests run axe with reduced motion and check WCAG 2.0, 2.1, and 2.2 A/AA rules in both the initial Japanese state and the English, dark-theme, result-visible state. The all-topic matrix selects OWASP API1 through API10 in Japanese, renders each topic-specific synthetic result, switches to English, and rechecks all ten titles, result statuses, the absence of axe violations, and the absence of `/api` traffic. Tab and Enter drive the theme, language, and result controls, and the tests also verify focus access to scrollable result content. A dedicated opening test uses normal motion to verify the first-visit dialog in both languages, initial focus, the Tab/Shift+Tab trap, Escape and skip dismissal, post-dismissal brand focus, and persisted seen state; reduced motion bypasses the dialog. Verification runs on pushes, pull requests, manual dispatches, and every Monday at 12:17 JST. Scheduled events cannot satisfy the deploy-job condition and receive no Cloudflare credentials. Dependabot checks npm dependencies every Tuesday and GitHub Actions every Wednesday; it groups minor and patch updates by purpose and leaves major updates as individual pull requests. The verified `.open-next` artifact is passed unchanged to the deploy job. Cloudflare credentials are exposed only to the final deploy step after all verification succeeds on a push to `main`, and deployment runs only when explicitly enabled at the repository level.
 
 - The local-boundary CI step is the explicit exception to the disabled-lab default: it temporarily sets `LAB_MODE=local` and `PUBLIC_SHOWCASE=false`. Production builds and the workerd verification continue to use the disabled lab and public showcase boundary.
@@ -165,7 +166,7 @@ Secure APIs process synthetic data only after module-specific validation succeed
 
 ```mermaid
 flowchart TD
-    Request["API request"] --> PublicShowcase{"PUBLIC_SHOWCASE = true"}
+    Request["API request"] --> PublicShowcase{"Public showcase enabled<br/>non-empty except false"}
     PublicShowcase -- "Yes" --> PublicDisabled["403 PUBLIC_SHOWCASE_API_DISABLED"]
     PublicShowcase -- "No" --> Route{"Route family"}
     Route -- "/api/secure/*" --> SecureChecks["Input validation and module-specific controls"]
@@ -186,9 +187,9 @@ Route separation is represented by `/api/vulnerable/*` and `/api/secure/*` route
 
 ### Cloudflare Public Showcase
 
-- `@opennextjs/cloudflare` converts the Next.js application into `.open-next/worker.js`; Wrangler serves generated static assets from `.open-next/assets`.
+- `@opennextjs/cloudflare` converts the Next.js application into `.open-next/worker.js`; Wrangler serves generated static assets from `.open-next/assets`. `assets.run_worker_first=true` sends static assets through the Worker first so HTTPS redirects and HSTS cover every path.
 - `wrangler.jsonc` fixes the public runtime to `LAB_MODE=disabled`, `NODE_ENV=production`, and `PUBLIC_SHOWCASE=true`.
-- GitHub Actions keeps Cloudflare credentials in repository secrets and does not place account identifiers or API tokens in tracked files.
+- GitHub Actions keeps Cloudflare credentials in `production` Environment secrets and does not place account identifiers or API tokens in tracked files. The deployed public URL is verified with the same boundary checks after deployment.
 - The public site exposes only learning content, request examples, synthetic response examples, design differences, and implementation flows. Live secure and vulnerable API execution remains unavailable.
 - `src/data/showcase-results.ts` contains stable synthetic response envelopes for every learning module. The public showcase notice and `Show request results` control appear after the vulnerable and secure API examples. The action copies synthetic data into client state and reuses the local demo result panels; it does not invoke route handlers or service functions.
 
@@ -262,7 +263,7 @@ The in-memory rate limits, reservation totals, stock, and attempt counters are s
 
 - The vulnerable third-party profile import route `/api/vulnerable/third-party/profile-import` imports redirect targets and privileged fields from synthetic third-party API responses without validation after the local-only safety guard passes.
 - The secure third-party profile import route `/api/secure/third-party/profile-import` validates provider identity, TLS assumptions, redirect allowlists, payload size, response schema, and privileged fields before importing data.
-- The comparison UI attempts to import `partner-response-redirect-admin`. The vulnerable route accepts the admin role and unallowed redirect target, while the secure route returns `403 FORBIDDEN`.
+- The comparison UI attempts to import `partner-response-redirect-admin`. The vulnerable route accepts the admin role and disallowed redirect target, while the secure route returns `403 FORBIDDEN`.
 - The third-party API response demo performs no real external API calls and uses synthetic external responses only. It does not use real partners, personal data, credentials, or external service integrations.
 
 ## Improper Inventory Management Module Design
@@ -324,7 +325,7 @@ flowchart TD
 
 - Topic list: displays risk category, difficulty, progress, summary, and selected state for each module.
 - Learning detail: displays overview, vulnerable condition, and defensive design for the selected module.
-- Comparison view: displays side-by-side route, request, response, design notes, and implementation flow for vulnerable and secure APIs. The implementation flow shows the full API program flow and highlights problem areas in `/api/vulnerable/*` in red and improvements in `/api/secure/*` in blue.
+- Comparison view: displays side-by-side route, request, response, design notes, and implementation flow for vulnerable and secure APIs. The implementation flow shows the full API processing flow and highlights problem areas in `/api/vulnerable/*` in red and improvements in `/api/secure/*` in blue.
 - Checklist: displays defensive review points for the selected module. Progress is not currently saved.
 - Vulnerable comparison areas always display local-only and non-public deployment warnings.
 - Web Storage persistence for language, theme, and opening state is optional; blocked storage falls back to the defaults and a usable application screen.
