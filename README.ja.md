@@ -101,6 +101,7 @@ Cloudflare Workers向け設定は、読み取り専用の公開ショーケー�
 - `npm ci`: `package-lock.json` に固定された依存関係を再現可能な形でインストールする。
 - `npm run dev`: `127.0.0.1` 限定でローカル開発サーバーを起動する。
 - `npm run security:audit`: 依存関係の既知の脆弱性を監査する。
+- `npm run security:repository`: 環境変数ファイル、秘密鍵、ローカルDB、ログ、開発者専用ファイルがGitの追跡対象に含まれていないことを確認する。
 - `npm run lint`: ESLintを実行する。
 - `npm run format`: Prettierでフォーマットを確認する。
 - `npm run typecheck`: TypeScriptの型チェックを実行する。
@@ -128,4 +129,4 @@ UIの初期表示言語は日本語とします。すべての画面に共通の
 
 ## 公開時の安全確認
 
-公開前には、秘密情報、認証情報、非公開ログ、ローカルDB、開発者専用ロードマップがGitの追跡対象に含まれていないことを確認します。公開資料では、脆弱なデモがローカル限定であり、公開環境では実行してはいけないことを明記します。CloudflareのAccount IDとAPI Tokenはデプロイ用の秘密情報として扱い、リポジトリ内のファイルには保存しません。セキュリティ・品質検証はpush、Pull Request、手動実行に加えて週次でも実行しますが、Cloudflareへのデプロイは`main`へのpush時だけに限定します。npm依存関係とGitHub ActionsはDependabotの週次Pull Requestで更新候補を確認します。
+公開前には、秘密情報、認証情報、非公開ログ、ローカルDB、開発者専用ロードマップがGitの追跡対象に含まれていないことを確認します。CIでは依存関係をインストールする前に`npm run security:repository`を実行し、この規則を強制します。公開資料では、脆弱なデモがローカル限定であり、公開環境では実行してはいけないことを明記します。CloudflareのAccount IDとAPI Tokenはデプロイ用の秘密情報として扱い、リポジトリ内のファイルには保存しません。セキュリティ・品質検証はpush、Pull Request、手動実行に加えて週次でも実行しますが、Cloudflareへのデプロイは`main`へのpush時だけに限定します。npm依存関係とGitHub ActionsはDependabotの週次Pull Requestで更新候補を確認します。

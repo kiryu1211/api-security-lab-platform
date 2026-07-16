@@ -101,6 +101,7 @@ Development and verification require Node.js 22.13.0 or later. CI uses the lates
 - `npm ci`: reproducibly install dependencies locked in `package-lock.json`.
 - `npm run dev`: start the local development server bound only to `127.0.0.1`.
 - `npm run security:audit`: audit dependencies for known vulnerabilities.
+- `npm run security:repository`: verify that Git tracks no environment files, private keys, local databases, logs, or developer-only files.
 - `npm run lint`: run ESLint.
 - `npm run format`: check formatting with Prettier.
 - `npm run typecheck`: run TypeScript type checking.
@@ -128,4 +129,4 @@ The default UI language is Japanese. Every screen should provide a shared langua
 
 ## Publication Safety Check
 
-Before publication, verify that no secrets, credentials, private logs, local databases, or developer-only roadmaps are tracked by Git. Public documentation must clearly state that vulnerable demos are local-only and must not be run in public environments. Cloudflare account IDs and API tokens are deployment secrets and must not be stored in repository files. Security and quality verification runs on pushes, pull requests, manual dispatches, and a weekly schedule, while Cloudflare deployment remains limited to pushes to `main`. Weekly Dependabot pull requests surface candidate updates for npm dependencies and GitHub Actions.
+Before publication, verify that no secrets, credentials, private logs, local databases, or developer-only roadmaps are tracked by Git. `npm run security:repository` enforces this rule in CI before dependency installation. Public documentation must clearly state that vulnerable demos are local-only and must not be run in public environments. Cloudflare account IDs and API tokens are deployment secrets and must not be stored in repository files. Security and quality verification runs on pushes, pull requests, manual dispatches, and a weekly schedule, while Cloudflare deployment remains limited to pushes to `main`. Weekly Dependabot pull requests surface candidate updates for npm dependencies and GitHub Actions.
