@@ -87,9 +87,9 @@ const styleDirective =
   firstPolicy
     .split(";")
     .find((directive) => directive.trim().startsWith("style-src ")) ?? "";
-const scriptTags = [...firstHome.matchAll(/<script\b([^>]*)>/g)];
-const styleTags = [...firstHome.matchAll(/<style\b([^>]*)>/g)];
-const linkTags = [...firstHome.matchAll(/<link\b([^>]*)>/g)];
+const scriptTags = [...firstHome.matchAll(/<script\b([^>]*)>/gi)];
+const styleTags = [...firstHome.matchAll(/<style\b([^>]*)>/gi)];
+const linkTags = [...firstHome.matchAll(/<link\b([^>]*)>/gi)];
 const scriptPaths = [
   ...new Set(
     scriptTags.map((match) => attributeFrom(match[1], "src")).filter(Boolean),
