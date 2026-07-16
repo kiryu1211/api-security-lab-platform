@@ -101,6 +101,7 @@ Development and verification require Node.js 22.13.0 or later. CI uses the lates
 - `npm ci`: reproducibly install dependencies locked in `package-lock.json`.
 - `npm run dev`: start the local development server bound only to `127.0.0.1`.
 - `npm run security:audit`: audit dependencies for known vulnerabilities.
+- `npm run security:local-boundary`: start the development server temporarily, verify the vulnerable health route through loopback with Host-header rejection, and confirm that non-loopback IPv4 interfaces cannot reach the server port.
 - `npm run security:repository`: verify that Git tracks no environment files, private keys, local databases, logs, or developer-only files.
 - `npm run lint`: run ESLint.
 - `npm run format`: check formatting with Prettier.

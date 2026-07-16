@@ -52,6 +52,12 @@ jobs:
       - name: Run tests
         run: npm run test
 
+      - name: Verify local lab boundary
+        run: npm run security:local-boundary
+        env:
+          LAB_MODE: local
+          PUBLIC_SHOWCASE: "false"
+
       - name: Type-check
         run: npm run typecheck
 

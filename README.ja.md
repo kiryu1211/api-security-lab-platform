@@ -101,6 +101,7 @@ Cloudflare Workers向け設定は、読み取り専用の公開ショーケー�
 - `npm ci`: `package-lock.json` に固定された依存関係を再現可能な形でインストールする。
 - `npm run dev`: `127.0.0.1` 限定でローカル開発サーバーを起動する。
 - `npm run security:audit`: 依存関係の既知の脆弱性を監査する。
+- `npm run security:local-boundary`: 開発サーバーを一時的に起動し、ループバック経由の`/api/vulnerable/health`と`Host`ヘッダー拒否を検証して、ループバック以外のIPv4インターフェースからサーバーポートへ到達できないことを確認する。
 - `npm run security:repository`: 環境変数ファイル、秘密鍵、ローカルDB、ログ、開発者専用ファイルがGitの追跡対象に含まれていないことを確認する。
 - `npm run lint`: ESLintを実行する。
 - `npm run format`: Prettierでフォーマットを確認する。
