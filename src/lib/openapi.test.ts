@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { learningModules } from "@/data/learning-modules";
+import {
+  apiRouteOperations,
+  type ApiRouteFamily,
+} from "@/test-utils/route-inventory";
 import openApiSpec from "../../docs/api/openapi.json";
 
 type OpenApiOperation = {
@@ -38,67 +42,43 @@ const knownDemoUserIds = [
   "user-demo-reviewer",
   "user-demo-admin",
 ];
+const openApiHttpMethods = new Set([
+  "delete",
+  "get",
+  "head",
+  "options",
+  "patch",
+  "post",
+  "put",
+]);
 
-function toOpenApiPath(route: string) {
-  return route.replace("{orderId}", "{orderId}");
+function documentedApiOperations(family: ApiRouteFamily) {
+  const paths = openApiSpec.paths as Record<string, OpenApiPathItem>;
+
+  return Object.entries(paths)
+    .flatMap(([path, pathItem]) =>
+      path.startsWith(`/api/${family}/`)
+        ? Object.keys(pathItem)
+            .filter((method) => openApiHttpMethods.has(method))
+            .map((method) => `${method.toUpperCase()} ${path}`)
+        : [],
+    )
+    .sort();
 }
 
 describe("OpenAPI specification", () => {
-  it("documents separated secure and vulnerable support routes", () => {
-    expect(openApiSpec.paths).toHaveProperty("/api/secure/health");
-    expect(openApiSpec.paths).toHaveProperty("/api/vulnerable/health");
-    expect(openApiSpec.paths).toHaveProperty("/api/secure/lab-samples");
-    expect(openApiSpec.paths).toHaveProperty("/api/vulnerable/lab-samples");
-    expect(openApiSpec.paths).toHaveProperty("/api/secure/orders/{orderId}");
-    expect(openApiSpec.paths).toHaveProperty(
-      "/api/vulnerable/orders/{orderId}",
-    );
-    expect(openApiSpec.paths).toHaveProperty("/api/secure/auth/session");
-    expect(openApiSpec.paths).toHaveProperty("/api/vulnerable/auth/session");
-    expect(openApiSpec.paths).toHaveProperty("/api/secure/rate-limit/search");
-    expect(openApiSpec.paths).toHaveProperty(
-      "/api/vulnerable/rate-limit/search",
-    );
-    expect(openApiSpec.paths).toHaveProperty("/api/secure/admin/invitations");
-    expect(openApiSpec.paths).toHaveProperty(
-      "/api/vulnerable/admin/invitations",
-    );
-    expect(openApiSpec.paths).toHaveProperty("/api/secure/profile");
-    expect(openApiSpec.paths).toHaveProperty("/api/vulnerable/profile");
-    expect(openApiSpec.paths).toHaveProperty("/api/secure/fetch-url");
-    expect(openApiSpec.paths).toHaveProperty("/api/vulnerable/fetch-url");
-    expect(openApiSpec.paths).toHaveProperty("/api/secure/config/diagnostics");
-    expect(openApiSpec.paths).toHaveProperty(
-      "/api/vulnerable/config/diagnostics",
-    );
-    expect(openApiSpec.paths).toHaveProperty(
-      "/api/secure/business-flow/reservations",
-    );
-    expect(openApiSpec.paths).toHaveProperty(
-      "/api/vulnerable/business-flow/reservations",
-    );
-    expect(openApiSpec.paths).toHaveProperty(
-      "/api/secure/third-party/profile-import",
-    );
-    expect(openApiSpec.paths).toHaveProperty(
-      "/api/vulnerable/third-party/profile-import",
-    );
-    expect(openApiSpec.paths).toHaveProperty(
-      "/api/secure/inventory/operations",
-    );
-    expect(openApiSpec.paths).toHaveProperty(
-      "/api/vulnerable/inventory/operations",
-    );
+  it("documents every implemented secure and vulnerable operation", () => {
+    for (const family of ["secure", "vulnerable"] as const) {
+      expect(documentedApiOperations(family)).toEqual(
+        apiRouteOperations(family),
+      );
+    }
   });
 
   it("documents every ready learning module route", () => {
     for (const learningModule of learningModules) {
-      expect(openApiSpec.paths).toHaveProperty(
-        toOpenApiPath(learningModule.vulnerable.route),
-      );
-      expect(openApiSpec.paths).toHaveProperty(
-        toOpenApiPath(learningModule.secure.route),
-      );
+      expect(openApiSpec.paths).toHaveProperty(learningModule.vulnerable.route);
+      expect(openApiSpec.paths).toHaveProperty(learningModule.secure.route);
     }
   });
 

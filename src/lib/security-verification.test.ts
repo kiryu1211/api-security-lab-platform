@@ -21,11 +21,13 @@ import { GET as vulnerableOrderGet } from "@/app/api/vulnerable/orders/[orderId]
 import { PATCH as vulnerableProfilePatch } from "@/app/api/vulnerable/profile/route";
 import { GET as vulnerableRateLimitGet } from "@/app/api/vulnerable/rate-limit/search/route";
 import { POST as vulnerableProfileImportPost } from "@/app/api/vulnerable/third-party/profile-import/route";
+import { apiRouteOperations } from "@/test-utils/route-inventory";
 import { uiText } from "./i18n";
 import { resetRateLimitBuckets } from "./rate-limit-service";
 
 type RouteCall = {
   name: string;
+  operation: string;
   call: () => Response | Promise<Response>;
 };
 
@@ -45,6 +47,7 @@ describe("phase 7 security verification", () => {
     const vulnerableRoutes: RouteCall[] = [
       {
         name: "health",
+        operation: "GET /api/vulnerable/health",
         call: () =>
           vulnerableHealthGet(
             new Request("http://localhost/api/vulnerable/health"),
@@ -52,6 +55,7 @@ describe("phase 7 security verification", () => {
       },
       {
         name: "lab samples",
+        operation: "GET /api/vulnerable/lab-samples",
         call: () =>
           vulnerableLabSamplesGet(
             new Request("http://localhost/api/vulnerable/lab-samples"),
@@ -59,6 +63,7 @@ describe("phase 7 security verification", () => {
       },
       {
         name: "BOLA order",
+        operation: "GET /api/vulnerable/orders/{orderId}",
         call: () =>
           vulnerableOrderGet(new Request("http://localhost"), {
             params: Promise.resolve({ orderId: "order-demo-002" }),
@@ -66,6 +71,7 @@ describe("phase 7 security verification", () => {
       },
       {
         name: "authentication session",
+        operation: "POST /api/vulnerable/auth/session",
         call: () =>
           vulnerableAuthSessionPost(
             new Request("http://localhost/api/vulnerable/auth/session", {
@@ -77,6 +83,7 @@ describe("phase 7 security verification", () => {
       },
       {
         name: "rate limit search",
+        operation: "GET /api/vulnerable/rate-limit/search",
         call: () =>
           vulnerableRateLimitGet(
             new Request(
@@ -86,6 +93,7 @@ describe("phase 7 security verification", () => {
       },
       {
         name: "admin invitation",
+        operation: "POST /api/vulnerable/admin/invitations",
         call: () =>
           vulnerableInvitationPost(
             new Request("http://localhost/api/vulnerable/admin/invitations", {
@@ -101,6 +109,7 @@ describe("phase 7 security verification", () => {
       },
       {
         name: "profile update",
+        operation: "PATCH /api/vulnerable/profile",
         call: () =>
           vulnerableProfilePatch(
             new Request("http://localhost/api/vulnerable/profile", {
@@ -112,6 +121,7 @@ describe("phase 7 security verification", () => {
       },
       {
         name: "sensitive business flow reservation",
+        operation: "POST /api/vulnerable/business-flow/reservations",
         call: () =>
           vulnerableBusinessFlowPost(
             new Request(
@@ -131,6 +141,7 @@ describe("phase 7 security verification", () => {
       },
       {
         name: "URL fetch preview",
+        operation: "POST /api/vulnerable/fetch-url",
         call: () =>
           vulnerableFetchUrlPost(
             new Request("http://localhost/api/vulnerable/fetch-url", {
@@ -142,6 +153,7 @@ describe("phase 7 security verification", () => {
       },
       {
         name: "configuration diagnostics",
+        operation: "POST /api/vulnerable/config/diagnostics",
         call: () =>
           vulnerableConfigDiagnosticsPost(
             new Request("http://localhost/api/vulnerable/config/diagnostics", {
@@ -156,6 +168,7 @@ describe("phase 7 security verification", () => {
       },
       {
         name: "third-party profile import",
+        operation: "POST /api/vulnerable/third-party/profile-import",
         call: () =>
           vulnerableProfileImportPost(
             new Request(
@@ -173,6 +186,7 @@ describe("phase 7 security verification", () => {
       },
       {
         name: "API inventory operation",
+        operation: "POST /api/vulnerable/inventory/operations",
         call: () =>
           vulnerableInventoryPost(
             new Request(
@@ -189,6 +203,10 @@ describe("phase 7 security verification", () => {
           ),
       },
     ];
+
+    expect(vulnerableRoutes.map((route) => route.operation).sort()).toEqual(
+      apiRouteOperations("vulnerable"),
+    );
 
     for (const route of vulnerableRoutes) {
       const response = await route.call();
