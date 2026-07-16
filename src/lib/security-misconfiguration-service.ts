@@ -19,12 +19,8 @@ const syntheticRuntimeConfig = {
 };
 
 const secureHeaders = {
-  "Cache-Control": "no-store",
-  "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'",
   "Cross-Origin-Resource-Policy": "same-origin",
-  "Referrer-Policy": "no-referrer",
   Vary: "Origin",
-  "X-Content-Type-Options": "nosniff",
 } as const;
 
 function inspectRequestOrigin(context: SecurityConfigRequestContext) {

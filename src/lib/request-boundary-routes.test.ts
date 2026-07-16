@@ -1,6 +1,10 @@
 /// <reference types="vite/client" />
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  API_CORS_ALLOW_HEADERS,
+  API_RESPONSE_SECURITY_HEADERS,
+} from "./api-response";
 import { resetBusinessFlowState } from "./business-flow-service";
 import { MAX_JSON_BODY_BYTES } from "./request-validation";
 import {
@@ -88,8 +92,12 @@ async function expectBoundaryError(
 ) {
   expect(response.status).toBe(status);
   expect(response.headers.get("Content-Type")).toContain("application/json");
-  expect(response.headers.get("Cache-Control")).toBe("no-store");
-  expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
+  for (const [name, value] of Object.entries(API_RESPONSE_SECURITY_HEADERS)) {
+    expect(response.headers.get(name)).toBe(value);
+  }
+  for (const name of API_CORS_ALLOW_HEADERS) {
+    expect(response.headers.get(name)).toBeNull();
+  }
   await expect(response.json()).resolves.toMatchObject({
     ok: false,
     error: { code },
@@ -106,8 +114,12 @@ async function expectAcceptedForSchemaValidation(
 ) {
   expect(response.status).not.toBe(413);
   expect(response.headers.get("Content-Type")).toContain("application/json");
-  expect(response.headers.get("Cache-Control")).toBe("no-store");
-  expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
+  for (const [name, value] of Object.entries(API_RESPONSE_SECURITY_HEADERS)) {
+    expect(response.headers.get(name)).toBe(value);
+  }
+  for (const name of API_CORS_ALLOW_HEADERS) {
+    expect(response.headers.get(name)).toBeNull();
+  }
   const body = await response.json();
 
   expect(body).toMatchObject({

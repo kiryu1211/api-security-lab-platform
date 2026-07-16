@@ -70,7 +70,7 @@
 - 公開ショーケースの全10学習テーマを日本語と英語で順番に選択し、選択状態、テーマ固有の合成結果ステータス、通信なしの結果表示、axeによる検出可能な違反がないことをデスクトップ・モバイルで確認する。
 - 未設定または不正な`LAB_MODE`で脆弱APIが無効となり、明示的なローカル設定とloopbackリクエスト条件を満たす場合だけ有効になることを確認する。CIでは開発サーバーをローカルモードで起動し、ループバック経由で`/api/vulnerable/health`へ到達できること、ループバック以外の`Host`ヘッダーが拒否されること、ループバック以外のIPv4インターフェースからサーバーポートへ接続できないことを確認する。
 - 不正UTF-8、不正JSON、非対応Content-Type、16 KiBを超える本文が統一した400、415、413レスポンスで拒否されることを確認する。ルート一覧に基づくテストでは、すべてのPOST・PATCH操作が共通JSON解析処理を呼び出すことを必須とし、対応する全Route Handlerへ非対応Content-Type、過大な宣言サイズ、過大な実本文を送信するほか、16 KiBちょうどの本文がschema検証へ進むことを確認する。
-- HTMLのnonceがリクエストごとに更新され、すべてのscriptとstyle要素へ同じnonceが付与され、本番の`script-src`と`style-src`に`'unsafe-inline'`が含まれず、`script-src`に`'unsafe-eval'`も含まれないことを確認する。HTMLにstyle属性がなく、`style-src-attr 'none'`と`script-src-attr 'none'`が適用されること、HTMLとAPIの両方が`no-store`となることも確認する。
+- HTMLのnonceがリクエストごとに更新され、すべてのscriptとstyle要素へ同じnonceが付与され、本番の`script-src`と`style-src`に`'unsafe-inline'`が含まれず、`script-src`に`'unsafe-eval'`も含まれないことを確認する。HTMLにstyle属性がなく、`style-src-attr 'none'`と`script-src-attr 'none'`が適用されること、HTMLとAPIの両方が`no-store`となることも確認する。すべてのAPI操作で、共通のCSP、クロスオリジン保護、権限制御、Referrer制御、MIME sniffing防止、フレーム埋め込み拒否ヘッダーを返し、CORS許可ヘッダーを返さないことを必須とする。ローカルNext.jsと公開workerdへのHTTP検証でも同じAPIヘッダー契約と`X-Powered-By`がないことを確認する。
 - 公開ショーケースのテストとworkerdプレビューで、安全APIと脆弱APIの両方がRoute Handlerへ到達する前に`403 PUBLIC_SHOWCASE_API_DISABLED`を返すことを確認する。
 - コンポーネントテストで、公開用のリクエスト結果操作がAPI例の後に配置され、`fetch`を呼び出さずに両方の比較結果を表示することを確認し、静的データテストで全学習テーマを検証する。
 - ローカルモードのコンポーネントテストでは全10学習テーマを選択し、4回連続で安全APIを呼び出すレート制限シナリオを含め、各ライブデモのHTTPメソッド、URL、JSON本文を確認する。通信失敗とJSON解析失敗では実行中状態を解除し、選択中の言語でエラーを表示することも確認する。

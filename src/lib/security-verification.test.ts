@@ -22,6 +22,10 @@ import { PATCH as vulnerableProfilePatch } from "@/app/api/vulnerable/profile/ro
 import { GET as vulnerableRateLimitGet } from "@/app/api/vulnerable/rate-limit/search/route";
 import { POST as vulnerableProfileImportPost } from "@/app/api/vulnerable/third-party/profile-import/route";
 import { apiRouteOperations } from "@/test-utils/route-inventory";
+import {
+  API_CORS_ALLOW_HEADERS,
+  API_RESPONSE_SECURITY_HEADERS,
+} from "./api-response";
 import { uiText } from "./i18n";
 import { resetRateLimitBuckets } from "./rate-limit-service";
 
@@ -213,9 +217,17 @@ describe("phase 7 security verification", () => {
       const body = await response.json();
 
       expect(response.status, route.name).toBe(403);
-      expect(response.headers.get("Content-Security-Policy"), route.name).toBe(
-        "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+      expect(response.headers.get("Content-Type"), route.name).toContain(
+        "application/json",
       );
+      for (const [name, value] of Object.entries(
+        API_RESPONSE_SECURITY_HEADERS,
+      )) {
+        expect(response.headers.get(name), route.name).toBe(value);
+      }
+      for (const name of API_CORS_ALLOW_HEADERS) {
+        expect(response.headers.get(name), route.name).toBeNull();
+      }
       expect(body.error.code, route.name).toBe("VULNERABLE_API_DISABLED");
       expect(body.meta, route.name).toMatchObject({
         routeType: "vulnerable",
@@ -339,7 +351,7 @@ describe("phase 7 security verification", () => {
 
     expect(secureBola.status).toBe(403);
     expect(secureBola.headers.get("Content-Security-Policy")).toBe(
-      "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+      API_RESPONSE_SECURITY_HEADERS["Content-Security-Policy"],
     );
     expect(secureAuth.status).toBe(401);
     expect(await secureAuth.json()).toMatchObject({

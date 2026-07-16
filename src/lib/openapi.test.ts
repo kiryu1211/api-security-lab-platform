@@ -5,6 +5,7 @@ import {
   type ApiRouteFamily,
 } from "@/test-utils/route-inventory";
 import openApiSpec from "../../docs/api/openapi.json";
+import { API_RESPONSE_SECURITY_HEADERS } from "./api-response";
 
 type OpenApiOperation = {
   summary?: string;
@@ -257,5 +258,8 @@ describe("OpenAPI specification", () => {
         $ref: "#/components/headers/VaryOrigin",
       });
     }
+    expect(
+      openApiSpec.components.headers.ContentSecurityPolicy.schema.const,
+    ).toBe(API_RESPONSE_SECURITY_HEADERS["Content-Security-Policy"]);
   });
 });
