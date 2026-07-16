@@ -1,5 +1,6 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { relative, resolve } from "node:path";
+import ts from "typescript";
 
 export type ApiRouteFamily = "secure" | "vulnerable";
 export type HttpMethod =
@@ -12,10 +13,78 @@ export type DiscoveredApiRoute = {
   source: string;
 };
 
-const routeFunctionPattern =
-  /export\s+(?:async\s+)?function\s+(DELETE|GET|HEAD|OPTIONS|PATCH|POST|PUT)\s*\(/g;
-const routeConstantPattern =
-  /export\s+const\s+(DELETE|GET|HEAD|OPTIONS|PATCH|POST|PUT)\s*=/g;
+const httpMethods = new Set<HttpMethod>([
+  "DELETE",
+  "GET",
+  "HEAD",
+  "OPTIONS",
+  "PATCH",
+  "POST",
+  "PUT",
+]);
+
+function httpMethod(name: string | undefined) {
+  return name && httpMethods.has(name as HttpMethod)
+    ? (name as HttpMethod)
+    : undefined;
+}
+
+function hasExportModifier(node: ts.Node) {
+  return (
+    ts.canHaveModifiers(node) &&
+    ts
+      .getModifiers(node)
+      ?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)
+  );
+}
+
+export function exportedHttpMethods(file: string, source: string) {
+  const sourceFile = ts.createSourceFile(
+    file,
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TS,
+  );
+  const methods = new Set<HttpMethod>();
+
+  for (const statement of sourceFile.statements) {
+    if (ts.isFunctionDeclaration(statement) && hasExportModifier(statement)) {
+      const method = httpMethod(statement.name?.text);
+      if (method) {
+        methods.add(method);
+      }
+      continue;
+    }
+
+    if (ts.isVariableStatement(statement) && hasExportModifier(statement)) {
+      for (const declaration of statement.declarationList.declarations) {
+        const method = ts.isIdentifier(declaration.name)
+          ? httpMethod(declaration.name.text)
+          : undefined;
+        if (method) {
+          methods.add(method);
+        }
+      }
+      continue;
+    }
+
+    if (
+      ts.isExportDeclaration(statement) &&
+      statement.exportClause &&
+      ts.isNamedExports(statement.exportClause)
+    ) {
+      for (const element of statement.exportClause.elements) {
+        const method = httpMethod(element.name.text);
+        if (method) {
+          methods.add(method);
+        }
+      }
+    }
+  }
+
+  return [...methods].sort();
+}
 
 function findRouteFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -47,18 +116,10 @@ export function discoverApiRoutes(
   return findRouteFiles(familyRoot)
     .map((file) => {
       const source = readFileSync(file, "utf8");
-      const methods = new Set<HttpMethod>();
-
-      for (const pattern of [routeFunctionPattern, routeConstantPattern]) {
-        pattern.lastIndex = 0;
-        for (const match of source.matchAll(pattern)) {
-          methods.add(match[1] as HttpMethod);
-        }
-      }
 
       return {
         file: relative(process.cwd(), file).replaceAll("\\", "/"),
-        methods: [...methods].sort(),
+        methods: exportedHttpMethods(file, source),
         path: routePath(family, familyRoot, file),
         source,
       };
