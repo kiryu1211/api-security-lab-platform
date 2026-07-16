@@ -76,9 +76,9 @@ export const showcaseResults = {
           acceptedChecks: ["token-id-present"],
           tokenDiagnostics: {
             tokenId: "demo-token-expired-admin",
-            signatureState: "invalid",
+            signatureState: "valid",
             expired: true,
-            revoked: true,
+            revoked: false,
           },
         },
         meta: vulnerableMeta,
@@ -91,7 +91,7 @@ export const showcaseResults = {
         error: {
           code: "UNAUTHORIZED",
           message: "The demo token failed secure validation.",
-          details: { reason: "invalid-signature" },
+          details: { reason: "expired" },
         },
         meta: secureMeta,
       },

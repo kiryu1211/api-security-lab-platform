@@ -324,6 +324,12 @@ describe("phase 7 security verification", () => {
       "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
     );
     expect(secureAuth.status).toBe(401);
+    expect(await secureAuth.json()).toMatchObject({
+      error: {
+        code: "UNAUTHORIZED",
+        details: { reason: "expired" },
+      },
+    });
     expect(secureInvitation.status).toBe(403);
     expect(secureProfile.status).toBe(403);
     expect(await secureProfile.json()).toMatchObject({

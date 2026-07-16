@@ -225,7 +225,7 @@ flowchart LR
 
 - 脆弱な認証ルート `/api/vulnerable/auth/session` は、ローカル限定の安全ガードを通過した後、既知のデモトークンIDだけを見てセッションを受け入れる。
 - 安全な認証ルート `/api/secure/auth/session` は、デモトークンの署名状態、期限、失効状態、必要な権限を確認してからセッションを受け入れる。
-- 比較UIでは、署名状態が不正、期限切れ、失効済みの `demo-token-expired-admin` を使用する。脆弱ルートでは受け入れられ、安全ルートでは `401 UNAUTHORIZED` が返ることを確認できる。
+- 合成トークンは拒否条件を独立させる。`demo-token-invalid-signature-admin`は署名だけが不正、`demo-token-expired-admin`は署名が有効で期限切れ、`demo-token-revoked-admin`は署名が有効で有効期限内だが失効済みとする。比較UIでは期限切れトークンを使用し、脆弱ルートでは受け入れられ、安全ルートでは`401 UNAUTHORIZED`が返ることを確認できる。
 - 認証モジュールでは合成したトークンIDとメタデータのみを使用し、実トークン、署名鍵、秘密情報、認証情報、実セッションは含めない。
 
 ## レート制限・Mass Assignment・SSRFモジュール設計

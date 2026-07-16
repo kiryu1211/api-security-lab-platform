@@ -156,8 +156,8 @@ const learningModuleDefinitions: LearningModule[] = [
       request:
         'POST /api/vulnerable/auth/session\n{\n  "tokenId": "demo-token-expired-admin",\n  "requiredPermission": "admin:read"\n}',
       response: {
-        ja: "HTTP 200で受け入れられる場合、期限切れ・失効済み・署名不正の合成トークンでも、IDの存在だけでセッションを認めていることを表します。",
-        en: "HTTP 200 means the synthetic expired, revoked, or invalidly signed token was accepted because the API trusted token existence only.",
+        ja: "HTTP 200で受け入れられる場合、署名が有効でも期限切れの合成トークンを、IDの存在だけでセッションとして認めていることを表します。",
+        en: "HTTP 200 means a correctly signed synthetic token was accepted after its lifetime expired because the API trusted token existence only.",
       },
       note: {
         ja: "実際のトークンや秘密情報はサンプルに含めません。",
@@ -169,8 +169,8 @@ const learningModuleDefinitions: LearningModule[] = [
       request:
         'POST /api/secure/auth/session\n{\n  "tokenId": "demo-token-expired-admin",\n  "requiredPermission": "admin:read"\n}',
       response: {
-        ja: "HTTP 401は、署名、期限、失効状態、権限のいずれかが検証に失敗し、本人確認として使えないトークンを拒否したことを表します。",
-        en: "HTTP 401 means the token failed signature, expiration, revocation, or permission validation and cannot be used for authentication.",
+        ja: "HTTP 401は、署名が有効でも有効期限を過ぎたトークンを拒否し、本人確認として使用しなかったことを表します。",
+        en: "HTTP 401 means the API rejected a correctly signed token after its expiration and did not use it for authentication.",
       },
       note: {
         ja: "安全APIでは、署名状態、期限、失効状態、権限を明示的に確認します。",

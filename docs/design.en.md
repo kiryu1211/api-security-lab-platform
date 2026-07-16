@@ -225,7 +225,7 @@ The in-memory rate limits, reservation totals, stock, and attempt counters are s
 
 - The vulnerable authentication route `/api/vulnerable/auth/session` accepts a known demo token by ID only after the local-only safety guard passes.
 - The secure authentication route `/api/secure/auth/session` validates demo token signature state, expiration, revocation state, and required permission before accepting a session.
-- The comparison UI uses `demo-token-expired-admin`, which has an invalid signature, is expired, and is revoked. The vulnerable route accepts it, while the secure route returns `401 UNAUTHORIZED`.
+- Synthetic tokens keep each rejection condition independent: `demo-token-invalid-signature-admin` has only an invalid signature, `demo-token-expired-admin` has a valid signature but is expired, and `demo-token-revoked-admin` has a valid signature and future expiration but is revoked. The comparison UI uses the expired token; the vulnerable route accepts it, while the secure route returns `401 UNAUTHORIZED`.
 - The authentication module uses synthetic token identifiers and metadata only; it does not contain real tokens, signing keys, secrets, credentials, or user sessions.
 
 ## Rate Limiting, Mass Assignment, And SSRF Module Design

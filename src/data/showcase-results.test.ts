@@ -55,6 +55,25 @@ describe("public showcase results", () => {
     });
   });
 
+  it("keeps the authentication showcase aligned with the expired-token scenario", () => {
+    expect(showcaseResults.auth.vulnerable.body).toMatchObject({
+      data: {
+        tokenDiagnostics: {
+          tokenId: "demo-token-expired-admin",
+          signatureState: "valid",
+          expired: true,
+          revoked: false,
+        },
+      },
+    });
+    expect(showcaseResults.auth.secure.body).toMatchObject({
+      error: {
+        code: "UNAUTHORIZED",
+        details: { reason: "expired" },
+      },
+    });
+  });
+
   it("makes the no-network SSRF behavior explicit on both sides", () => {
     expect(JSON.stringify(showcaseResults.ssrf.vulnerable.body)).toContain(
       '"networkAccessPerformed":false',
