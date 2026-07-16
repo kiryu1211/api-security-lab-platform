@@ -123,6 +123,8 @@ Cloudflare Workers向け設定は、読み取り専用の公開ショーケー�
 - 要件定義書: [`docs/requirements.ja.md`](docs/requirements.ja.md)
 - 設計書: [`docs/design.ja.md`](docs/design.ja.md)
 - OpenAPI: [`docs/api/openapi.json`](docs/api/openapi.json)
+- セキュリティポリシー: [`SECURITY.ja.md`](SECURITY.ja.md)
+- ライセンス: [`LICENSE`](LICENSE)
 
 ## UI言語方針
 
@@ -131,3 +133,5 @@ UIの初期表示言語は日本語とします。すべての画面に共通の
 ## 公開時の安全確認
 
 公開前には、秘密情報、認証情報、非公開ログ、ローカルDB、開発者専用ロードマップがGitの追跡対象に含まれていないことを確認します。CIでは依存関係をインストールする前に`npm run security:repository`を実行し、この規則を強制します。公開資料では、脆弱なデモがローカル限定であり、公開環境では実行してはいけないことを明記します。CloudflareのAccount IDとAPI Tokenはデプロイ用の秘密情報として扱い、リポジトリ内のファイルには保存しません。セキュリティ・品質検証はpush、Pull Request、手動実行に加えて週次でも実行しますが、Cloudflareへのデプロイは`main`へのpush時だけに限定します。npm依存関係とGitHub ActionsはDependabotの週次Pull Requestで更新候補を確認します。
+
+このプロジェクトには[MIT License](LICENSE)を適用します。セキュリティ上の問題は[`SECURITY.ja.md`](SECURITY.ja.md)の手順で報告し、公開Issueへ機密性のある詳細を記載しないでください。
