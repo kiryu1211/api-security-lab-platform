@@ -61,6 +61,7 @@
 - API inventory demos must not issue real tokens or send notifications from either vulnerable or secure APIs.
 - Third-party API response demos must not perform real external API calls from either vulnerable or secure APIs.
 - OpenAPI must document implemented API routes, inputs, error responses, and safety notes.
+- CI must inspect Git-tracked files before dependency installation and reject environment files other than `.env.example`, developer-only documents, key material, local databases, and logs.
 - Japanese and English UI modes must keep visible text consistent within the selected language.
 - Desktop and mobile Chromium tests run automated WCAG 2.0, 2.1, and 2.2 A/AA checks with axe against both the initial Japanese state and the English, dark-theme, result-visible state of a public-showcase-equivalent environment, with no automatically detectable violations.
 - Primary theme, language, and request-result controls must operate by keyboard, and keyboard focus must reach horizontally scrollable result regions.
@@ -139,7 +140,7 @@ requirementDiagram
 
     element repository_exclusions {
         type: "Git exclusion rules"
-        docref: ".gitignore"
+        docref: ".gitignore / scripts/verify-repository-safety.mjs"
     }
 
     element ui_resources {

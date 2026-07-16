@@ -309,6 +309,7 @@ flowchart TD
 - `src/lib/security-verification.test.ts` は、公開環境に相当する設定ですべての脆弱APIが `403 VULNERABLE_API_DISABLED` を返すことを横断的に確認する。
 - 同テストでは、安全APIがBOLA、認証不備、レート制限不足、機能単位認可不備、業務フロー悪用、Mass Assignment、SSRF、セキュリティ設定不備、旧API管理不備、外部API応答の過信を再現しないことを確認する。
 - `src/lib/openapi.test.ts` は、すべての脆弱API操作にローカル限定の説明と公開環境相当での無効化レスポンスが記述されていることを確認する。
+- `scripts/verify-repository-safety.mjs`は依存関係のインストール前にGit追跡対象のパスとファイル内容を検査する。`.env.example`だけを許可し、開発者専用文書、環境変数・Worker変数ファイル、鍵・証明書、ログ、ローカルDBを拒否するほか、秘密情報の内容を表示せずに秘密鍵ヘッダーを検出する。
 - UI文言リソースは、日英のキー構造が揃っていることをテストし、共通画面ラベルの言語混在を避ける。
 - `src/lib/public-showcase.test.ts`で両API種別のRoute Handler到達前停止を確認する。コンポーネントテストで通信なしのリクエスト結果表示を確認し、静的データテストで全テーマを検証する。OpenNext build、Wrangler dry run、CIのworkerd HTTP確認で、デプロイへ渡す同一成果物と実行時境界を検証する。
 

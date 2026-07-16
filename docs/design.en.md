@@ -309,6 +309,7 @@ flowchart TD
 - `src/lib/security-verification.test.ts` verifies across all vulnerable APIs that production-like settings return `403 VULNERABLE_API_DISABLED`.
 - The same test verifies that secure APIs do not reproduce BOLA, weak authentication, missing rate limiting, broken function-level authorization, business-flow abuse, Mass Assignment, SSRF, security misconfiguration, legacy API inventory gaps, or overtrusted third-party response behavior.
 - `src/lib/openapi.test.ts` verifies that every vulnerable API operation documents local-only behavior and the disabled response for production-like settings.
+- `scripts/verify-repository-safety.mjs` inspects Git-tracked paths and file contents before dependency installation. It permits only `.env.example`, rejects developer-only documents, environment and Worker variable files, key and certificate files, logs, and local databases, and detects private-key headers without printing secret contents.
 - UI text resources are tested for matching Japanese and English key structures to avoid mixed-language shared screen labels.
 - `src/lib/public-showcase.test.ts` verifies the pre-route shutdown for both API families. Component tests verify no-network synthetic result rendering, and static-data tests cover every module. OpenNext build, Wrangler dry run, and CI workerd HTTP checks verify the exact artifact passed to deployment.
 
