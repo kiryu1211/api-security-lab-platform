@@ -33,8 +33,9 @@ describe("authentication demo routes", () => {
         subjectUserId: "user-demo-bob",
         tokenDiagnostics: {
           tokenId: "demo-token-expired-admin",
-          signatureState: "invalid",
-          revoked: true,
+          signatureState: "valid",
+          expired: true,
+          revoked: false,
         },
       },
       meta: {
@@ -44,12 +45,19 @@ describe("authentication demo routes", () => {
     });
   });
 
-  it("secure route rejects the same weak demo token", async () => {
+  it.each([
+    ["demo-token-invalid-signature-admin", "invalid-signature"],
+    ["demo-token-expired-admin", "expired"],
+    ["demo-token-revoked-admin", "revoked"],
+  ] as const)("secure route rejects %s for %s", async (tokenId, reason) => {
     const response = await secureAuthPost(
       new Request("http://localhost/api/secure/auth/session", {
         method: "POST",
         headers: jsonHeaders,
-        body: JSON.stringify(weakTokenBody),
+        body: JSON.stringify({
+          tokenId,
+          requiredPermission: "admin:read",
+        }),
       }),
     );
     const body = await response.json();
@@ -60,7 +68,7 @@ describe("authentication demo routes", () => {
       error: {
         code: "UNAUTHORIZED",
         details: {
-          reason: "invalid-signature",
+          reason,
         },
       },
       meta: {
