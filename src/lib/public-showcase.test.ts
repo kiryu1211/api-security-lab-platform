@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { config, middleware } from "@/middleware";
+import { normalizeDocumentPrefetchRequest } from "@/lib/prefetch-request";
 
 const prefetchHeaderCases: Array<Record<string, string>> = [
   { "next-router-prefetch": "1" },
@@ -154,9 +155,18 @@ describe("public showcase boundary", () => {
       expect(response.headers.get("Content-Security-Policy")).toContain(
         "'nonce-",
       );
-      expect(response.headers.get("x-middleware-override-headers")).not.toMatch(
-        /next-router-prefetch|purpose/,
-      );
+    },
+  );
+
+  it.each(prefetchHeaderCases)(
+    "normalizes document prefetch hints before the OpenNext handler",
+    (headers) => {
+      const request = new Request("https://showcase.example/", { headers });
+      const normalizedRequest = normalizeDocumentPrefetchRequest(request);
+
+      expect(normalizedRequest.headers.get("next-router-prefetch")).toBeNull();
+      expect(normalizedRequest.headers.get("purpose")).toBeNull();
+      expect(request.headers.has(Object.keys(headers)[0])).toBe(true);
     },
   );
 });
